@@ -1,0 +1,54 @@
+{
+  "$comment": [
+    "MCP server template for ACT heirs. Recommended starting set of official",
+    "reference servers from modelcontextprotocol/servers (MIT). Copy this to",
+    ".vscode/mcp.json on first heir bootstrap; that copy is heir-owned and you",
+    "may add or remove servers. This template (.github/config/mcp.json.template)",
+    "is Edition-owned and updates on heir pull — diff against your active",
+    ".vscode/mcp.json after each upgrade to pick up new recommended servers.",
+    "",
+    "Servers selected for ACT-fit:",
+    "  sequentialthinking — operational hand for Tenet III (Multiple Working Hypotheses)",
+    "  memory             — pairs with memory-triggers instruction; persistent context",
+    "  filesystem         — allowlisted file access; replaces ad-hoc reads",
+    "  git                — git operations as MCP tools; supports git-workflow",
+    "  fetch              — HTTP fetch with content-type handling",
+    "  time               — eliminates 'what's today's date' hallucination class",
+    "",
+    "Prerequisites:",
+    "  Node servers (filesystem, memory, sequentialthinking) require: node 18+",
+    "  Python servers (fetch, git, time) require: uv (https://docs.astral.sh/uv)",
+    "",
+    "Reference: https://github.com/modelcontextprotocol/servers"
+  ],
+  "servers": {
+    "sequentialthinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git", "--repository", "${workspaceFolder}"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time"]
+    }
+  }
+}

@@ -1,3 +1,2 @@
-brain/
-catalog/
 *.vsix
+node_modules/

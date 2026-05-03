@@ -16,12 +16,12 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const REPO_ROOT = path.resolve(__dirname, '..');
-const EXT_DIR = path.join(REPO_ROOT, 'extension');
-const BRAIN_SRC = path.join(REPO_ROOT, '.github');
+const EXT_DIR = __dirname;
+const EDITION_ROOT = path.resolve(EXT_DIR, '..', 'Alex_ACT_Edition');
+const BRAIN_SRC = path.join(EDITION_ROOT, '.github');
 const BRAIN_DST = path.join(EXT_DIR, 'brain');
 const CATALOG_DST = path.join(EXT_DIR, 'catalog');
-const MALL_CATALOG = path.join(REPO_ROOT, '..', 'Alex_ACT_Plugin_Mall', 'CATALOG.json');
+const MALL_CATALOG = path.resolve(EXT_DIR, '..', 'Alex_ACT_Plugin_Mall', 'CATALOG.json');
 const ICON_PATH = path.join(EXT_DIR, 'assets', 'icon.png');
 
 const noVsix = process.argv.includes('--no-vsix');
@@ -97,7 +97,7 @@ fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 
 // ── Step 6: Copy README for marketplace ──────────────────────────
 console.log('6. Preparing marketplace README...');
-const readmeSrc = path.join(REPO_ROOT, 'README.md');
+const readmeSrc = path.join(EDITION_ROOT, 'README.md');
 const readmeDst = path.join(EXT_DIR, 'README.md');
 if (fs.existsSync(readmeSrc)) {
     // Copy and fix relative image paths to absolute GitHub URLs
@@ -112,7 +112,7 @@ if (fs.existsSync(readmeSrc)) {
 // ── Step 7: Copy CHANGELOG and LICENSE ───────────────────────────
 console.log('7. Copying CHANGELOG and LICENSE...');
 for (const f of ['CHANGELOG.md', 'LICENSE']) {
-    const src = path.join(REPO_ROOT, f);
+    const src = path.join(EDITION_ROOT, f);
     if (fs.existsSync(src)) fs.copyFileSync(src, path.join(EXT_DIR, f));
 }
 

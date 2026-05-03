@@ -1,0 +1,47 @@
+{
+    "$comment": "Sync policy for ACT-Edition pull-based fleet. Read by .github/scripts/upgrade-self.cjs in each heir. Edition only ever copies into .github/ and .vscode/ — everything else in the heir repo (README, src, tests, package.json, etc.) is left alone via the unmatched:preserve rule. Edition-owned paths are overwritten on upgrade; heir-owned paths are preserved.",
+    "spec_version": "1.0",
+    "edition_owned": [
+        ".github/copilot-instructions.md",
+        ".github/EXTERNAL-API-REGISTRY.md",
+        ".github/instructions/**",
+        ".github/skills/**",
+        ".github/prompts/**",
+        ".github/muscles/**",
+        ".github/agents/**",
+        ".github/config/sync-policy.json",
+        ".github/config/edition-manifest.json",
+        ".github/config/markdown-light.css",
+        ".github/config/mcp.json.template",
+        ".github/config/README.md",
+        ".github/scripts/upgrade-self.cjs",
+        ".github/scripts/bootstrap-heir.cjs",
+        ".github/scripts/build-edition-manifest.cjs",
+        ".github/scripts/_registry.cjs",
+        ".github/VERSION"
+    ],
+    "heir_owned": [
+        ".github/.act-heir.json",
+        ".github/copilot-instructions.local.md",
+        ".github/config/cognitive-config.json",
+        ".github/config/goals.json",
+        ".github/config/local/**",
+        ".github/instructions/local/**",
+        ".github/skills/local/**",
+        ".github/prompts/local/**",
+        ".github/muscles/local/**",
+        ".github/agents/local/**",
+        ".github/episodic/**",
+        ".vscode/extensions.json",
+        ".vscode/settings.json"
+    ],
+    "merge_rules": {
+        "edition_owned": "overwrite",
+        "heir_owned": "preserve",
+        "unmatched": "preserve"
+    },
+    "marker_fields_updated_on_sync": [
+        "edition_version",
+        "last_sync_at"
+    ]
+}
