@@ -1,0 +1,16 @@
+.git
+.github
+decisions
+ACT
+ACT_obsolete
+assets/banner-*.svg
+*.cjs
+!extension.js
+MIGRATION.md
+PLUGINS.md
+README.md
+!brain/**
+!catalog/**
+node_modules
+.vscode-test
+build-extension.cjs
