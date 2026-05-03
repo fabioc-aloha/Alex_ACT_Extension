@@ -509,12 +509,12 @@ async function cmdMallSearch() {
 // ── Converter Commands ─────────────────────────────────────────────
 
 const CONVERTERS = {
-    'md-to-word':  { muscle: 'md-to-word.cjs',  ext: '.docx', label: 'Word' },
-    'md-to-html':  { muscle: 'md-to-html.cjs',  ext: '.html', label: 'HTML' },
-    'md-to-eml':   { muscle: 'md-to-eml.cjs',   ext: '.eml',  label: 'Email' },
-    'md-to-txt':   { muscle: 'md-to-txt.cjs',   ext: '.txt',  label: 'Plain Text' },
-    'docx-to-md':  { muscle: 'docx-to-md.cjs',  ext: '.md',   label: 'Markdown' },
-    'html-to-md':  { muscle: 'html-to-md.cjs',  ext: '.md',   label: 'Markdown' },
+    'md-to-word': { muscle: 'md-to-word.cjs', ext: '.docx', label: 'Word' },
+    'md-to-html': { muscle: 'md-to-html.cjs', ext: '.html', label: 'HTML' },
+    'md-to-eml': { muscle: 'md-to-eml.cjs', ext: '.eml', label: 'Email' },
+    'md-to-txt': { muscle: 'md-to-txt.cjs', ext: '.txt', label: 'Plain Text' },
+    'docx-to-md': { muscle: 'docx-to-md.cjs', ext: '.md', label: 'Markdown' },
+    'html-to-md': { muscle: 'html-to-md.cjs', ext: '.md', label: 'Markdown' },
 };
 
 async function runConverter(converterId, fileUri) {
