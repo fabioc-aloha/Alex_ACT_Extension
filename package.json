@@ -47,8 +47,85 @@
                 "command": "alex-act.mall-search",
                 "title": "Search Plugin Mall",
                 "category": "ACT"
+            },
+            {
+                "command": "alex-act.convert.md-to-word",
+                "title": "Convert to Word (.docx)",
+                "category": "ACT Convert"
+            },
+            {
+                "command": "alex-act.convert.md-to-html",
+                "title": "Convert to HTML",
+                "category": "ACT Convert"
+            },
+            {
+                "command": "alex-act.convert.md-to-eml",
+                "title": "Convert to Email (.eml)",
+                "category": "ACT Convert"
+            },
+            {
+                "command": "alex-act.convert.md-to-txt",
+                "title": "Convert to Plain Text",
+                "category": "ACT Convert"
+            },
+            {
+                "command": "alex-act.convert.docx-to-md",
+                "title": "Convert to Markdown",
+                "category": "ACT Convert"
+            },
+            {
+                "command": "alex-act.convert.html-to-md",
+                "title": "Convert to Markdown",
+                "category": "ACT Convert"
             }
-        ]
+        ],
+        "submenus": [
+            {
+                "id": "alex-act.convert",
+                "label": "ACT Convert"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "submenu": "alex-act.convert",
+                    "when": "resourceExtname =~ /\\.(md|docx|html|htm)$/",
+                    "group": "7_modification"
+                }
+            ],
+            "alex-act.convert": [
+                {
+                    "command": "alex-act.convert.md-to-word",
+                    "when": "resourceExtname == .md",
+                    "group": "1_from_md@1"
+                },
+                {
+                    "command": "alex-act.convert.md-to-html",
+                    "when": "resourceExtname == .md",
+                    "group": "1_from_md@2"
+                },
+                {
+                    "command": "alex-act.convert.md-to-eml",
+                    "when": "resourceExtname == .md",
+                    "group": "1_from_md@3"
+                },
+                {
+                    "command": "alex-act.convert.md-to-txt",
+                    "when": "resourceExtname == .md",
+                    "group": "1_from_md@4"
+                },
+                {
+                    "command": "alex-act.convert.docx-to-md",
+                    "when": "resourceExtname == .docx",
+                    "group": "2_to_md@1"
+                },
+                {
+                    "command": "alex-act.convert.html-to-md",
+                    "when": "resourceExtname =~ /\\.(html|htm)$/",
+                    "group": "2_to_md@2"
+                }
+            ]
+        }
     },
     "icon": "assets/icon.png",
     "galleryBanner": {

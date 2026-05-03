@@ -506,6 +506,59 @@ async function cmdMallSearch() {
     }
 }
 
+// ── Converter Commands ─────────────────────────────────────────────
+
+const CONVERTERS = {
+    'md-to-word':  { muscle: 'md-to-word.cjs',  ext: '.docx', label: 'Word' },
+    'md-to-html':  { muscle: 'md-to-html.cjs',  ext: '.html', label: 'HTML' },
+    'md-to-eml':   { muscle: 'md-to-eml.cjs',   ext: '.eml',  label: 'Email' },
+    'md-to-txt':   { muscle: 'md-to-txt.cjs',   ext: '.txt',  label: 'Plain Text' },
+    'docx-to-md':  { muscle: 'docx-to-md.cjs',  ext: '.md',   label: 'Markdown' },
+    'html-to-md':  { muscle: 'html-to-md.cjs',  ext: '.md',   label: 'Markdown' },
+};
+
+async function runConverter(converterId, fileUri) {
+    const converter = CONVERTERS[converterId];
+    if (!converter) { vscode.window.showErrorMessage(`Unknown converter: ${converterId}`); return; }
+
+    // Resolve input file
+    let inputPath;
+    if (fileUri && fileUri.fsPath) {
+        inputPath = fileUri.fsPath;
+    } else {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            inputPath = editor.document.uri.fsPath;
+        } else {
+            vscode.window.showErrorMessage('ACT Convert: No file selected.');
+            return;
+        }
+    }
+
+    // Find the muscle script (check workspace .github/muscles first, then bundled brain)
+    const root = getWorkspaceRoot();
+    let musclePath = root ? path.join(root, '.github', 'muscles', converter.muscle) : null;
+    if (!musclePath || !fs.existsSync(musclePath)) {
+        musclePath = path.join(BRAIN_DIR, 'muscles', converter.muscle);
+    }
+    if (!fs.existsSync(musclePath)) {
+        vscode.window.showErrorMessage(`ACT Convert: Muscle not found: ${converter.muscle}`);
+        return;
+    }
+
+    // Compute output path
+    const inputDir = path.dirname(inputPath);
+    const inputBase = path.basename(inputPath, path.extname(inputPath));
+    const outputPath = path.join(inputDir, inputBase + converter.ext);
+
+    // Run the converter
+    const terminal = vscode.window.createTerminal({ name: `ACT: ${converter.label}`, cwd: inputDir });
+    terminal.show();
+    terminal.sendText(`node "${musclePath}" "${inputPath}" --out "${outputPath}"`);
+
+    vscode.window.showInformationMessage(`ACT: Converting to ${converter.label}...`);
+}
+
 // ── Activation ─────────────────────────────────────────────────────
 
 function activate(context) {
@@ -515,6 +568,13 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.status', cmdStatus),
         vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
     );
+
+    // Register converter commands
+    for (const [id, _] of Object.entries(CONVERTERS)) {
+        context.subscriptions.push(
+            vscode.commands.registerCommand(`alex-act.convert.${id}`, (fileUri) => runConverter(id, fileUri))
+        );
+    }
 
     // Silent startup check: if workspace is a heir, show status bar item
     const root = getWorkspaceRoot();
