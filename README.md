@@ -1,7 +1,5 @@
 # Alex ACT Edition
 
-![Alex ACT Edition — Artificial Critical Thinking for AI Assistants](https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Edition/main/assets/banner-readme.svg)
-
 > Artificial Critical Thinking for AI Assistants.
 
 Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They confirm your assumptions instead of challenging them. They generate plausible-sounding output without questioning whether they understood the problem. They sound certain when they should hedge.
