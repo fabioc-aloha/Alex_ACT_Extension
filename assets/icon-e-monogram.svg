@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Option E: Minimal bold ACT monogram -->
+  <defs>
+    <linearGradient id="bgE" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="20" fill="#0f172a"/>
+  <!-- Bold ACT letterforms -->
+  <text x="64" y="72" font-family="Segoe UI, Inter, sans-serif" font-size="52" font-weight="800" fill="url(#bgE)" text-anchor="middle" letter-spacing="-2">ACT</text>
+  <!-- Subtle underline accent -->
+  <rect x="16" y="82" width="96" height="3" rx="1.5" fill="#22c55e" opacity="0.4"/>
+  <!-- Tagline -->
+  <text x="64" y="106" font-family="Segoe UI, Inter, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Critical Thinking</text>
+</svg>
