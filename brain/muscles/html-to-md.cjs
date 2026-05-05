@@ -6,7 +6,7 @@
  * @lifecycle stable
  * @inheritance inheritable
  * @description Convert HTML to Markdown via pandoc
- * @version 1.1.0
+ * @version 1.2.0
  * @reviewed 2026-04-30
  * @platform windows,macos,linux
  * @requires node,pandoc

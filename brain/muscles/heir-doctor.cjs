@@ -5,7 +5,7 @@
  * @muscle heir-doctor
  * @inheritance inheritable
  * @description Health check for an ACT Edition heir — flags misplaced files, edition-owned drift, missing local/ subdirs
- * @version 1.1.0
+ * @version 1.2.0
  * @reviewed 2026-04-30
  * @platform windows,macos,linux
  * @requires node

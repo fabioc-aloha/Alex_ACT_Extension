@@ -1,5 +1,7 @@
 # Alex ACT Edition
 
+![Alex ACT Edition — Artificial Critical Thinking for AI Assistants](assets/banner-readme.svg)
+
 > Artificial Critical Thinking for AI Assistants.
 
 Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They confirm your assumptions instead of challenging them. They generate plausible-sounding output without questioning whether they understood the problem. They sound certain when they should hedge.
@@ -8,7 +10,7 @@ ACT Edition changes that. Not by making AI "smarter," but by making it **honest*
 
 A confident wrong answer is worse than an uncertain correct answer. ACT shifts the default from "sound authoritative" to "show your work." When the AI doesn't know, it says "I don't know." When it's uncertain, it quantifies the uncertainty. When it challenges your framing, it explains why. Debugging a confident hallucination takes hours. Verifying a well-reasoned hypothesis takes minutes.
 
-This is a **cognitive architecture** -- 17 skills, 33 instructions, 20 prompts, 3 worker agents, and 20 muscles that teach your AI assistant to think critically about its own reasoning. Built for GitHub Copilot's `.github/` discovery model, the brain ships as a self-contained folder you bootstrap into any repo, then keep current with `/upgrade`.
+This is a **cognitive architecture** -- 17 skills, 34 instructions, 20 prompts, 3 worker agents, and 20 muscles that teach your AI assistant to think critically about its own reasoning. Built for GitHub Copilot's `.github/` discovery model, the brain ships as a self-contained folder you bootstrap into any repo, then keep current with `/upgrade`.
 
 ## Commands
 
@@ -28,7 +30,6 @@ The brain ships slash-prompts grouped by lifecycle stage. Type `/` in Copilot Ch
 | --- | --- | --- |
 | `/status` | Anytime | Snapshot of brain version, marker, drift from Edition, fleet membership |
 | `/upgrade` | Edition has shipped a new version | Runs `upgrade-self.cjs` (dry-run by default), shows diff, applies on confirmation |
-| `/fleet` | From Supervisor or any project | Reads fleet inventory, shows who's on what version, who's drifted |
 
 ### Skill Discovery
 
@@ -36,6 +37,7 @@ The brain ships slash-prompts grouped by lifecycle stage. Type `/` in Copilot Ch
 | --- | --- | --- |
 | `/mall search` | Need capability not in Edition | Searches Plugin Mall catalog, shows matches with shape, tokens, install path |
 | `/mall install` | Found a Mall plugin to adopt | Copies skill/config into `local/` slots, preserving upgrade safety |
+| `/mall contribute` | Local skill worth sharing | Proposes a local skill for Plugin Mall inclusion via feedback channel |
 
 ### Memory & Feedback
 
@@ -70,9 +72,9 @@ These tenets form the philosophical foundation. The instructions operationalize 
 | IX | **Visible Markers** | Show the reasoning, not just the conclusion | Audit drift, hidden assumptions |
 | X | **Recursive Application** | Apply ACT to ACT itself | Framework-as-ideology |
 
-## What's Included: Instructions (33)
+## What's Included: Instructions (34)
 
-ACT Edition ships 33 behavioral instructions across these categories. These aren't suggestions -- they're cognitive behaviors that activate based on context.
+ACT Edition ships 34 behavioral instructions across these categories. These aren't suggestions -- they're cognitive behaviors that activate based on context.
 
 ### Critical Thinking Core (7)
 
@@ -147,13 +149,14 @@ Document conversion: one routing instruction, one rendering skill, one session-s
 | `markdown-mermaid` | Markdown + Mermaid rendering rules |
 | `greeting-checkin` | Session-start version check + announcement reader |
 
-### Infrastructure (2)
+### Infrastructure (3)
 
-Mall integration and fleet communication.
+Mall integration, tool awareness, and fleet communication.
 
 | Instruction | What It Does |
 | --- | --- |
 | `mall-installation` | How projects install plugins from the [Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall) |
+| `tool-awareness` | Platform awareness for deferred tools and external ingest |
 
 ## Quick Start
 
@@ -221,7 +224,7 @@ Two shared surfaces complete the architecture:
 
 ### The Skill Mall
 
-Edition ships lean (17 skills, 33 instructions). The [Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall) extends it with 284 curated plugins across security, Azure, data, healthcare, architecture, publishing, and more. Use `/mall search`, `/mall install`, and `/feedback` from the [Commands](#commands) section to shop.
+Edition ships lean (17 skills, 34 instructions). The [Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall) extends it with 284 curated plugins across security, Azure, data, healthcare, architecture, publishing, and more. Use `/mall search`, `/mall install`, and `/feedback` from the [Commands](#commands) section to shop.
 
 Skills install into `.github/skills/local/` so they survive Edition upgrades. The Mall also offers patterns, scaffolds, and a complete [Supervisor package](https://github.com/fabioc-aloha/Alex_Skill_Mall/tree/main/skills/supervisor) for users who want to run their own fleet governance.
 

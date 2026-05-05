@@ -2,6 +2,16 @@
 
 All notable changes to Alex ACT Edition.
 
+## [1.2.0] - 2026-05-05
+
+### Added
+
+- **tool-awareness instruction**: New instruction for VS Code tool system awareness (deferred tools, external ingest). Brings instruction count from 33 to 34.
+
+### Changed
+
+- Version alignment with Alex_ACT_Edition v1.2.0.
+
 ## [1.0.0] - 2026-05-02
 
 The v1 brain refactor: a complete restructure of the cognitive architecture for clarity, token efficiency, and maintainability. Every instruction, skill, prompt, and muscle was re-evaluated, clustered, trimmed, or consolidated.

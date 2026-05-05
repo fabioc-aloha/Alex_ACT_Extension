@@ -6,7 +6,7 @@
  * @lifecycle stable
  * @inheritance inheritable
  * @description Convert Markdown to standalone HTML with embedded assets
- * @version 1.1.0
+ * @version 1.2.0
  * @skill md-to-html
  * @reviewed 2026-04-15
  * @platform windows,macos,linux

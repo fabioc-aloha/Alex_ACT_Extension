@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Alex ACT Edition — Artificial Critical Thinking for AI Assistants">
+  <title>Alex ACT Edition</title>
+  <desc>Artificial Critical Thinking for AI Assistants</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="50%" style="stop-color:#f97316"/>
+      <stop offset="100%" style="stop-color:#ef4444"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="320" rx="16" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <g opacity="0.04" stroke="#f59e0b" stroke-width="0.5">
+    <line x1="0" y1="40" x2="1200" y2="40"/><line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="120" x2="1200" y2="120"/><line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/><line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="280" x2="1200" y2="280"/>
+    <line x1="100" y1="0" x2="100" y2="320"/><line x1="200" y1="0" x2="200" y2="320"/>
+    <line x1="300" y1="0" x2="300" y2="320"/><line x1="400" y1="0" x2="400" y2="320"/>
+    <line x1="500" y1="0" x2="500" y2="320"/><line x1="600" y1="0" x2="600" y2="320"/>
+    <line x1="700" y1="0" x2="700" y2="320"/><line x1="800" y1="0" x2="800" y2="320"/>
+    <line x1="900" y1="0" x2="900" y2="320"/><line x1="1000" y1="0" x2="1000" y2="320"/>
+    <line x1="1100" y1="0" x2="1100" y2="320"/>
+  </g>
+
+  <!-- Corner accents (warm) -->
+  <path d="M0,16 Q0,0 16,0 L80,0" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
+  <path d="M0,16 L0,80" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
+  <path d="M1120,0 L1184,0 Q1200,0 1200,16" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
+  <path d="M1200,16 L1200,80" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
+  <path d="M0,304 Q0,320 16,320 L80,320" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+  <path d="M0,240 L0,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+  <path d="M1120,320 L1184,320 Q1200,320 1200,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+  <path d="M1200,240 L1200,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+
+  <!-- ACT Logo: brain with question mark — critical thinking -->
+  <g transform="translate(120, 160)" filter="url(#glow)">
+    <!-- Outer thinking circle -->
+    <circle cx="0" cy="0" r="62" fill="none" stroke="url(#accent)" stroke-width="1.5" opacity="0.3"/>
+    <!-- Brain left lobe -->
+    <path d="M-6,-42 Q-42,-42 -46,-12 Q-50,18 -32,30 Q-14,42 -6,34" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <!-- Brain right lobe -->
+    <path d="M6,-42 Q42,-42 46,-12 Q50,18 32,30 Q14,42 6,34" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <!-- Center -->
+    <line x1="0" y1="-38" x2="0" y2="30" stroke="#94a3b8" stroke-width="1.2" opacity="0.3"/>
+    <!-- Neural nodes -->
+    <circle cx="-36" cy="-18" r="3.5" fill="#f59e0b" opacity="0.7"/>
+    <circle cx="-40" cy="10" r="2.5" fill="#f97316" opacity="0.6"/>
+    <circle cx="-22" cy="28" r="2.5" fill="#fbbf24" opacity="0.5"/>
+    <circle cx="36" cy="-18" r="3.5" fill="#ef4444" opacity="0.7"/>
+    <circle cx="40" cy="10" r="2.5" fill="#f97316" opacity="0.6"/>
+    <circle cx="22" cy="28" r="2.5" fill="#fbbf24" opacity="0.5"/>
+    <!-- Center pulse -->
+    <circle cx="0" cy="-4" r="5" fill="url(#accent)" opacity="0.8"/>
+    <circle cx="0" cy="-4" r="9" fill="none" stroke="url(#accent)" stroke-width="1" opacity="0.3"/>
+    <!-- Question mark (critical thinking) -->
+    <text x="0" y="2" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#f8fafc" text-anchor="middle" opacity="0.9">?</text>
+  </g>
+
+  <!-- Title -->
+  <text x="230" y="105" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="50" font-weight="700" fill="#f8fafc" letter-spacing="-1">Alex ACT Edition</text>
+
+  <!-- Tagline -->
+  <text x="230" y="143" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#94a3b8" font-weight="400">Artificial Critical Thinking for AI assistants</text>
+
+  <!-- Accent line (warm gradient) -->
+  <rect x="230" y="158" width="140" height="3" rx="1.5" fill="url(#accent)" opacity="0.8"/>
+
+  <!-- Stats badges -->
+  <g transform="translate(230, 180)">
+    <rect x="0" y="0" width="130" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <circle cx="20" cy="18" r="6" fill="#f59e0b" opacity="0.8"/>
+    <text x="78" y="23" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">17 skills</text>
+
+    <rect x="144" y="0" width="148" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <circle cx="164" cy="18" r="6" fill="#f97316" opacity="0.8"/>
+    <text x="231" y="23" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">34 instructions</text>
+
+    <rect x="306" y="0" width="126" height="36" rx="18" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <circle cx="326" cy="18" r="6" fill="#ef4444" opacity="0.8"/>
+    <text x="382" y="23" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">20 prompts</text>
+  </g>
+
+  <!-- Bottom tagline -->
+  <text x="230" y="258" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#64748b">Teach your AI assistant to challenge its own reasoning — not just confirm yours</text>
+
+  <!-- Right side: value proposition cards -->
+  <g transform="translate(790, 35)">
+    <rect x="0" y="0" width="270" height="38" rx="8" fill="#f59e0b" opacity="0.15"/>
+    <rect x="0" y="0" width="270" height="38" rx="8" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0.4"/>
+    <text x="135" y="24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#fbbf24" text-anchor="middle">Catch hallucinations before they ship</text>
+
+    <rect x="20" y="50" width="280" height="38" rx="8" fill="#f97316" opacity="0.15"/>
+    <rect x="20" y="50" width="280" height="38" rx="8" fill="none" stroke="#f97316" stroke-width="1" opacity="0.4"/>
+    <text x="160" y="74" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#fdba74" text-anchor="middle">Challenge assumptions, not just assist</text>
+
+    <rect x="10" y="100" width="260" height="38" rx="8" fill="#ef4444" opacity="0.12"/>
+    <rect x="10" y="100" width="260" height="38" rx="8" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.35"/>
+    <text x="140" y="124" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#fca5a5" text-anchor="middle">Anti-sycophancy built into the brain</text>
+
+    <rect x="30" y="150" width="240" height="38" rx="8" fill="#38bdf8" opacity="0.15"/>
+    <rect x="30" y="150" width="240" height="38" rx="8" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.35"/>
+    <text x="150" y="174" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#7dd3fc" text-anchor="middle">300+ plugins via the Plugin Mall</text>
+
+    <rect x="15" y="200" width="260" height="38" rx="8" fill="#34d399" opacity="0.15"/>
+    <rect x="15" y="200" width="260" height="38" rx="8" fill="none" stroke="#34d399" stroke-width="1" opacity="0.35"/>
+    <text x="145" y="224" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#6ee7b7" text-anchor="middle">Drop in, bootstrap, keep current</text>
+  </g>
+
+  <!-- Version pill -->
+  <rect x="1070" y="280" width="100" height="24" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="1120" y="296" font-family="Consolas, monospace" font-size="11" fill="#94a3b8" text-anchor="middle">v1.2.0</text>
+</svg>
