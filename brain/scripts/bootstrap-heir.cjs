@@ -124,7 +124,7 @@ function generateActMd(heirId, heirName, version, signals) {
 
     let md = `# ACT Recommendations for ${heirName}\n\n`;
     md += `## Your Brain\n\n`;
-    md += `Edition v${version} is installed with the v1 brain (33 instructions, 16 skills, 20 prompts, 3 worker agents).\n\n`;
+    md += `Edition v${version} is installed with the v1 brain (34 instructions, 17 skills, 20 prompts, 3 worker agents).\n\n`;
     md += `## First Steps\n\n`;
     md += `1. **Fill in your identity**: Edit \`.github/copilot-instructions.local.md\` with your project context, domain vocabulary, preferences, and constraints. This is heir-owned and survives Edition upgrades.\n`;
     md += `2. **Browse the Plugin Mall**: Run \`/mall search <keyword>\` to find plugins relevant to your project.\n`;

@@ -21,12 +21,12 @@ Run these commands to understand the user's setup:
 
 ```bash
 # bash/zsh (macOS/Linux)
-code --list-extensions | grep -iE "mermaid|markdown"
+code.cmd --list-extensions | grep -iE "mermaid|markdown"
 ```
 
 ```powershell
 # PowerShell (Windows)
-code --list-extensions | Select-String -Pattern "mermaid|markdown"
+code.cmd --list-extensions | Select-String -Pattern "mermaid|markdown"
 ```
 
 ### Step 2: Resolve Extension Conflicts
@@ -42,7 +42,7 @@ code --list-extensions | Select-String -Pattern "mermaid|markdown"
 
 ```bash
 # bash/zsh/PowerShell (cross-platform)
-code --uninstall-extension shd101wyy.markdown-preview-enhanced
+code.cmd --uninstall-extension shd101wyy.markdown-preview-enhanced
 ```
 
 ### Step 3: Apply Mermaid Settings

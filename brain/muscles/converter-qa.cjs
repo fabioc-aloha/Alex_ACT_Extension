@@ -4,9 +4,9 @@
  * @lifecycle stable
  * @muscle converter-qa
  * @lifecycle stable
- * @inheritance master-only
+ * @inheritance inheritable
  * @description Converter quality assurance framework with 284+ assertions
- * @version 1.2.0
+ * @version 1.2.1
  * @skill converter-qa
  * @reviewed 2026-04-15
  * @platform windows,macos,linux
@@ -331,7 +331,7 @@ suite('File Inventory: expected files exist', () => {
     { path: NAV_INJECT, desc: 'nav-inject.cjs' },
     { path: path.join(SHARED, 'data-uri.cjs'), desc: 'shared/data-uri.cjs' },
     { path: path.join(SHARED, 'mermaid-pipeline.cjs'), desc: 'shared/mermaid-pipeline.cjs' },
-    { path: path.join(SHARED, 'markdown-preprocessor.cjs'), desc: 'shared/markdown-preprocessor.cjs'},
+    { path: path.join(SHARED, 'markdown-preprocessor.cjs'), desc: 'shared/markdown-preprocessor.cjs' },
     { path: path.join(SHARED, 'replicate-core.cjs'), desc: 'shared/replicate-core.cjs' },
     { path: path.join(SHARED, 'converter-config.cjs'), desc: 'shared/converter-config.cjs' },
     { path: path.join(SHARED, 'prompt-preprocessor.cjs'), desc: 'shared/prompt-preprocessor.cjs' },

@@ -5,7 +5,7 @@
  * @muscle heir-doctor
  * @inheritance inheritable
  * @description Health check for an ACT Edition heir — flags misplaced files, edition-owned drift, missing local/ subdirs
- * @version 1.2.0
+ * @version 1.2.1
  * @reviewed 2026-04-30
  * @platform windows,macos,linux
  * @requires node
@@ -24,6 +24,8 @@ const HEIR_ROOT = process.cwd();
 const GH = path.join(HEIR_ROOT, '.github');
 const POLICY_PATH = path.join(GH, 'config', 'sync-policy.json');
 const MARKER_PATH = path.join(GH, '.act-heir.json');
+const IS_EDITION_TEMPLATE = fs.existsSync(path.join(HEIR_ROOT, 'init-edition.cjs')) &&
+    fs.existsSync(path.join(HEIR_ROOT, 'migrate-to-edition.cjs'));
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
@@ -35,21 +37,25 @@ function warn(msg) { findings.warnings.push(msg); }
 function info(msg) { findings.info.push(msg); }
 
 // ---- Check 1: marker exists --------------------------------------------------
+let marker = null;
 if (!fs.existsSync(MARKER_PATH)) {
-    err('Missing .github/.act-heir.json — heir not bootstrapped. Run scripts/bootstrap-heir.cjs.');
-    emit();
-    process.exit(2);
+    if (IS_EDITION_TEMPLATE) {
+        info('Template mode: running in Alex_ACT_Edition source repo; .github/.act-heir.json is not expected.');
+    } else {
+        err('Missing .github/.act-heir.json — heir not bootstrapped. Run scripts/bootstrap-heir.cjs.');
+        emit();
+        process.exit(2);
+    }
+} else {
+    try {
+        marker = JSON.parse(fs.readFileSync(MARKER_PATH, 'utf8'));
+    } catch (e) {
+        err(`.github/.act-heir.json is not valid JSON: ${e.message}`);
+        emit();
+        process.exit(2);
+    }
+    info(`Heir: ${marker.heir_id || '(no heir_id)'} on Edition v${marker.edition_version || '?'}`);
 }
-
-let marker;
-try {
-    marker = JSON.parse(fs.readFileSync(MARKER_PATH, 'utf8'));
-} catch (e) {
-    err(`.github/.act-heir.json is not valid JSON: ${e.message}`);
-    emit();
-    process.exit(2);
-}
-info(`Heir: ${marker.heir_id || '(no heir_id)'} on Edition v${marker.edition_version || '?'}`);
 
 // ---- Check 2: sync-policy exists --------------------------------------------
 if (!fs.existsSync(POLICY_PATH)) {
@@ -132,7 +138,7 @@ if (editionManifest) {
 
 // ---- Check 5: copilot-instructions.local.md exists --------------------------
 const localId = path.join(GH, 'copilot-instructions.local.md');
-if (!fs.existsSync(localId)) {
+if (!IS_EDITION_TEMPLATE && !fs.existsSync(localId)) {
     warn('Missing .github/copilot-instructions.local.md — your identity customizations have no home. Create it (see /welcome).');
 }
 
@@ -158,13 +164,13 @@ for (const { rel, ref } of heirConfigs) {
 const versionPath = path.join(GH, 'VERSION');
 if (fs.existsSync(versionPath)) {
     const ver = fs.readFileSync(versionPath, 'utf8').trim();
-    if (marker.edition_version && ver !== marker.edition_version) {
+    if (marker && marker.edition_version && ver !== marker.edition_version) {
         warn(`VERSION file says ${ver} but marker says ${marker.edition_version}. Run /upgrade to reconcile.`);
     }
 }
 
 // ---- Check 8: stale sync ----------------------------------------------------
-if (marker.last_sync_at) {
+if (marker && marker.last_sync_at) {
     const last = new Date(marker.last_sync_at);
     const ageDays = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24);
     if (ageDays > 30) {

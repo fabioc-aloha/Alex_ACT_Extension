@@ -108,7 +108,7 @@ Roughly 90% of markdown lint errors are missing blank lines. Lists, code blocks,
 - Any list of consecutive `**Label**: value` lines that should *visually* be separate but should *not* have full paragraph spacing between them
 - Poetry, lyrics, or any prose where line breaks are semantic
 
-**When this rule does NOT fire**:
+**Not applicable in these cases**:
 
 - Inside a real Markdown list (use `-` or `1.` instead)
 - Inside a table (use `<br/>` for in-cell line breaks)
@@ -160,3 +160,9 @@ Before writing markdown, plan for:
 
 - [markdown-mermaid](../markdown-mermaid/SKILL.md) — full markdown + Mermaid style guide
 - [markdown-mermaid § Mode Fragility](../markdown-mermaid/SKILL.md) — silent render failures
+
+## Falsifiability
+
+- This skill has failed if markdown produced after activation still fails markdownlint with the same violation classes the skill explicitly addresses
+- The rule set is stale if markdownlint releases new defaults this skill contradicts
+- Wrong if the formatting constraints reduce readability rather than improve it (user consistently overrides the prescribed style)

@@ -32,6 +32,9 @@
         ".github/muscles/local/**",
         ".github/agents/local/**",
         ".github/episodic/**",
+        ".github/workflows/**",
+        ".github/ISSUE_TEMPLATE/**",
+        ".github/dependabot.yml",
         ".vscode/extensions.json",
         ".vscode/settings.json"
     ],

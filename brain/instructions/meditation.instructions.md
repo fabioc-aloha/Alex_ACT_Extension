@@ -5,8 +5,8 @@ inheritance: inheritable
 description: "Knowledge consolidation — transform working memory into permanent architecture"
 application: "When ending significant sessions or when patterns emerge worth persisting"
 applyTo: "**/*meditat*,**/*consolidat*"
-currency: 2026-04-30
-lastReviewed: 2026-04-30
+currency: 2026-05-13
+lastReviewed: 2026-05-13
 ---
 
 # Meditation Protocol
@@ -77,10 +77,12 @@ Write to `.github/episodic/meditation-YYYY-MM-DD-<topic>.md`:
 
 ### 5. Handoff — Enable session continuity
 
-Write explicit state snapshot at session end:
+Write explicit state snapshot at session end to repo-root `SESSION-HANDOFF.md`:
 
 ```markdown
-## Session Handoff
+# Session Handoff
+
+Last updated: YYYY-MM-DD HH:MM
 
 ### State
 - **In progress**: [What we were working on]
@@ -128,3 +130,9 @@ A meditation is complete when:
 - [ ] INDEX.md updated with new entries
 - [ ] Future Alex can pick up where we left off
 - [ ] No important insight lives only in context window
+
+## Would Revise If
+
+- Meditation rituals produce no actionable insights (skill extraction, pattern recognition, or architectural decisions) over a 90-day window
+- Chronicles accumulate without being referenced in subsequent sessions (write-only knowledge)
+- The time investment shows no measurable improvement in session continuity or decision quality

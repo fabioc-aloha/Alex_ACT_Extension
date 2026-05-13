@@ -174,6 +174,11 @@ function daysSince(date) {
     return Math.floor(ms / (1000 * 60 * 60 * 24));
 }
 
+function isHeadRestrictedHost(hostname) {
+    const host = String(hostname || '').toLowerCase();
+    return host === 'npmjs.com' || host === 'www.npmjs.com';
+}
+
 // ---- HEAD probe (optional) ----
 function probeUrl(url, timeoutMs = 8000) {
     return new Promise((resolve) => {
@@ -181,8 +186,11 @@ function probeUrl(url, timeoutMs = 8000) {
         try { parsed = new URL(url); } catch { return resolve({ ok: false, reason: 'invalid-url' }); }
         const lib = parsed.protocol === 'https:' ? https : http;
         const req = lib.request(url, { method: 'HEAD', timeout: timeoutMs }, (res) => {
-            // Treat 2xx, 3xx as reachable. 405 (Method Not Allowed) means HEAD not supported but server is up.
-            const ok = (res.statusCode >= 200 && res.statusCode < 400) || res.statusCode === 405;
+            // Treat 2xx/3xx as reachable. 405 means HEAD not supported.
+            // Some registries (for example npmjs) return 401/403 to HEAD while still reachable.
+            const ok = (res.statusCode >= 200 && res.statusCode < 400) ||
+                res.statusCode === 405 ||
+                ((res.statusCode === 401 || res.statusCode === 403) && isHeadRestrictedHost(parsed.hostname));
             resolve({ ok, status: res.statusCode });
         });
         req.on('error', (err) => resolve({ ok: false, reason: err.code || err.message }));

@@ -13,6 +13,7 @@
  *
  * Usage: node .github/scripts/build-edition-manifest.cjs
  *        node .github/scripts/build-edition-manifest.cjs --check  (exit 1 if regenerated content differs)
+ *        node .github/scripts/build-edition-manifest.cjs --preflight  (exit 1 if .github/VERSION != latest git tag)
  *
  * Output: .github/config/edition-manifest.json (overwrites)
  *
@@ -22,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const GH = path.join(ROOT, '.github');
@@ -33,6 +35,7 @@ const OUT = path.join(GH, 'config', 'edition-manifest.json');
 
 const args = process.argv.slice(2);
 const checkOnly = args.includes('--check');
+const preflight = args.includes('--preflight');
 
 function listSkills() {
   if (!fs.existsSync(SKILLS_DIR)) return [];
@@ -87,6 +90,29 @@ if (checkOnly) {
     process.exit(1);
   }
   console.log('edition-manifest.json is current.');
+  process.exit(0);
+}
+
+// --preflight: verify .github/VERSION matches the latest git tag.
+// Catches the failure mode where a release is tagged but .github/VERSION
+// was not bumped (or vice versa).
+if (preflight) {
+  let latestTag;
+  try {
+    latestTag = execSync('git describe --tags --abbrev=0', { cwd: ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    console.error('No git tags found. Skipping version-drift check.');
+    process.exit(0);
+  }
+  const tagVersion = latestTag.replace(/^v/, '');
+  if (tagVersion !== version) {
+    console.error(`VERSION DRIFT DETECTED`);
+    console.error(`  .github/VERSION says: ${version}`);
+    console.error(`  Latest git tag says:  ${latestTag} (${tagVersion})`);
+    console.error(`  Fix: update .github/VERSION to match the tag, or tag a new release.`);
+    process.exit(1);
+  }
+  console.log(`Preflight OK: .github/VERSION (${version}) matches latest tag (${latestTag}).`);
   process.exit(0);
 }
 
