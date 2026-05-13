@@ -2,6 +2,12 @@
 
 All notable changes to Alex ACT Edition.
 
+## [1.2.1] - 2026-05-13
+
+### Changed
+
+- Version bump release.
+
 ## [1.2.0] - 2026-05-05
 
 ### Added

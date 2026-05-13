@@ -186,7 +186,7 @@ async function cmdBootstrap() {
     if (!heirName) return;
 
     const confirm = await vscode.window.showWarningMessage(
-        `Bootstrap ACT Edition v1.2.0 into this workspace?\n\nThis will create .github/ with 34 instructions, 17 skills, 20 prompts, 3 agents, and 20 muscles.`,
+        `Bootstrap ACT Edition v1.2.1 into this workspace?\n\nThis will create .github/ with 34 instructions, 17 skills, 20 prompts, 3 agents, and 20 muscles.`,
         { modal: true },
         'Bootstrap'
     );
