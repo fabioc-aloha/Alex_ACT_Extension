@@ -11,28 +11,20 @@ Run a local brain audit for this repository and produce a concise, actionable re
 
 ## Steps
 
-1. Run deterministic checks:
+1. Use local deterministic checks available from repository contents:
+	- frontmatter completeness and freshness
+	- manifest and artifact consistency
+	- cross-reference integrity across instructions, skills, prompts, and agents
 
-```sh
-node scripts/brain-qa.cjs
-node scripts/epistemic-qa.cjs
-```
+2. Validate findings in files and classify by severity (`high`, `medium`, `low`).
 
-2. Attempt semantic queue prep without external dependency:
-
-```sh
-node scripts/semantic-qa.cjs --dry-run --top 25
-```
-
-3. Validate findings in files and classify by severity (`high`, `medium`, `low`).
-
-4. Report findings first with:
+3. Report findings first with:
 
 - file path
 - why it matters
 - minimal fix
 
-5. If user approves, apply fixes and rerun deterministic checks.
+4. If user approves, apply fixes and rerun the same local checks.
 
 ## Guardrails
 

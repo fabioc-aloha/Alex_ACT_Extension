@@ -23,14 +23,14 @@ Run a local quality audit of the Edition brain and report issues with concrete, 
 
 ## Local Audit Protocol
 
-1. Run deterministic checks:
-   - `node scripts/brain-qa.cjs`
-   - `node scripts/epistemic-qa.cjs`
-2. If semantic QA credentials are unavailable, run:
-   - `node scripts/semantic-qa.cjs --dry-run --top 25`
+1. Start from the `/audit-brain` prompt, which routes to the `brain-auditor` worker.
+2. Gather local deterministic evidence from repository state:
+   - frontmatter completeness and freshness (`currency`, `lastReviewed`, required fields)
+   - manifest consistency (`.github/config/edition-manifest.json` vs shipped artifacts)
+   - cross-reference integrity (files referenced by prompts/instructions/skills exist)
 3. Validate findings directly in affected files.
 4. Report findings ordered by severity with exact file references.
-5. Apply approved fixes, then rerun deterministic checks.
+5. Apply approved fixes, then rerun the same local evidence checks to confirm closure.
 
 ## Reporting Standard
 
@@ -43,7 +43,7 @@ Each finding includes:
 
 ## Boundaries
 
-- Deterministic checks are mandatory.
+- Local deterministic evidence is mandatory.
 - Do not block audit completion on external model tokens.
 - Separate "must-fix now" from "quality debt".
 

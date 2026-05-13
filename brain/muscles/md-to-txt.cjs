@@ -6,7 +6,7 @@
  * @lifecycle stable
  * @inheritance inheritable
  * @description Convert Markdown to plain text via pandoc
- * @version 1.2.1
+ * @version 1.2.0
  * @reviewed 2026-04-21
  * @platform windows,macos,linux
  * @requires node,pandoc

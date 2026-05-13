@@ -13,10 +13,10 @@ lastReviewed: 2026-05-13
 
 For any brain-audit request:
 
-1. Run deterministic checks first (`brain-qa`, `epistemic-qa`).
-2. If semantic credentials are missing, continue with local-only coverage (`semantic-qa --dry-run`).
+1. Route through `/audit-brain` and run the `brain-auditor` worker first.
+2. Use local deterministic evidence (frontmatter/schema consistency, manifest consistency, cross-reference integrity).
 3. Validate each finding in the target file before proposing changes.
 4. Apply minimal fixes to high-severity findings first, then medium, then low.
-5. Rerun deterministic checks after edits.
+5. Rerun the same local evidence checks after edits.
 
 The audit is complete only after findings are either fixed or explicitly documented as deferred with rationale.

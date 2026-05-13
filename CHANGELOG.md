@@ -4,9 +4,18 @@ All notable changes to Alex ACT Edition.
 
 ## [1.2.1] - 2026-05-13
 
+### Added
+
+- **Brain audit baseline**: Bundled Edition updates including the `brain-auditor` agent and brain-audit trifecta workflow.
+
+### Fixed
+
+- **Brain sync completeness**: Extension `brain/` now mirrors latest Edition `.github` contents (excluding episodic state).
+- **Metadata drift**: Updated extension-facing counts and docs to 35 instructions, 18 skills, 23 prompts, 4 agents, 21 muscles.
+
 ### Changed
 
-- Version bump release.
+- Refreshed extension README from latest Edition content (marketplace banner path preserved as PNG).
 
 ## [1.2.0] - 2026-05-05
 

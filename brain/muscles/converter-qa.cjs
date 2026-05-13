@@ -6,7 +6,7 @@
  * @lifecycle stable
  * @inheritance inheritable
  * @description Converter quality assurance framework with 284+ assertions
- * @version 1.2.1
+ * @version 1.2.0
  * @skill converter-qa
  * @reviewed 2026-04-15
  * @platform windows,macos,linux
