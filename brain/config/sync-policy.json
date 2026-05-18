@@ -13,6 +13,7 @@
         ".github/config/edition-manifest.json",
         ".github/config/markdown-light.css",
         ".github/config/mcp.json.template",
+        ".github/config/welcome-baseline.json",
         ".github/config/README.md",
         ".github/scripts/upgrade-self.cjs",
         ".github/scripts/bootstrap-heir.cjs",

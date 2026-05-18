@@ -1,8 +1,8 @@
 {
     "name": "alex-act-edition",
     "displayName": "Alex ACT Edition",
-    "description": "Artificial Critical Thinking for GitHub Copilot. 35 instructions, 18 skills, 23 prompts, 4 agents, and 21 muscles that teach your AI to reason honestly.",
-    "version": "1.2.1",
+    "description": "Artificial Critical Thinking for GitHub Copilot. 36 instructions, 18 skills, 23 prompts, 4 agents, and 15 muscles that teach your AI to reason honestly.",
+    "version": "1.5.0",
     "publisher": "fabioc-aloha",
     "license": "MIT",
     "engines": {

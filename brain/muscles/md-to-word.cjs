@@ -241,13 +241,13 @@ function formatTables(xml) {
     '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="AAAAAA"/>' +
     '</w:tblBorders>';
 
-  // Cell margins (top/bottom 40twips ~2pt, left/right 80twips ~4pt)
+  // Cell margins (top/bottom 20twips ~1pt, left/right 60twips ~3pt) -- tightened in v5.5.0
   const cellMarginsXml =
     '<w:tblCellMar xmlns:w="' + W_NS + '">' +
-    '<w:top w:w="40" w:type="dxa"/>' +
-    '<w:left w:w="80" w:type="dxa"/>' +
-    '<w:bottom w:w="40" w:type="dxa"/>' +
-    '<w:right w:w="80" w:type="dxa"/>' +
+    '<w:top w:w="20" w:type="dxa"/>' +
+    '<w:left w:w="60" w:type="dxa"/>' +
+    '<w:bottom w:w="20" w:type="dxa"/>' +
+    '<w:right w:w="60" w:type="dxa"/>' +
     '</w:tblCellMar>';
 
   // Full-width table
@@ -311,25 +311,25 @@ function formatTables(xml) {
           cellMatch = cellMatch.replace(/(<w:tc\b[^>]*>)/, `$1<w:tcPr>${shadingXml}</w:tcPr>`);
         }
 
-        // Header row: bold white text
+        // Header row: bold white text (9pt; w:sz half-points -- tightened in v5.5.0)
         if (isHeader) {
           cellMatch = cellMatch.replace(/<w:rPr>([\s\S]*?)<\/w:rPr>/g, (rprMatch, rprInner) => {
             let c = rprInner
               .replace(/<w:b[^/]*\/>/g, '')
               .replace(/<w:color[^/]*\/>/g, '')
               .replace(/<w:sz[^/]*\/>/g, '');
-            return `<w:rPr>${c}<w:b/><w:color w:val="FFFFFF"/><w:sz w:val="20"/></w:rPr>`;
+            return `<w:rPr>${c}<w:b/><w:color w:val="FFFFFF"/><w:sz w:val="18"/></w:rPr>`;
           });
           // Runs without rPr -- add one
           cellMatch = cellMatch.replace(/<w:r>((?:(?!<w:rPr)[\s\S])*?<w:t)/g,
-            `<w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="20"/></w:rPr><w:t`);
+            `<w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="18"/></w:rPr><w:t`);
         } else {
-          // Data rows: 9pt black text
+          // Data rows: 8.5pt black text (w:sz 17 half-points -- tightened in v5.5.0)
           cellMatch = cellMatch.replace(/<w:rPr>([\s\S]*?)<\/w:rPr>/g, (rprMatch, rprInner) => {
             let c = rprInner
               .replace(/<w:sz[^/]*\/>/g, '')
               .replace(/<w:color[^/]*\/>/g, '');
-            return `<w:rPr>${c}<w:sz w:val="18"/><w:color w:val="000000"/></w:rPr>`;
+            return `<w:rPr>${c}<w:sz w:val="17"/><w:color w:val="000000"/></w:rPr>`;
           });
         }
 
@@ -959,12 +959,15 @@ async function build(args) {
       stripDecorativeRules: args.stripDecorativeRules
     });
 
-    // [toc] marker auto-detection -- strips the marker line and enables TOC.
+    // [toc] marker handling (v5.5.0): strip the marker line, but DO NOT auto-enable TOC.
+    // The documented default is `--toc off`; respecting [toc] silently as auto-on contradicts
+    // that contract. Warn the heir so they can either add --toc explicitly or remove the marker.
     const tocResult = detectTocMarker(content);
     content = tocResult.content;
     if (tocResult.hasTocMarker && !args.toc) {
-      args.toc = true;
-      console.log('   \u{1f4d1} [toc] marker detected -- enabling Table of Contents');
+      console.warn(`   \u26a0\ufe0f  [toc] marker found in ${path.basename(sourcePath)} but --toc was not passed; marker stripped, TOC not generated. Pass --toc to enable.`);
+    } else if (tocResult.hasTocMarker && args.toc) {
+      console.log('   \u{1f4d1} [toc] marker detected and --toc set -- generating Table of Contents');
     }
 
     // Validate heading hierarchy

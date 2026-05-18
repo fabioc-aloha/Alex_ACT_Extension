@@ -137,6 +137,13 @@ if (fs.existsSync(readmeSrc)) {
         /\(assets\//g,
         '(https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Edition/main/assets/'
     );
+    // vsce policy: SVGs are restricted in marketplace README. Swap the
+    // banner-readme.svg reference (Edition repo) for the PNG counterpart
+    // bundled in this Extension repo's assets/.
+    readme = readme.replace(
+        /https:\/\/raw\.githubusercontent\.com\/fabioc-aloha\/Alex_ACT_Edition\/main\/assets\/banner-readme\.svg/g,
+        'https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png'
+    );
     fs.writeFileSync(readmeDst, readme);
 }
 

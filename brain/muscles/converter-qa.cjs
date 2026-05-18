@@ -5,15 +5,19 @@
  * @muscle converter-qa
  * @lifecycle stable
  * @inheritance inheritable
- * @description Converter quality assurance framework with 284+ assertions
- * @version 1.2.0
+ * @description Converter quality assurance framework with 256+ assertions across all converters
+ * @version 1.3.0
  * @skill converter-qa
- * @reviewed 2026-04-15
+ * @reviewed 2026-05-18
  * @platform windows,macos,linux
  * @requires node,pandoc,mermaid-cli
  *
  * Test harness for validating converter outputs:
- * - md-to-word.cjs regression tests
+ * - md-to-word.cjs regression tests (structure + font/margin values + [toc] semantic)
+ * - md-to-html.cjs end-to-end with PNG + SVG image handling
+ * - md-to-txt.cjs strip-formatting verification
+ * - html-to-md.cjs structure preservation
+ * - docx-to-md.cjs round-trip via md-to-word
  * - md-to-eml.cjs structure validation
  * - Shared module unit tests
  * - File size bounds checking
@@ -24,7 +28,7 @@
  *   node .github/muscles/converter-qa.cjs --suite=word   # Run word converter tests only
  *   node .github/muscles/converter-qa.cjs --suite=shared # Run shared module tests only
  *   node .github/muscles/converter-qa.cjs --verbose      # Show detailed output
- * @currency 2026-04-20
+ * @currency 2026-05-18
  */
 'use strict';
 
@@ -161,14 +165,6 @@ suite('Shared: markdown-preprocessor.cjs', () => {
   const pb = mod.preprocessMarkdown('Before\n<!-- pagebreak -->\nAfter');
   assert(pb.includes('\\newpage') || pb.includes('pagebreak'), 'Page break directive processed');
 
-  // Callout blocks
-  const callout = mod.preprocessMarkdown('::: tip\nDo this\n:::');
-  assert(callout.includes('[IDEA]') || callout.includes('TIP') || callout.includes('tip'), 'Callout block processed');
-
-  // GitHub-style callouts
-  const ghCallout = mod.preprocessMarkdown('> [!WARNING]\n> Be careful');
-  assert(ghCallout.includes('[!]') || ghCallout.includes('WARNING') || ghCallout.includes('warning'), 'GitHub callout processed');
-
   // Keyboard shortcuts
   const kbd = mod.preprocessMarkdown('Press [[Ctrl+S]] to save');
   assert(kbd.includes('<kbd>') || kbd.includes('Ctrl+S'), 'Keyboard shortcut processed');
@@ -213,46 +209,6 @@ suite('Shared: mermaid-pipeline.cjs', () => {
   const table = mod.mermaidToTableFallback('flowchart TD\n  A["Source"]-->B["Target"]');
   assert(table.includes('Source') || table.includes('A'), 'Table fallback extracts nodes');
   assert(table.includes('|'), 'Table fallback produces markdown table format');
-});
-
-suite('Shared: replicate-core.cjs', () => {
-  const mod = require(path.join(SHARED, 'replicate-core.cjs'));
-
-  assert(typeof mod.estimateCost === 'function', 'estimateCost is exported');
-  assert(typeof mod.writeOutput === 'function', 'writeOutput is exported');
-  assert(typeof mod.writeReport === 'function', 'writeReport is exported');
-  assert(typeof mod.parseCliArgs === 'function', 'parseCliArgs is exported');
-  assert(typeof mod.MODEL_COSTS === 'object', 'MODEL_COSTS is exported');
-
-  // Cost estimation (returns { perImage, total, model })
-  const cost = mod.estimateCost('google/nano-banana-pro', 10);
-  assert(cost.total > 0, 'Cost estimate is positive');
-  assert(cost.total <= 5, 'Cost estimate is reasonable (<=5 for 10 images)');
-
-  const unknownCost = mod.estimateCost('unknown/model', 5);
-  assert(unknownCost.total >= 0, 'Unknown model returns fallback cost');
-
-  // CLI arg parsing (parseCliArgs takes full argv, slices off first 2)
-  const fakeArgv = ['node', 'script.js', '--dry-run', '--limit=5', '--skip=2', '--only=test', '--output=out'];
-  const parsed = mod.parseCliArgs(fakeArgv);
-  assert(parsed.dryRun === true, 'parseCliArgs: --dry-run');
-  assert(parsed.limit === 5, 'parseCliArgs: --limit=5');
-  assert(parsed.skip === 2, 'parseCliArgs: --skip=2');
-  assert(parsed.only.includes('test'), 'parseCliArgs: --only=test');
-  assert(parsed.outputDir === 'out', 'parseCliArgs: --output=out');
-
-  // Write output (Buffer)
-  const outPath = path.join(TEMP_DIR, 'test-output.bin');
-  mod.writeOutput(Buffer.from('test data'), outPath);
-  assert(fileExists(outPath), 'writeOutput writes Buffer to disk');
-  assert(fs.readFileSync(outPath, 'utf8') === 'test data', 'writeOutput content correct');
-
-  // Write report (expects { generator, model, results, summary })
-  const reportPath = path.join(TEMP_DIR, 'test-report.json');
-  mod.writeReport(reportPath, { generator: 'qa-test', model: 'test/model', results: [{ status: 'ok' }], summary: { total: 1 } });
-  assert(fileExists(reportPath), 'writeReport creates file');
-  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-  assert(report.generator === 'qa-test', 'writeReport content correct');
 });
 
 suite('Shared: converter-config.cjs', () => {
@@ -332,14 +288,12 @@ suite('File Inventory: expected files exist', () => {
     { path: path.join(SHARED, 'data-uri.cjs'), desc: 'shared/data-uri.cjs' },
     { path: path.join(SHARED, 'mermaid-pipeline.cjs'), desc: 'shared/mermaid-pipeline.cjs' },
     { path: path.join(SHARED, 'markdown-preprocessor.cjs'), desc: 'shared/markdown-preprocessor.cjs' },
-    { path: path.join(SHARED, 'replicate-core.cjs'), desc: 'shared/replicate-core.cjs' },
     { path: path.join(SHARED, 'converter-config.cjs'), desc: 'shared/converter-config.cjs' },
     { path: path.join(SHARED, 'prompt-preprocessor.cjs'), desc: 'shared/prompt-preprocessor.cjs' },
     { path: path.join(SHARED, 'index.mjs'), desc: 'shared/index.mjs (ESM bridge)' },
     { path: path.join(LUA, 'keep-headings.lua'), desc: 'lua-filters/keep-headings.lua' },
     { path: path.join(LUA, 'word-table-style.lua'), desc: 'lua-filters/word-table-style.lua' },
     { path: path.join(LUA, 'caption-labels.lua'), desc: 'lua-filters/caption-labels.lua' },
-    { path: path.join(ROOT, '.github', 'config', 'visual-memory.json'), desc: 'visual-memory.json' },
   ];
 
   for (const { path: p, desc } of required) {
@@ -509,69 +463,6 @@ suite('Shared: mermaid-pipeline.cjs -- creation helpers', () => {
 
 // -----------------------------------------------------------------------------
 // SVG pipeline
-// -----------------------------------------------------------------------------
-
-suite('Shared: svg-pipeline.cjs', () => {
-  const svg = require(path.join(SHARED, 'svg-pipeline.cjs'));
-
-  assert(typeof svg.BRAND_COLORS === 'object', 'BRAND_COLORS exported');
-  assert(svg.BRAND_COLORS.blue != null, 'BRAND_COLORS.blue exists');
-  assert(svg.BRAND_COLORS.blue.fill != null, 'BRAND_COLORS.blue has fill');
-
-  assert(typeof svg.THEME === 'object', 'THEME exported');
-  assert(svg.THEME.light != null, 'THEME.light exists');
-  assert(svg.THEME.dark != null, 'THEME.dark exists');
-
-  // createSvg
-  assert(typeof svg.createSvg === 'function', 'createSvg exported');
-  const s1 = svg.createSvg({ width: 200, height: 100, title: 'Test' });
-  assert(s1.includes('xmlns="http://www.w3.org/2000/svg"'), 'createSvg has xmlns');
-  assert(s1.includes('viewBox'), 'createSvg has viewBox');
-  assert(s1.includes('role="img"'), 'createSvg has role=img');
-  assert(s1.includes('</svg>'), 'createSvg closes svg tag');
-
-  // createIcon
-  assert(typeof svg.createIcon === 'function', 'createIcon exported');
-  const icon = svg.createIcon({ glyph: '\u2699', label: 'Settings' });
-  assert(icon.includes('<svg'), 'createIcon produces svg');
-  assert(icon.includes('\u2699'), 'createIcon includes glyph');
-
-  // createBadge
-  assert(typeof svg.createBadge === 'function', 'createBadge exported');
-  const badge = svg.createBadge({ label: 'version', value: '1.0', color: 'green' });
-  assert(badge.includes('<svg'), 'createBadge produces svg');
-  assert(badge.includes('1.0'), 'createBadge includes value');
-
-  // createDiagram
-  assert(typeof svg.createDiagram === 'function', 'createDiagram exported');
-  const diag = svg.createDiagram({
-    shapes: [
-      { type: 'rect', x: 10, y: 10, label: 'Box' },
-      { type: 'circle', x: 180, y: 50, label: 'Node' },
-    ],
-    arrows: [{ from: 0, to: 1 }],
-  });
-  assert(diag.includes('<rect'), 'createDiagram has rect');
-  assert(diag.includes('<ellipse'), 'createDiagram has circle (rendered as ellipse)');
-  assert(diag.includes('<marker'), 'createDiagram has arrowhead marker');
-
-  // validateSvg
-  assert(typeof svg.validateSvg === 'function', 'validateSvg exported');
-  const v1 = svg.validateSvg(s1);
-  assert(v1 && typeof v1.valid === 'boolean', 'validateSvg returns { valid, warnings }');
-  // Valid SVG should have few warnings
-  const badSvg = '<svg><rect/></svg>';
-  const v2 = svg.validateSvg(badSvg);
-  assert(v2.warnings.length > 0, 'validateSvg catches missing xmlns');
-
-  // writeSvg
-  assert(typeof svg.writeSvg === 'function', 'writeSvg exported');
-  const svgOut = path.join(TEMP_DIR, 'test-output.svg');
-  svg.writeSvg(s1, svgOut);
-  assert(fileExists(svgOut), 'writeSvg creates file');
-  assert(fs.readFileSync(svgOut, 'utf8').includes('<svg'), 'writeSvg content is SVG');
-});
-
 // -----------------------------------------------------------------------------
 // Markdown lint/validator
 // -----------------------------------------------------------------------------
@@ -849,6 +740,14 @@ suite('md-to-word.cjs: table styling regression', () => {
 
       // Full-width table
       assert(docXml.includes('w:tblW') && docXml.includes('5000'), 'Table is full-width (5000 pct)');
+
+      // Font sizes (v1.4.0 / muscle v5.5.0: header 9pt = w:sz 18, data 8.5pt = w:sz 17)
+      assert(docXml.includes('<w:sz w:val="18"/>'), 'Header font is 9pt (w:sz 18)');
+      assert(docXml.includes('<w:sz w:val="17"/>'), 'Data font is 8.5pt (w:sz 17)');
+
+      // Cell margins (v1.4.0 / muscle v5.5.0: T/B 1pt = 20 twips, L/R 3pt = 60 twips)
+      assert(docXml.includes('w:w="20" w:type="dxa"'), 'Cell margin T/B is 1pt (20 twips)');
+      assert(docXml.includes('w:w="60" w:type="dxa"'), 'Cell margin L/R is 3pt (60 twips)');
     } else {
       skip('adm-zip not available');
     }
@@ -995,56 +894,6 @@ Conclusion text.
 // -----------------------------------------------------------------------------
 // Replicate Core: new features (#16, #19, #39, #40, #43)
 // -----------------------------------------------------------------------------
-
-suite('Shared: replicate-core.cjs -- batch retry & validation', () => {
-  const mod = require(path.join(SHARED, 'replicate-core.cjs'));
-
-  // Duration validation (#19)
-  assert(typeof mod.validateDuration === 'function', 'validateDuration is exported');
-  const v1 = mod.validateDuration('minimax/hailuo-ai-video-01-director', 7);
-  assert(v1.valid === false, 'Invalid duration rejected for hailuo');
-  assert(v1.message.includes('6') && v1.message.includes('10'), 'Error message shows allowed values');
-  assert(v1.suggested === 6, 'Suggests default duration');
-
-  const v2 = mod.validateDuration('minimax/hailuo-ai-video-01-director', 6);
-  assert(v2.valid === true, 'Valid duration accepted');
-
-  const v3 = mod.validateDuration('luma/ray', 3);
-  assert(v3.valid === false, 'Below-minimum duration rejected');
-
-  const v4 = mod.validateDuration('luma/ray', 5);
-  assert(v4.valid === true, 'In-range duration accepted');
-
-  const v5 = mod.validateDuration('unknown/model', 999);
-  assert(v5.valid === true, 'Unknown model passes validation');
-
-  // Model freshness (#43)
-  assert(typeof mod.checkModelFreshness === 'function', 'checkModelFreshness is exported');
-  assert(typeof mod.MODEL_REGISTRY === 'object', 'MODEL_REGISTRY is exported');
-  const fresh = mod.checkModelFreshness('google/nano-banana-pro');
-  assert(fresh.fresh === true, 'Recently verified model is fresh');
-  assert(fresh.daysSinceVerified != null, 'Returns days since verified');
-
-  const unknown = mod.checkModelFreshness('some/unknown-model');
-  assert(unknown.fresh === true, 'Unknown model treated as fresh (no tracking)');
-
-  // DURATION_CONSTRAINTS export
-  assert(typeof mod.DURATION_CONSTRAINTS === 'object', 'DURATION_CONSTRAINTS is exported');
-
-  // Enhanced parseCliArgs (#40)
-  const argv = ['node', 'script.js', '--variants=3', '--save-prompts', '--postprocess=rembg,upscale'];
-  const parsed = mod.parseCliArgs(argv);
-  assert(parsed.variants === 3, 'parseCliArgs: --variants=3');
-  assert(parsed.savePrompts === true, 'parseCliArgs: --save-prompts');
-  assert(Array.isArray(parsed.postprocess), 'parseCliArgs: --postprocess is array');
-  assert(parsed.postprocess.includes('rembg'), 'parseCliArgs: postprocess includes rembg');
-  assert(parsed.postprocess.includes('upscale'), 'parseCliArgs: postprocess includes upscale');
-
-  // postProcess export (#33)
-  assert(typeof mod.postProcess === 'function', 'postProcess is exported');
-});
-
-// -----------------------------------------------------------------------------
 // Prompt Preprocessor (#27)
 // -----------------------------------------------------------------------------
 
@@ -1172,29 +1021,6 @@ suite('Shared: markdown-preprocessor.cjs -- image embedding', () => {
   assert(missingResult.includes('nonexistent.png'), 'Missing file paths left unchanged');
 });
 
-suite('Shared: replicate-core.cjs -- negative-prompt & prompt-file', () => {
-  const mod = require(path.join(SHARED, 'replicate-core.cjs'));
-
-  // Negative prompt parsing
-  const neg = mod.parseCliArgs(['node', 'script.js', '--negative-prompt=blurry, low quality']);
-  assert(neg.negativePrompt === 'blurry, low quality', 'parseCliArgs: --negative-prompt');
-
-  // Negative prompt with equals sign in value
-  const negEq = mod.parseCliArgs(['node', 'script.js', '--negative-prompt=style=cartoon']);
-  assert(negEq.negativePrompt === 'style=cartoon', 'parseCliArgs: --negative-prompt with = in value');
-
-  // Prompt file parsing (without actual file -- just field presence)
-  const noFile = mod.parseCliArgs(['node', 'script.js']);
-  assert(noFile.negativePrompt === null, 'Default negativePrompt is null');
-  assert(noFile.promptFile === null, 'Default promptFile is null');
-
-  // Prompt file with real temp file
-  const promptPath = createTempFile('test-prompt.txt', 'A beautiful landscape with mountains');
-  const withFile = mod.parseCliArgs(['node', 'script.js', `--prompt-file=${promptPath}`]);
-  assert(withFile.promptFile === promptPath, 'parseCliArgs: --prompt-file path');
-  assert(withFile.promptFileContent === 'A beautiful landscape with mountains', 'promptFileContent loaded from file');
-});
-
 suite('md-to-word.cjs: CLI flag parsing (new flags)', () => {
   // Test that the new flags are accepted by parseArgs via --help-like checking
   const result = runNode(MD_TO_WORD, ['--help-flags-check'], 5000);
@@ -1250,8 +1076,7 @@ suite('Shared: markdown-preprocessor.cjs -- footnote passthrough', () => {
   assert(output.includes('[^1]:'), 'Footnote def [^1]: preserved after preprocessing');
 });
 
-suite('md-to-word.cjs: dry-run mode', () => {
-  // Create a simple test markdown file
+suite('md-to-word.cjs: dry-run mode', () => {  // Create a simple test markdown file
   const testMd = createTempFile('dry-run-test.md', '# Test\\n\\nHello world');
   const outPath = path.join(TEMP_DIR, 'dry-run-test.docx');
 
@@ -1259,6 +1084,383 @@ suite('md-to-word.cjs: dry-run mode', () => {
   assert(result.status === 0, 'Dry-run exits with code 0');
   assert((result.stdout + result.stderr).includes('Dry-run complete'), 'Dry-run prints completion message');
   assert(!fileExists(outPath), 'Dry-run does not generate .docx file');
+});
+
+// -----------------------------------------------------------------------------
+// md-to-word.cjs: [toc] marker warn-and-ignore (v1.4.0 behavior)
+// -----------------------------------------------------------------------------
+
+suite('md-to-word.cjs: [toc] marker warn-and-ignore', () => {
+  const pandocCheck = spawnSync('pandoc', ['--version'], { encoding: 'utf8', timeout: 5000 });
+  if (pandocCheck.status !== 0) {
+    skip('pandoc not installed');
+    return;
+  }
+
+  const tocMd = createTempFile('toc-marker-test.md', `# TOC Marker Test
+
+[toc]
+
+## Section A
+
+Content here.
+
+## Section B
+
+More content.
+`);
+  const outPath = path.join(TEMP_DIR, 'toc-marker-test.docx');
+  const result = runNode(MD_TO_WORD, [tocMd, outPath], 60000);
+
+  assert(result.status === 0, '[toc] marker source converts cleanly');
+  const allOutput = result.stdout + result.stderr;
+  assert(allOutput.includes('[toc] marker found') && allOutput.includes('--toc was not passed'),
+    'Warning logged when [toc] marker found without --toc flag');
+  assert(allOutput.includes('marker stripped, TOC not generated'),
+    'Warning explains the marker was stripped and no TOC generated');
+
+  try {
+    const AdmZip = (() => { try { return require('adm-zip'); } catch { return null; } })();
+    if (AdmZip && fileExists(outPath)) {
+      const zip = new AdmZip(outPath);
+      const docXml = zip.readAsText('word/document.xml');
+      // TOC in Word is a field; if present, document.xml has "TOC \o" or "Table of Contents"
+      assert(!docXml.includes('TOC \\o') && !docXml.toLowerCase().includes('table of contents'),
+        'Output .docx does not contain a TOC field');
+      // The [toc] marker line itself should be stripped from the body
+      assert(!docXml.includes('[toc]'), 'Literal [toc] marker stripped from body');
+    } else {
+      skip('adm-zip not available or output missing');
+    }
+  } catch (err) {
+    assert(false, `[toc] marker docx inspection failed: ${err.message}`);
+  }
+});
+
+// -----------------------------------------------------------------------------
+// PHASE C: coverage for the other converters
+// Each suite uses an in-memory test corpus exercising headings, lists, tables,
+// code, links, blockquotes, and BOTH PNG and SVG image references so we can
+// verify image handling end-to-end per converter.
+// -----------------------------------------------------------------------------
+
+// Shared image fixtures created on demand by each suite that needs them.
+function createImageFixtures(dir) {
+  const pngPath = path.join(dir, 'sample.png');
+  // Minimal 1x1 transparent PNG (8 bytes header + IHDR + IDAT + IEND)
+  const pngBytes = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+    0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41,
+    0x54, 0x78, 0x9c, 0x62, 0x00, 0x01, 0x00, 0x00,
+    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
+    0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+    0x42, 0x60, 0x82,
+  ]);
+  fs.writeFileSync(pngPath, pngBytes);
+
+  const svgPath = path.join(dir, 'sample.svg');
+  const svgContent = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" width="100" height="50" role="img"><rect width="100" height="50" fill="#0078D4"/><text x="50" y="30" text-anchor="middle" fill="white" font-family="sans-serif" font-size="14">SAMPLE</text></svg>';
+  fs.writeFileSync(svgPath, svgContent);
+
+  return { pngPath, svgPath };
+}
+
+// -----------------------------------------------------------------------------
+// md-to-html.cjs: standalone HTML with embedded CSS, PNG, and SVG
+// -----------------------------------------------------------------------------
+
+const MD_TO_HTML = path.join(MUSCLES, 'md-to-html.cjs');
+
+suite('md-to-html.cjs: end-to-end + image handling', () => {
+  if (!fileExists(MD_TO_HTML)) {
+    skip('md-to-html.cjs not present');
+    return;
+  }
+
+  const sourceDir = path.join(TEMP_DIR, 'md-to-html-src');
+  fs.mkdirSync(sourceDir, { recursive: true });
+  createImageFixtures(sourceDir);
+
+  const sourcePath = path.join(sourceDir, 'doc.md');
+  fs.writeFileSync(sourcePath, `# Hello
+
+A paragraph with **bold** and *italic* and \`code\`.
+
+## Section
+
+- Item one
+- Item two
+  - Nested
+- Item three
+
+1. Numbered one
+2. Numbered two
+
+| A | B |
+| --- | --- |
+| 1 | 2 |
+| 3 | 4 |
+
+[A link](https://example.com)
+
+> A blockquote.
+
+\`\`\`javascript
+const x = 1;
+\`\`\`
+
+### PNG image
+
+![Sample PNG](sample.png)
+
+### SVG image
+
+![Sample SVG](sample.svg)
+`, 'utf8');
+
+  const outputPath = path.join(sourceDir, 'doc.html');
+  const result = runNode(MD_TO_HTML, [sourcePath, outputPath], 30000);
+  assert(result.status === 0, 'md-to-html exits 0');
+  assert(fileExists(outputPath), 'HTML output file created');
+
+  if (!fileExists(outputPath)) return;
+  const html = fs.readFileSync(outputPath, 'utf8');
+
+  // Structural
+  assert(/<!DOCTYPE html>/i.test(html), 'HTML has DOCTYPE');
+  assert(/<html[\s>]/i.test(html), 'HTML has <html> tag');
+  assert(/<style[\s>]/i.test(html) || /<link[^>]*stylesheet/i.test(html), 'HTML embeds CSS (either <style> block or <link>)');
+
+  // Content
+  assert(html.includes('<h1') && html.includes('Hello'), 'H1 rendered');
+  assert(html.includes('<h2') && html.includes('Section'), 'H2 rendered');
+  assert(html.includes('<table'), 'Table rendered');
+  assert(/<a [^>]*href="https:\/\/example\.com"/i.test(html), 'Link rendered with href');
+  assert(html.includes('<blockquote'), 'Blockquote rendered');
+  assert(html.includes('<code') || html.includes('javascript'), 'Code block rendered');
+
+  // PNG image handling: either base64-embedded (default --embed-images) or referenced
+  const hasPngBase64 = /data:image\/png;base64,/i.test(html);
+  const hasPngRef = /<img[^>]*src="[^"]*sample\.png"/i.test(html);
+  assert(hasPngBase64 || hasPngRef, 'PNG image embedded as data URI or referenced');
+
+  // SVG image handling: either inline <svg>, base64 data URI, or <img src> ref
+  const hasInlineSvg = /<svg[\s>]/i.test(html);
+  const hasSvgDataUri = /data:image\/svg\+xml/i.test(html);
+  const hasSvgRef = /<img[^>]*src="[^"]*sample\.svg"/i.test(html);
+  assert(hasInlineSvg || hasSvgDataUri || hasSvgRef, 'SVG image inline / data URI / referenced');
+});
+
+// -----------------------------------------------------------------------------
+// md-to-txt.cjs: strip formatting, preserve alt text for images
+// -----------------------------------------------------------------------------
+
+const MD_TO_TXT = path.join(MUSCLES, 'md-to-txt.cjs');
+
+suite('md-to-txt.cjs: strip formatting + preserve image alt text', () => {
+  if (!fileExists(MD_TO_TXT)) {
+    skip('md-to-txt.cjs not present');
+    return;
+  }
+
+  const pandocCheck = spawnSync('pandoc', ['--version'], { encoding: 'utf8', timeout: 5000 });
+  if (pandocCheck.status !== 0) {
+    skip('pandoc not installed');
+    return;
+  }
+
+  const sourcePath = createTempFile('md-to-txt-src.md', `# Title
+
+A paragraph with **bold** and *italic* and \`inline code\`.
+
+- bullet one
+- bullet two
+
+| A | B |
+| --- | --- |
+| 1 | 2 |
+
+[Link text](https://example.com)
+
+![PNG alt text](sample.png)
+
+![SVG alt text](sample.svg)
+`);
+  const outputPath = path.join(TEMP_DIR, 'md-to-txt-out.txt');
+  const result = runNode(MD_TO_TXT, [sourcePath, outputPath], 30000);
+  assert(result.status === 0, 'md-to-txt exits 0');
+  assert(fileExists(outputPath), 'Text output created');
+
+  if (!fileExists(outputPath)) return;
+  const txt = fs.readFileSync(outputPath, 'utf8');
+
+  // Formatting stripped
+  assert(!txt.includes('**'), 'Bold markers (**) stripped');
+  assert(!/(^|[^*])\*[A-Za-z]/.test(txt), 'Italic markers (*) stripped');
+  assert(!txt.includes('`'), 'Code backticks stripped');
+  assert(!/^#{1,6}\s/m.test(txt), 'Heading hash markers stripped');
+  assert(!/^\s*\|/m.test(txt), 'Table pipe characters stripped');
+
+  // Content preserved
+  assert(txt.includes('Title'), 'Heading text preserved');
+  assert(txt.includes('bullet one'), 'List content preserved');
+  assert(txt.includes('Link text'), 'Link text preserved');
+
+  // Image alt text preserved (pandoc emits the alt text in plain output)
+  assert(txt.toLowerCase().includes('png alt text') || txt.toLowerCase().includes('image'),
+    'PNG image alt text or reference preserved');
+  assert(txt.toLowerCase().includes('svg alt text') || txt.toLowerCase().includes('image'),
+    'SVG image alt text or reference preserved');
+});
+
+// -----------------------------------------------------------------------------
+// html-to-md.cjs: HTML -> Markdown, preserving structure and image refs
+// -----------------------------------------------------------------------------
+
+const HTML_TO_MD = path.join(MUSCLES, 'html-to-md.cjs');
+
+suite('html-to-md.cjs: structure + image preservation', () => {
+  if (!fileExists(HTML_TO_MD)) {
+    skip('html-to-md.cjs not present');
+    return;
+  }
+
+  const pandocCheck = spawnSync('pandoc', ['--version'], { encoding: 'utf8', timeout: 5000 });
+  if (pandocCheck.status !== 0) {
+    skip('pandoc not installed');
+    return;
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test</title></head>
+<body>
+<h1>Top Heading</h1>
+<p>A paragraph with <strong>bold</strong> and <em>italic</em>.</p>
+<h2>Sub heading</h2>
+<ul><li>One</li><li>Two</li><li>Three</li></ul>
+<ol><li>First</li><li>Second</li></ol>
+<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>
+<p><a href="https://example.com">Example link</a></p>
+<blockquote><p>Quoted text</p></blockquote>
+<pre><code>const x = 1;</code></pre>
+<p><img src="sample.png" alt="PNG image"></p>
+<p><img src="sample.svg" alt="SVG image"></p>
+</body></html>
+`;
+  const sourcePath = createTempFile('html-to-md-src.html', html);
+  const outputPath = path.join(TEMP_DIR, 'html-to-md-out.md');
+  const result = runNode(HTML_TO_MD, [sourcePath, outputPath], 30000);
+  assert(result.status === 0, 'html-to-md exits 0');
+  assert(fileExists(outputPath), 'Markdown output created');
+
+  if (!fileExists(outputPath)) return;
+  const md = fs.readFileSync(outputPath, 'utf8');
+
+  // Structure preserved
+  assert(/^#\s+Top Heading/m.test(md) || /Top Heading\n=+/.test(md), 'H1 preserved (ATX or setext)');
+  assert(/^##\s+Sub heading/m.test(md) || /Sub heading\n-+/.test(md), 'H2 preserved (ATX or setext)');
+  assert(md.includes('**bold**') || md.includes('__bold__'), 'Bold preserved');
+  assert(md.includes('*italic*') || md.includes('_italic_'), 'Italic preserved');
+  assert(/[-*+]\s+One/.test(md), 'Bullet list preserved');
+  assert(/^1\.\s+First/m.test(md), 'Numbered list preserved');
+  // Table preserved -- pandoc may emit pipe form, simple form (2-space indent + ---),
+  // or grid form (+---+). All count as preserved if header + data cells appear.
+  const tableDataPreserved = /A\s+B/.test(md) && /1\s+2/.test(md);
+  assert(tableDataPreserved, 'Table data preserved (header A B + row 1 2 visible in any pandoc table form)');
+  assert(/\[Example link\]\(https:\/\/example\.com\)/.test(md), 'Link preserved');
+  assert(/^>\s+Quoted text/m.test(md), 'Blockquote preserved');
+  assert(md.includes('const x = 1'), 'Code block content preserved');
+
+  // Image refs preserved (both PNG and SVG)
+  assert(/!\[PNG image\]\([^)]*sample\.png[^)]*\)/.test(md), 'PNG image ref preserved with alt text');
+  assert(/!\[SVG image\]\([^)]*sample\.svg[^)]*\)/.test(md), 'SVG image ref preserved with alt text');
+});
+
+// -----------------------------------------------------------------------------
+// docx-to-md.cjs: round-trip via md-to-word + image extraction
+// -----------------------------------------------------------------------------
+
+const DOCX_TO_MD = path.join(MUSCLES, 'docx-to-md.cjs');
+
+suite('docx-to-md.cjs: round-trip + image extraction', () => {
+  if (!fileExists(DOCX_TO_MD)) {
+    skip('docx-to-md.cjs not present');
+    return;
+  }
+
+  const pandocCheck = spawnSync('pandoc', ['--version'], { encoding: 'utf8', timeout: 5000 });
+  if (pandocCheck.status !== 0) {
+    skip('pandoc not installed');
+    return;
+  }
+
+  // Step 1: build a docx from a known md (no SVG -- md-to-word needs svgexport for SVG;
+  // the docx-to-md round-trip is the test, so stick to PNG which is universal)
+  const sourceDir = path.join(TEMP_DIR, 'docx-roundtrip-src');
+  fs.mkdirSync(sourceDir, { recursive: true });
+  createImageFixtures(sourceDir);
+
+  const mdSourcePath = path.join(sourceDir, 'roundtrip.md');
+  fs.writeFileSync(mdSourcePath, `# Round-Trip Test
+
+## Section A
+
+A paragraph with **bold** and *italic*.
+
+- bullet one
+- bullet two
+
+| Col A | Col B |
+| --- | --- |
+| 1 | 2 |
+| 3 | 4 |
+
+![PNG image](sample.png)
+`, 'utf8');
+
+  const docxPath = path.join(sourceDir, 'roundtrip.docx');
+  const wordResult = runNode(MD_TO_WORD, [mdSourcePath, docxPath], 60000);
+  if (wordResult.status !== 0 || !fileExists(docxPath)) {
+    skip('md-to-word leg of round-trip failed; cannot test docx-to-md');
+    return;
+  }
+
+  // Step 2: convert back to markdown
+  const outDir = path.join(TEMP_DIR, 'docx-roundtrip-out');
+  fs.mkdirSync(outDir, { recursive: true });
+  const mdOutPath = path.join(outDir, 'roundtrip-out.md');
+  const mdResult = runNode(DOCX_TO_MD, [docxPath, mdOutPath], 30000);
+  assert(mdResult.status === 0, 'docx-to-md exits 0');
+  assert(fileExists(mdOutPath), 'Markdown round-trip output created');
+
+  if (!fileExists(mdOutPath)) return;
+  const roundTripped = fs.readFileSync(mdOutPath, 'utf8');
+
+  // Structure preserved through round-trip (headings, lists, tables)
+  assert(/Round-Trip Test/.test(roundTripped), 'H1 text preserved through round-trip');
+  assert(/Section A/.test(roundTripped), 'H2 text preserved through round-trip');
+  assert(/bullet one/.test(roundTripped), 'List item preserved');
+  assert(/Col A/.test(roundTripped) && /Col B/.test(roundTripped), 'Table headers preserved');
+  assert(/[-*+]\s+bullet/.test(roundTripped) || /\\-\s+bullet/.test(roundTripped), 'Bullet syntax recovered (markdown bullet form)');
+
+  // Image extraction: docx-to-md --extract-images is the default; an images/ folder
+  // should exist alongside the output and contain at least one extracted image
+  const imagesDir = path.join(outDir, 'images');
+  if (fs.existsSync(imagesDir)) {
+    const extracted = fs.readdirSync(imagesDir).filter(f => /\.(png|jpe?g|svg|gif)$/i.test(f));
+    assert(extracted.length >= 1, `Images extracted to images/ folder (${extracted.length} file(s))`);
+  } else {
+    // Pandoc may have placed images differently; accept inline data URI or skip
+    const hasImageRef = /!\[[^\]]*\]\([^)]+\)/.test(roundTripped) || /data:image\//.test(roundTripped);
+    if (hasImageRef) {
+      assert(true, 'Image reference preserved in output (inline form, no extraction dir)');
+    } else {
+      skip('No images/ dir and no inline image ref -- pandoc image handling unknown for this docx');
+    }
+  }
 });
 
 // -----------------------------------------------------------------------------

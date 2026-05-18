@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "$comment": "Baseline VS Code user-scope settings applied by /welcome and audited by /welcome-verify. Edition-owned (overwritten on upgrade). Stable settings only — keep preview/experimental toggles off unless explicitly requested. To update the baseline, edit this file once; both prompts load from here.",
+    "spec_version": "1.0",
+    "settings": {
+        "update.mode": "default",
+        "extensions.autoUpdate": true,
+        "extensions.autoCheckUpdates": true,
+        "extensions.autoUpdateOnlyEnabledExtensions": false,
+        "chat.agent.enabled": true,
+        "chat.useAgentSkills": true,
+        "chat.includeReferencedInstructions": true,
+        "chat.commandCenter.enabled": true,
+        "chat.todoListTool.enabled": true,
+        "chat.planWidget.inlineEditor.enabled": true,
+        "github.copilot.chat.copilotMemory.enabled": true,
+        "github.copilot.chat.tools.memory.enabled": true,
+        "github.copilot.chat.codesearch.enabled": true,
+        "github.copilot.chat.responsesApi.toolSearchTool.enabled": true,
+        "github.copilot.chat.agent.modelDetails.enabled": true,
+        "mermaid-chat.enabled": true,
+        "chat.tools.terminal.backgroundNotifications": true,
+        "chat.tools.terminal.detachBackgroundProcesses": true,
+        "terminal.integrated.tabs.allowAgentCliTitle": true,
+        "chat.experimental.implicitContext.enabled": false,
+        "chat.experimental.symbolTools.cacheStable": false
+    }
+}

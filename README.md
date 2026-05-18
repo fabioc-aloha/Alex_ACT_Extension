@@ -1,6 +1,6 @@
 # Alex ACT Edition
 
-![Alex ACT Edition — Artificial Critical Thinking for AI Assistants](assets/banner-readme.png)
+![Alex ACT Edition — Artificial Critical Thinking for AI Assistants](https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png)
 
 > Artificial Critical Thinking for AI Assistants.
 
