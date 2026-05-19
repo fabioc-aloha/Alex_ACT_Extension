@@ -8,6 +8,70 @@ All notable changes to Alex ACT Edition.
 
 ---
 
+## [2.0.4] - 2026-05-19
+
+**Patch — README Model Compatibility section gains the Copilot Language Models spec snapshot.** Adds the factual model surface (context window, capability flags, in/out/cache costs) visible in VS Code 1.121's Language Models view (`Settings → GitHub Copilot → Language Models`). Documentation-only patch; no brain behavior change.
+
+### Added
+
+- **`README.md` — Model Compatibility § "Snapshot: Copilot Language Models (2026-05-19)"** — 22-row table covering every Copilot model in the VS Code 1.121 picker:
+  - Context window (range: 68K → 1M)
+  - Tools and Vision capability flags (universal across the lineup — not differentiators)
+  - Input / output / cache cost in credits per 1M tokens (range: In 25–500, Out 200–3000, Cache 2.5–125)
+  - Retirement warnings for GPT-4.1, GPT-5.2, GPT-5.2-Codex (all closing 2026-06-01)
+- One-paragraph framing below the table noting what is **universal** (Tools + Vision present everywhere) vs what is **variable** (context, in/out/cache cost), and pointing at the capability-floor benchmark (`MAN.8.3`) as the deferred work that will turn this spec sheet into an ACT-fit recommendation.
+
+### Notes for heirs
+
+- **Verify against your own Language Models view** before depending on these values. Model availability and pricing can change between releases.
+- Costs are **credits per 1M tokens** (Copilot internal accounting) — different from the *premium request multiplier* surface documented at `docs.github.com/copilot/reference/ai-models/supported-models`. Both surfaces matter; this snapshot covers the credits view.
+- The table is **factual spec data, not a recommendation**. The v2.0.3 architectural-needs framing in the same section is still the active recommendation. Measured ACT-discipline floor remains the open `MAN.8.3` question.
+
+### Heir impact
+
+Documentation-only. No `/upgrade` reconfiguration needed.
+
+### Audit trail
+
+- Companion to v2.0.3 README guidance (`10bbe2e`)
+- Supervisor `README.md` updated in parallel with identical table (single source of truth across both repos)
+- Source: VS Code 1.121 Language Models settings view, screenshot dated 2026-05-19
+- Cross-referenced against GitHub Docs `supported-models` page for retirement dates and plan availability
+- `test-edition-applyto-coverage`: 18/18 PASS (unaffected — no brain-file changes)
+- `brain-qa`: exit 0 (79 + 58 files)
+
+---
+
+## [2.0.3] - 2026-05-19
+
+**Patch — README gains an honest Model Compatibility section.** Adds explicit guidance for heirs about which Copilot models the brain is known to work with, what architectural needs the brain has, and what we have **not** measured. Closes a documentation gap; does not change any brain behavior or settings.
+
+### Added
+
+- **`README.md`** — new top-level section **Model Compatibility** between the cognitive-architecture intro and the Commands table. Contents:
+  - Explicit "we have not characterised the minimum model" disclaimer citing `MAN.8.3` in the Claims Registry
+  - What we tested with: Claude Opus 4.7 (1M context) for v1.5.0 reasoning baseline + v2.0.0 release benchmark
+  - Architectural needs: tool calling, long context (≥ 64K, ideally ≥ 128K), instruction adherence, multi-step reasoning
+  - Practical recommendation: reasoning-class models (Claude Sonnet 4+, Claude Opus, GPT-4.1, GPT-4o or equivalent) for primary agent work; `gpt-4o-mini` reserved for the `chat.utilityModel` / `chat.utilitySmallModel` slots per v2.0.2 baseline (NOT for primary agent work)
+  - Open question: call for heir feedback with reports of "this worked on X" / "this failed on Y" routed to `AI-Memory/feedback/alex-act/`
+
+### Heir impact
+
+Documentation-only. No behavior change. Heirs on v2.0.2 reading the new section will learn what model class is recommended; no `/upgrade` reconfiguration is needed beyond pulling the new README.
+
+### What this is not
+
+This release does **not** establish a measured minimum model. The `MAN.8.3` claim remains open. The architectural-needs framing is the honest current state. A planned capability-floor benchmark (tracked in Supervisor `HANDOFF.md` outstanding item #8) will replace this guidance with measured floor on a future Edition release.
+
+### Audit trail
+
+- Companion to v2.0.2 baseline (`178cb76`) and v2.0.1 brain rules (`f9aaffd`)
+- Supervisor README updated in parallel with curator-facing framing
+- Provenance: user directed 2026-05-19 evening "A and then another day we refine it with B" — this is Option A (ship honest architectural-needs guidance now); Option B (run capability-floor benchmark to close `MAN.8.3`) deferred to a future session
+- `test-edition-applyto-coverage`: 18/18 PASS (unaffected — no `applyTo` or brain-file changes)
+
+---
+
 ## [2.0.2] - 2026-05-19
 
 **Patch — welcome baseline gains three VS Code 1.120/1.121 settings.** Three keys added to `.github/config/welcome-baseline.json` so all heirs get them on next `/welcome` (or fresh setup). Companion to v2.0.1 (which updated the brain rules describing these capabilities); v2.0.2 wires the matching settings into the heir bootstrap.
