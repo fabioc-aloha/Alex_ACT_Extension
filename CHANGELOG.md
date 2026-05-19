@@ -8,6 +8,149 @@ All notable changes to Alex ACT Edition.
 
 ---
 
+## [2.0.2] - 2026-05-19
+
+**Patch — welcome baseline gains three VS Code 1.120/1.121 settings.** Three keys added to `.github/config/welcome-baseline.json` so all heirs get them on next `/welcome` (or fresh setup). Companion to v2.0.1 (which updated the brain rules describing these capabilities); v2.0.2 wires the matching settings into the heir bootstrap.
+
+### Changed
+
+- **`.github/config/welcome-baseline.json`** — added three keys to the `settings` object:
+  - `chat.tools.compressOutput.enabled: true` (1.120 Preview) — enables terminal output compression for `git diff` / `ls -l` / `npm install` and the 1.121 expansion (test runners, build tools, linters, Docker, package managers). The brain's file-redirect fallback remains valid for cases where compression strips data the agent needs.
+  - `chat.utilityModel: "gpt-4o-mini"` (1.121) — routes title generation, rename suggestions, and settings search to a smaller cheap model. Heirs can override locally if `gpt-4o-mini` isn't in their model surface (VS Code falls back to default).
+  - `chat.utilitySmallModel: "gpt-4o-mini"` (1.121) — same rationale for the small-model slot.
+- **Baseline `$comment`** updated to acknowledge that preview/experimental toggles can be included when explicitly requested by user policy and noted in CHANGELOG (was: "Stable settings only — keep preview/experimental toggles off unless explicitly requested"). `chat.tools.compressOutput.enabled` is the first such inclusion.
+
+### Heir impact
+
+Heirs running `/welcome` (first-session bootstrap or new-machine setup) get all three settings. Heirs running `/welcome-verify` will see the three keys flagged as `missing` until they re-run `/welcome`. Existing user-level overrides for these keys are preserved by the merge step in `/welcome` (it merges, doesn't overwrite values that already differ — well, actually it does overwrite to match baseline; heirs who want a different utility model should set it AFTER `/welcome`). No `--allow-major` needed; standard `/upgrade` covers the baseline file.
+
+### Override guidance
+
+Heirs who want a different utility model (e.g. running on BYOK with a different small-model name) should set their override in personal `settings.json` AFTER running `/welcome`. The `/welcome` merge is overwrite-to-baseline, so the override needs to be re-applied if `/welcome` runs again.
+
+### Validation
+
+Dogfooded the `/welcome` reference command (verbatim from `welcome.prompt.md`) against the curator's personal `settings.json` before shipping — all three keys landed correctly as JSON booleans/strings (lowercase `true`, quoted model names). No existing keys disturbed.
+
+### Audit trail
+
+- Companion to v2.0.1 (brain rules) — commits `b6dafc3` (Supervisor) + `f9aaffd` (Edition)
+- Proposal: original `vscode-1.120-1.121-adoption-2026-05-19.md` recommended these as personal-settings-only; user directed (2026-05-19) to bake into the heir baseline instead
+- Brain-qa: exit 0 across 79 Supervisor + 58 Edition files (no brain file changes in v2.0.2)
+- `test-edition-applyto-coverage`: 18/18 PASS, 0 capability gaps (no `applyTo` changes)
+
+---
+
+## [2.0.1] - 2026-05-19
+
+**Patch — VS Code 1.120/1.121 feature adoption.** Three brain files updated to reflect VS Code capabilities that shipped between 2026-05-13 and 2026-05-19. Mirrored byte-for-byte from Supervisor per the shared-core direction-of-edit rule. Zero behavior change for heirs — additive informational text + one factual correction + one extension-recommendation update.
+
+### Changed
+
+- **`terminal-command-safety.instructions.md`** — documents two new VS Code mechanisms that work alongside the existing rules:
+  - NEW section *VS Code 1.120 + 1.121 Terminal Output Compression (Preview)* names `chat.tools.compressOutput.enabled` and the 1.121 expansion to `pytest` / `jest` / `cargo test` / `tsc` / `cargo build` / `make` / linters / Docker / package managers, plus auto-dispose of background terminals.
+  - *Terminal Hanging* rule #1 now notes that VS Code 1.121+ auto-promotes sync→background after a configurable idle-silence period; the agent-intent rule remains correct and is still required on older builds.
+  - *Falsifier — Backtick Hazard* watermark bumped from "through 1.118" to "through 1.121" with note that 1.120/1.121 ship no fix for `microsoft/vscode#295620`. The temp-file pattern remains mandatory.
+- **`session-health-monitoring.instructions.md`** — *Proxy Heuristics* opener corrected: VS Code 1.120 made BYOK token counts visible in the Chat-view context-window control. Opener now distinguishes BYOK (ground truth available) from non-BYOK / older builds (proxy heuristics still apply). Table below unchanged.
+- **`markdown-mermaid/SKILL.md`** — *VS Code Extension Setup* updated: VS Code 1.121 ships built-in Mermaid rendering in Markdown previews per `microsoft/vscode#293028`. Recommendation list keeps mermaidchart (chart authoring), vstirbu (standalone preview tab), and non-Mermaid tools (PlantUML, Graphviz, D2). `bierner.markdown-mermaid` removed — the built-in renderer covers its use case.
+
+### Out of scope (deliberate)
+
+Three 1.120/1.121 features documented in the proposal but **not adopted** pending field data: `chat.tools.riskAssessment.enabled` (overlaps act-pass severity), Claude auto-permission mode (overlaps act-pass), and workspace-level forcing of `chat.tools.compressOutput.enabled` (still preview).
+
+### Heir impact
+
+None for the contract. Heirs on v2.0.0 reading the updated rules gain awareness of upstream-handled mechanisms; the rules themselves continue to fire correctly. No `--allow-major` needed; standard `/upgrade` covers it.
+
+### Proposal + audit trail
+
+- Proposal: `Alex_ACT_Supervisor/docs/proposals/vscode-1.120-1.121-adoption-2026-05-19.md`
+- Supervisor commit: `b6dafc3` (origin/main)
+- Brain-qa: exit 0 across 79 Supervisor + 58 Edition files
+- `test-applyto-coverage`: 15/15 PASS, 0 capability gaps
+- `test-edition-applyto-coverage`: 18/18 PASS, 0 capability gaps
+
+---
+
+## [2.0.0] - 2026-05-19
+
+**Major — reasoning-quality release.** Same brain shape (36 instructions, 18 skills, 23 prompts, 16 muscles, 4 agents), same heir API surface, same `/upgrade` mechanism. Behavior changes are improvements to always-on reasoning disciplines that close measured coverage gaps in benchmark scenarios while reducing total credits-per-solved-problem. Major version bump signals that heirs upgrade via `--allow-major` and acknowledges that v2 reasoning IS measurably different from v1.5.0 (sharper verify-before-report, frame audits on explain frames, output-discipline gates).
+
+Validated by:
+
+- Compose verification benchmark (5 scenarios): **13/15 → 15/15 composite**, **-22.5% credits** (228.5 → 177.0)
+- S360 real-world adoption: heir adopted on `main` 2026-05-19 and self-promoted `.act-heir.json` from `2.0.0-candidate` → `2.0.0` after multi-commit follow-through validation
+- Tenet X demonstration in S360: v2 brain refused a stale templated instruction from Supervisor (exactly the failure mode the new rules were designed to catch)
+- Terminal-safety fix empirical validation: 3 post-fix commits in S360 with `$env:TEMP` pattern, zero `.commit-msg.tmp` leaks (verified via `git show --stat`)
+
+### Breaking
+
+- **None for the heir contract.** File inventory unchanged. Heir-side `.act-heir.json`, scripts, `local/` skills, `HANDOFF.md`, `episodic/`, `workflows/` all preserved on upgrade.
+- **Behavior changes are intentional** and visible: heirs will notice more verify-before-report patterns firing on search/summary work, more explicit frame-audit markers on "explain X" / "tell me how Y works" prompts, more by-name citations during disagreement-mode refusals. Net effect per benchmark + S360: better outcomes at lower cost, but takes a session to feel natural.
+- **`--allow-major` required** on `node .github/scripts/upgrade-self.cjs` for heirs upgrading from any v1.x to v2.0.0.
+
+### Added
+
+- **`epistemic-calibration.instructions.md` Output-discipline subsection** (Phase 3.3) — Anti-Hallucination Signals table split into Input-discipline (existing 5 rows: claims about generation) and Output-discipline (3 new rows: claims about reporting):
+  - `"No matches found"` / `"Verified clean"` / `"Nothing returned"` → verify search scope before reporting absence; cite paths/globs/file-count
+  - `"The doc says X"` / `"Per README"` / `"According to spec"` → cross-check doc against filesystem; cite both
+  - `"I checked and..."` / `"Verified that..."` → name what was actually checked; unattributed verification is theatre
+  - Plus 4th Core Principle: *"A search that didn't run looks identical to a search that found nothing — verify the scope before reporting absence."*
+- **`problem-framing-audit.instructions.md` Explain/Summarize Frame subsection** (Phase 5 Option C) — complementary discipline for summarization patterns the Output-discipline literal triggers don't catch:
+  - Literal trigger phrases: `"Explain X"`, `"Tell me how Y works"`, `"Describe Z"`, `"Summarize <doc>"`, `"Read <file> and..."`, `"Walk me through..."`, `"What does <doc> say about..."`
+  - Required action: name source file(s) read + cross-check ≥1 structural claim against filesystem; if doc and filesystem disagree, surface the gap and report both
+  - Visible marker: `**Verified against**: <doc path> + <filesystem check>`
+- **`terminal-command-safety.instructions.md` temp-file location guidance** — closes a heir-reported defect (the `git commit -F tmpfile` + `git add -A` interaction silently committed temp message files into commits):
+  - Warning paragraph: place temp files outside the working tree (`$env:TEMP\<slug>.txt` on Windows, `/tmp/<slug>.txt` on Unix) OR add the pattern to `.gitignore` before staging
+  - Preferred PowerShell template using `Join-Path $env:TEMP` + `Set-Content -NoNewline` + `git commit -F` + `Remove-Item`
+
+### Changed
+
+- **3 instruction files** updated (see Added above for the substantive changes):
+  - `.github/instructions/epistemic-calibration.instructions.md`
+  - `.github/instructions/problem-framing-audit.instructions.md`
+  - `.github/instructions/terminal-command-safety.instructions.md`
+- **`.github/VERSION`** bumped 1.5.0 → 2.0.0.
+- **File inventory unchanged** at 36 instructions / 18 skills / 23 prompts / 16 muscles / 4 agents.
+- **Always-on token growth: ~+908 tokens/session** (~+3632 bytes across the 3 instruction files). Trade is net-positive per benchmark: -22.5% credits across the 5-scenario Compose set; breakeven at ~1 avoided corrective turn per 10 sessions; observed rate in benchmark + S360 is 2-3+ per 10.
+
+### Scope correction
+
+A pre-flight diff during release prep reported 46 files differing between Edition v1.5.0 and the v2 candidate workspace. On verification (parent-commit checkout + spot-check) the 43 "accumulated v2-candidate dev" files were already byte-identical to Edition v1.5.0; the apparent difference was line-ending normalization (CRLF in Edition vs LF in the v2 candidate scratch workspace) that git smooths over at commit time. The **actual v2.0.0 release scope is 3 instruction files** (Phase 3.3 + Phase 5 + terminal-safety) plus VERSION + CHANGELOG. This entry was corrected before push.
+
+### Upgrade
+
+```pwsh
+node .github/scripts/upgrade-self.cjs --allow-major
+```
+
+Heirs preserve all of: `skills/local/`, `.act-heir.json`, `HANDOFF.md`, `episodic/`, `workflows/`, `scripts/` (heir-specific), `docs/`, all non-`.github/` content. Heir-doctor may surface cosmetic warnings on first run if the heir's `edition-manifest.json` is stale; they clear after upgrade completes.
+
+### Why
+
+The v1 line optimized brain size; v2 optimizes brain *outcomes*. The Phase 1 baseline benchmark surfaced one real coverage gap (output-verification — verify before reporting search/doc claims, scored 2/3 not 3/3 in S4 and S7). Phase 2 dual audit of all 17 always-on rules produced 1 Grow / 8 Compose / 8 Unchanged / 0 Shrink / 0 Restructure — confirming the brain isn't bloated, it's a tightly composed system where every rule earns its cost. Phase 3 applied the Grow (epistemic-calibration Output-discipline). Phase 5 added the complementary Explain/Summarize frame for surface patterns the Phase 3 literal triggers miss. Terminal-safety added the temp-file location guidance to close a heir-reported defect that hit S360 twice.
+
+The release reaches Edition because S360 adopted v2 candidate in real-world product work on 2026-05-19 and demonstrated all the predicted improvements PLUS a real Tenet X self-correction moment (v2 brain refused a stale Supervisor instruction). Real-world signal outweighs synthetic benchmark for ship/no-ship decisions.
+
+### Falsifiability
+
+This release is wrong if any of the following occur within 14 days:
+
+- ≥2 heirs report behavior regressions traceable to Phase 3.3 or Phase 5 changes (triggers partial rollback or v2.0.1 fix-forward)
+- The terminal-safety fix doesn't prevent a `.commit-msg.tmp`-class leak in a heir that upgrades to v2.0.0
+- S360 reverts its `.act-heir.json` marker from `2.0.0` back to `2.0.0-candidate` or below (the bellwether heir)
+- A fleet-cost regression appears that wasn't visible in the 5-scenario benchmark (triggers the Phase 6.2 light re-baseline that was deferred)
+
+If any fire: cut v2.0.1 with fix; document in Supervisor's `brain-qa-changelog.md` tagged `[V2-REGRESSION]`.
+
+### References
+
+- Launch proposal: [`Alex_ACT_Supervisor/docs/proposals/edition-v2-launch-2026-05-19.md`](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/edition-v2-launch-2026-05-19.md)
+- Benchmark data: `Alex_ACT_Supervisor/benchmark/v2-candidate-baseline.md`
+- Plan: `Alex_ACT_Edition_v2/PLAN-v2-REASONING.md`
+
+---
+
 ## [1.5.0] - 2026-05-18
 
 Minor — converter-qa harness restoration + complete-coverage tests for all converters (PNG + SVG image handling verified end-to-end).

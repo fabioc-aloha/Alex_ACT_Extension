@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema",
-    "$comment": "Baseline VS Code user-scope settings applied by /welcome and audited by /welcome-verify. Edition-owned (overwritten on upgrade). Stable settings only — keep preview/experimental toggles off unless explicitly requested. To update the baseline, edit this file once; both prompts load from here.",
+    "$comment": "Baseline VS Code user-scope settings applied by /welcome and audited by /welcome-verify. Edition-owned (overwritten on upgrade). Stable settings only by default; preview/experimental toggles are included only when explicitly requested by user policy and noted in CHANGELOG. To update the baseline, edit this file once; both prompts load from here.",
     "spec_version": "1.0",
     "settings": {
         "update.mode": "default",
@@ -21,6 +21,9 @@
         "mermaid-chat.enabled": true,
         "chat.tools.terminal.backgroundNotifications": true,
         "chat.tools.terminal.detachBackgroundProcesses": true,
+        "chat.tools.compressOutput.enabled": true,
+        "chat.utilityModel": "gpt-4o-mini",
+        "chat.utilitySmallModel": "gpt-4o-mini",
         "terminal.integrated.tabs.allowAgentCliTitle": true,
         "chat.experimental.implicitContext.enabled": false,
         "chat.experimental.symbolTools.cacheStable": false
