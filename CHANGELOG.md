@@ -8,6 +8,35 @@ All notable changes to Alex ACT Edition.
 
 ---
 
+## [2.0.5] - 2026-05-21
+
+**Patch — 25 shared-core brain files gain `## Would Revise If` falsifier sections.** Mirror of Supervisor D2(a) commit `c6327bb`. Each WRI names specific failure modes that would invalidate the file's advice — not boilerplate. Brain epistemic-qa coverage rises 45.5% → ~91% in Edition. No behavioral change for heirs: the files still direct the same actions; the WRI is an epistemic addition that names the conditions under which each rule should be revisited.
+
+Closes the C1 falsifiability gap identified in [Supervisor brain-qa 2026-05-21 findings](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/brain-qa-2026-05-21.md) (decision D2 option a, both phases). Satisfies the Cardinal Rule 3 quarterly CT-trifecta refinement requirement for Q2 2026 — the four CT-trifecta files (critical-thinking instruction + skill, problem-framing-audit, system-prompt-skepticism) are among the 25 with file-specific WRIs.
+
+### Added
+
+- **`## Would Revise If` section in 23 always-on instructions** — act-foundations, ai-writing-avoidance, alternatives-and-tradeoffs, brain-audit, communication-craft, creative-loop, critical-thinking, emotional-intelligence, epistemic-calibration, knowledge-coverage, lint-discipline, markdown-mermaid, partnership-charter, pii-memory-filter, privacy-responsible-ai, proactive-awareness, problem-framing-audit, reliance-nudges, scope-management, session-health-monitoring, system-prompt-skepticism, tool-awareness, tool-awareness-categories
+- **`## Would Revise If` section in `skills/critical-thinking/SKILL.md`** — covers the 7 disciplines + Discipline -1 frame audit
+- **`## Would Revise If` section in `skills/markdown-mermaid/polish-mermaid-setup.prompt.md`** — falsifier for the workflow prompt
+
+### Verification
+
+- `brain-qa.cjs`: exit 0, 0 stale of 137 files
+- `epistemic-qa.cjs` (Edition): 100/100 score, warns 4 → 3 (the `critical-thinking/SKILL.md` mirror brought along Supervisor's D1 OVR01 reword fix)
+- `test-edition-applyto-coverage.cjs`: 18/18 PASS, 0 capability gaps
+- `coherence-check.cjs`: 0 hard, 0 soft
+
+### Upgrade
+
+```pwsh
+node .github/scripts/upgrade-self.cjs
+```
+
+No `--allow-major` needed. No `/welcome` re-run needed. WRI sections are additive content; existing heir behavior unchanged.
+
+---
+
 ## [2.0.4] - 2026-05-19
 
 **Patch — README Model Compatibility section gains the Copilot Language Models spec snapshot.** Adds the factual model surface (context window, capability flags, in/out/cache costs) visible in VS Code 1.121's Language Models view (`Settings → GitHub Copilot → Language Models`). Documentation-only patch; no brain behavior change.

@@ -10,7 +10,7 @@ ACT Edition changes that. Not by making AI "smarter," but by making it **honest*
 
 A confident wrong answer is worse than an uncertain correct answer. ACT shifts the default from "sound authoritative" to "show your work." When the AI doesn't know, it says "I don't know." When it's uncertain, it quantifies the uncertainty. When it challenges your framing, it explains why. Debugging a confident hallucination takes hours. Verifying a well-reasoned hypothesis takes minutes.
 
-This is a **cognitive architecture** -- 18 skills, 35 instructions, 23 prompts, 4 worker agents, and 21 muscles that teach your AI assistant to think critically about its own reasoning. Built for GitHub Copilot's `.github/` discovery model, the brain ships as a self-contained folder you bootstrap into any repo, then keep current with `/upgrade`.
+This is a **cognitive architecture** -- 18 skills, 36 instructions, 23 prompts, 4 worker agents, and 15 muscles that teach your AI assistant to think critically about its own reasoning. Built for GitHub Copilot's `.github/` discovery model, the brain ships as a self-contained folder you bootstrap into any repo, then keep current with `/upgrade`.
 
 ## Model Compatibility
 
@@ -24,32 +24,44 @@ The v1.5.0 reasoning baseline and the v2.0.0 release benchmark (Compose verifica
 
 The table below is a factual snapshot of the Copilot model surface visible in VS Code 1.121 (`Settings → GitHub Copilot → Language Models`). Costs are **credits per 1M tokens** (Copilot internal accounting — different from the GitHub Docs *premium request multiplier* surface). **Verify against your own picker** before depending on these values; model availability and pricing can change between releases.
 
-| Model | Context | Tools | Vision | In (cr/1M) | Out (cr/1M) | Cache (cr/1M) |
-| --- | ---: | :---: | :---: | ---: | ---: | ---: |
-| Claude Haiku 4.5 | 200K | ✓ | ✓ | 100 | 500 | 10 |
-| Claude Opus 4.5 | 200K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.6 | 200K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.6 (Internal only) | 1000K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.7 | 200K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.7 (Extra high reasoning)(Internal only) | 200K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.7 (High reasoning)(Internal only) | 200K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Opus 4.7 (Internal only) | 1000K | ✓ | ✓ | 500 | 2500 | 50 |
-| Claude Sonnet 4.5 | 200K | ✓ | ✓ | 300 | 1500 | 30 |
-| Claude Sonnet 4.6 | 200K | ✓ | ✓ | 300 | 1500 | 30 |
-| Gemini 2.5 Pro | 173K | ✓ | ✓ | 125 | 1000 | 12.5 |
-| Gemini 3 Flash (Preview) | 173K | ✓ | ✓ | 50 | 300 | 5 |
-| Gemini 3.1 Pro (Preview) | 200K | ✓ | ✓ | 200 | 1200 | 20 |
-| GPT-4.1 ⚠️ *(retiring 2026-06-01)* | 128K | ✓ | ✓ | 200 | 800 | 50 |
-| GPT-4o | 68K | ✓ | ✓ | 250 | 1000 | 125 |
-| GPT-5 mini | 192K | ✓ | ✓ | 25 | 200 | 2.5 |
-| GPT-5.2 ⚠️ *(retiring 2026-06-01)* | 400K | ✓ | ✓ | 175 | 1400 | 17.5 |
-| GPT-5.2-Codex *(retiring 2026-06-01)* | 400K | ✓ | ✓ | 175 | 1400 | 17.5 |
-| GPT-5.3-Codex | 400K | ✓ | ✓ | 175 | 1400 | 17.5 |
-| GPT-5.4 | 400K | ✓ | ✓ | 175 | 1400 | 17.5 |
-| GPT-5.4 mini | 400K | ✓ | ✓ | 75 | 450 | 7.5 |
-| GPT-5.5 | 400K | ✓ | ✓ | 500 | 3000 | 50 |
+| Model | Context | Tools | Vision | In (cr/1M) | Out (cr/1M) | Cache (cr/1M) | Recommendation |
+| --- | ---: | :---: | :---: | ---: | ---: | ---: | --- |
+| Claude Haiku 4.5 | 200K | ✓ | ✓ | 100 | 500 | 10 | 🟡 Utility slot only |
+| Claude Opus 4.5 | 200K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (inferred) |
+| Claude Opus 4.6 | 200K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (inferred) |
+| Claude Opus 4.6 (Internal only) | 1000K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (inferred) |
+| Claude Opus 4.7 | 200K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (family measured) |
+| Claude Opus 4.7 (Extra high reasoning)(Internal only) | 200K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (family measured) |
+| Claude Opus 4.7 (High reasoning)(Internal only) | 200K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (family measured) |
+| Claude Opus 4.7 (Internal only) | 1000K | ✓ | ✓ | 500 | 2500 | 50 | ✅ Primary (**measured**) |
+| Claude Sonnet 4.5 | 200K | ✓ | ✓ | 300 | 1500 | 30 | ✅ Primary (inferred) |
+| Claude Sonnet 4.6 | 200K | ✓ | ✓ | 300 | 1500 | 30 | ✅ Primary (inferred) |
+| Gemini 2.5 Pro | 173K | ✓ | ✓ | 125 | 1000 | 12.5 | ✅ Primary (inferred) |
+| Gemini 3 Flash (Preview) | 173K | ✓ | ✓ | 50 | 300 | 5 | 🟡 Utility slot only |
+| Gemini 3.1 Pro (Preview) | 200K | ✓ | ✓ | 200 | 1200 | 20 | ✅ Primary (inferred) |
+| GPT-4.1 ⚠️ *(retiring 2026-06-01)* | 128K | ✓ | ✓ | 200 | 800 | 50 | ❌ Do not adopt |
+| GPT-4o | 68K | ✓ | ✓ | 250 | 1000 | 125 | ❌ Avoid (context+cache) |
+| GPT-5 mini | 192K | ✓ | ✓ | 25 | 200 | 2.5 | ⚠️ Test first |
+| GPT-5.2 ⚠️ *(retiring 2026-06-01)* | 400K | ✓ | ✓ | 175 | 1400 | 17.5 | ❌ Do not adopt |
+| GPT-5.2-Codex *(retiring 2026-06-01)* | 400K | ✓ | ✓ | 175 | 1400 | 17.5 | ❌ Do not adopt |
+| GPT-5.3-Codex | 400K | ✓ | ✓ | 175 | 1400 | 17.5 | ✅ Primary (inferred) |
+| GPT-5.4 | 400K | ✓ | ✓ | 175 | 1400 | 17.5 | ✅ Primary (inferred) |
+| GPT-5.4 mini | 400K | ✓ | ✓ | 75 | 450 | 7.5 | 🟡 Utility slot only |
+| GPT-5.5 | 400K | ✓ | ✓ | 500 | 3000 | 50 | ✅ Primary (inferred) |
 
 **Universal**: every Copilot model in this lineup exposes Tools + Vision — those capability flags are not differentiators within this surface. **Variable**: context window (68K → 1M), input cost (25 → 500), output cost (200 → 3000), and cache cost (2.5 → 125). The capability-floor benchmark (`MAN.8.3`, tracked in Supervisor `HANDOFF.md`) will measure ACT-discipline performance across a subset of these models; the data above is the factual spec sheet that feeds that benchmark, not a recommendation.
+
+**Recommendation legend** (preliminary; `MAN.8.3` open):
+
+| Marker | Meaning |
+| --- | --- |
+| ✅ **Primary (measured)** | Empirically validated against ACT discipline. Currently: Claude Opus 4.7 family only (v1.5.0 reasoning baseline + v2.0.0 release benchmark, both on the 1M-context Internal variant). |
+| ✅ **Primary (family measured)** | Same model family as the measured variant; same architecture, different routing tier. Strong inference but not separately benchmarked. |
+| ✅ **Primary (inferred)** | GitHub Docs categorizes for *deep reasoning + debugging* or *general-purpose + agent tasks*. Architectural fit matches ACT needs; not yet measured against ACT discipline specifically. |
+| ⚠️ **Test first** | Cross-category model (GitHub Docs recommends GPT-5 mini for **both** general-purpose AND deep reasoning). High-leverage benchmark target — if it handles ACT discipline at 0× premium multiplier and 200 cr/1M output, that's a major credit-economy win. Do not adopt for production ACT work before measuring. |
+| 🟡 **Utility slot only** | GitHub Docs categorizes for *fast help with simple or repetitive tasks*. Appropriate for the `chat.utilityModel` / `chat.utilitySmallModel` slots per v2.0.2 welcome baseline. **Not** for primary agent work — multi-step act-pass discipline is exactly the chained reasoning this tier is designed not to do. |
+| ❌ **Do not adopt** | Retiring 2026-06-01 per GitHub Docs; migrate now if currently using. |
+| ❌ **Avoid (context+cache)** | GPT-4o specifically: 68K context is below the comfortable floor (Edition's always-on + workspace + tool descriptions + conversation fills this fast), and 125 cr/1M cache cost is an anti-pattern for ACT's chunky reusable always-on prefix. |
 
 ### What the brain needs from a model
 
@@ -284,11 +296,11 @@ The script clones Edition into a temp dir, diffs edition-owned paths, never touc
 Two shared surfaces complete the architecture:
 
 - **AI-Memory** (OneDrive shared folder) — your fleet registry, feedback channel to Edition, and announcement inbox. Bootstrapped automatically on first install.
-- **[Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall)** -- public catalog of 284 optional plugins across 16 categories. Browse, search, install what you need into `local/` slots.
+- **[Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall)** -- public catalog of 297 optional plugins across 16 categories. Browse, search, install what you need into `local/` slots.
 
 ### The Skill Mall
 
-Edition ships lean (18 skills, 35 instructions). The [Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall) extends it with 284 curated plugins across security, Azure, data, healthcare, architecture, publishing, and more. Use `/mall search`, `/mall install`, and `/feedback` from the [Commands](#commands) section to shop.
+Edition ships lean (18 skills, 36 instructions). The [Alex Skill Mall](https://github.com/fabioc-aloha/Alex_Skill_Mall) extends it with 297 curated plugins across security, Azure, data, healthcare, architecture, publishing, and more. Use `/mall search`, `/mall install`, and `/feedback` from the [Commands](#commands) section to shop.
 
 Skills install into `.github/skills/local/` so they survive Edition upgrades. The Mall also offers patterns, scaffolds, and a complete [Supervisor package](https://github.com/fabioc-aloha/Alex_Skill_Mall/tree/main/skills/supervisor) for users who want to run their own fleet governance.
 

@@ -135,3 +135,7 @@ Open with native preview (`Ctrl+Shift+V`) and verify:
 | `darkModeTheme` | default, neutral, dark, forest, base | dark | Theme for dark mode |
 | `languages` | array of strings | ["mermaid"] | Code block language identifiers |
 | `maxTextSize` | number | 50000 | Max characters before truncation |
+
+## Would Revise If
+
+Revise if the recommended extension (`bierner.markdown-mermaid`) is deprecated or replaced by a different canonical choice, if the settings keys in Step 3 no longer match the extension's current schema, or if the conflict-resolution recommendation produces broken setups in heir environments 2+ times.
