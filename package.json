@@ -64,6 +64,16 @@
                 "category": "ACT"
             },
             {
+                "command": "alex-act.migrate-from-alex-master",
+                "title": "Migrate from AlexMaster",
+                "category": "ACT"
+            },
+            {
+                "command": "alex-act.rollback-migration",
+                "title": "Rollback Migration",
+                "category": "ACT"
+            },
+            {
                 "command": "alex-act.convert.md-to-word",
                 "title": "Convert to Word (.docx)",
                 "category": "ACT Convert"

@@ -559,6 +559,9 @@ async function runConverter(converterId, fileUri) {
     vscode.window.showInformationMessage(`ACT: Converting to ${converter.label}...`);
 }
 
+// ── Migration (AlexMaster v8.4.0 → ACT Edition v9.0.0) ────────────
+const migration = require('./migration');
+
 // ── Activation ─────────────────────────────────────────────────────
 
 function activate(context) {
@@ -567,6 +570,8 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.upgrade', cmdUpgrade),
         vscode.commands.registerCommand('alex-act.status', cmdStatus),
         vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
+        vscode.commands.registerCommand('alex-act.migrate-from-alex-master', migration.migrateFromAlexMaster),
+        vscode.commands.registerCommand('alex-act.rollback-migration', migration.rollbackMigration),
     );
 
     // Register converter commands
@@ -575,6 +580,12 @@ function activate(context) {
             vscode.commands.registerCommand(`alex-act.convert.${id}`, (fileUri) => runConverter(id, fileUri))
         );
     }
+
+    // Register no-op stubs for AlexMaster's 30 deprecated commands
+    migration.registerDeprecatedStubs(context);
+
+    // Fire AlexMaster detection modal (respects "remind later" / "don't ask again")
+    migration.checkActivationTrigger(context).catch(() => { /* silent */ });
 
     // Silent startup check: if workspace is a heir, show status bar item
     const root = getWorkspaceRoot();

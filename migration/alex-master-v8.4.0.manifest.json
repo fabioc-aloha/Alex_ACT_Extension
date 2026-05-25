@@ -1,0 +1,2313 @@
+{
+  "source": "Marketplace fabioc-aloha.alex-cognitive-architecture 8.4.0",
+  "downloadedAt": "2026-05-25T01:52:49.6919122Z",
+  "vsixSha256": "b000df3effa807b092649358076063870bd943e1df7d44350d54a6c16f9f588d",
+  "fileCount": 461,
+  "files": [
+    {
+      "path": "readme.md",
+      "size": 6991,
+      "sha256": "0a6d6f1044c77859d991fdd60d62dcbe99e10adad3af5f8cbf43945ae233ca6e"
+    },
+    {
+      "path": "package.json",
+      "size": 26977,
+      "sha256": "140374911b3cec861c0d529e5c0931bd24d653cf0435739625b1827fcc270c23"
+    },
+    {
+      "path": "LICENSE.md",
+      "size": 4718,
+      "sha256": "da6b08143018ec58d1bdde3c420870ced4084aebe27a3e6aa383b2f830a6b18c"
+    },
+    {
+      "path": "changelog.md",
+      "size": 293245,
+      "sha256": "30352d4aa752dc919e4f5bfc2dfb01cc5d7e35b71f23659ca7fc9f54732af1be"
+    },
+    {
+      "path": "dist/extension.js",
+      "size": 67713,
+      "sha256": "1202d80e20ece025c688faea33c7d3e77ffe9c36165e0860f798fcfb1d93ff90"
+    },
+    {
+      "path": "dist/codicon.ttf",
+      "size": 80188,
+      "sha256": "360527575395ad70f940eff1e43eb7c2ec64f4e69f89dc5861b73420d2a578f0"
+    },
+    {
+      "path": "dist/codicon.css",
+      "size": 29664,
+      "sha256": "f87bf74cabda7929e782ce83a90efa66367fbbe4870798028bfd75591ed87f1f"
+    },
+    {
+      "path": "media/sidebar.css",
+      "size": 10463,
+      "sha256": "55346d4b6c1a71d0c2a16d28dddda17384a7da91337bc8c20c5528e3b4247849"
+    },
+    {
+      "path": "brain-files/NORTH-STAR.md",
+      "size": 8753,
+      "sha256": "20182e913e9e683528eb0d0ea59fc01a1d1e2beea190019be055dec34853ab4c"
+    },
+    {
+      "path": "brain-files/EXTERNAL-API-REGISTRY.md",
+      "size": 13964,
+      "sha256": "bcf155f478f27687ab729280b4870a7415df69350394667fefea18a8e456d4d9"
+    },
+    {
+      "path": "brain-files/copilot-instructions.md",
+      "size": 1710,
+      "sha256": "1dfdc263334150df0341096ded56702ca02729168926998db03886f4f1724d31"
+    },
+    {
+      "path": "brain-files/brain-version.json",
+      "size": 451,
+      "sha256": "f722f4abfc6fa0f2b0a8bdc2decee409aa3119e43ca5ba5a439a6182ea3bec6b"
+    },
+    {
+      "path": "brain-files/ABOUT.md",
+      "size": 2955,
+      "sha256": "892b10cdad7b8e7acc6a828bb642ca336717f6d1eab934108b1ead1755c0ffda"
+    },
+    {
+      "path": "brain-files/.sync-manifest.json",
+      "size": 28386,
+      "sha256": "1c6701e6ba6fcb90306c8aa712ae759d92946b7807852432a3604be7004f3a80"
+    },
+    {
+      "path": "assets/sidebar-icon.svg",
+      "size": 529,
+      "sha256": "a46ecd18c3199a2f98c4d858538d5d3c4ff7c0b65c65a9b911e72e04befb146f"
+    },
+    {
+      "path": "assets/icon.png",
+      "size": 5364,
+      "sha256": "686dbb4c652615fe6fbd6b32ccd19bc1f71db232d63f5e020909d760c531124a"
+    },
+    {
+      "path": "brain-files/quality/brain-health-grid.md",
+      "size": 51935,
+      "sha256": "9134d3877a105ec297412761e63c40ac015128ef7204fd52709863f2881e8aee"
+    },
+    {
+      "path": "brain-files/prompts/vscode-extension-audit.prompt.md",
+      "size": 5713,
+      "sha256": "876351cbdfdb3a7b7650dcbaa43827a063b759d16ef7ef673991346a5212e70b"
+    },
+    {
+      "path": "brain-files/prompts/visualize.prompt.md",
+      "size": 1706,
+      "sha256": "408bdef238371a014c1448a82b918f63df68401251757bfb60be72c5113ba3d2"
+    },
+    {
+      "path": "brain-files/prompts/visual-memory.prompt.md",
+      "size": 4562,
+      "sha256": "6c9e023b3d75d40e3e728f01165e31fe3d9babbd5aaf8e20ce6c88c5079f000a"
+    },
+    {
+      "path": "brain-files/prompts/validate-config.prompt.md",
+      "size": 3330,
+      "sha256": "4d4810aac5cc42decc860b7021cd8918a53e8876deeb7a32c25341c860d42dc0"
+    },
+    {
+      "path": "brain-files/prompts/ui-ux-audit.prompt.md",
+      "size": 20256,
+      "sha256": "aa2fa422c4e03d017a7c1ca9add5ef1adabd9e78585dc7eba82e2b9aa23b713a"
+    },
+    {
+      "path": "brain-files/prompts/tests.prompt.md",
+      "size": 1277,
+      "sha256": "f083a8a97debdf8c6cff2d42c6e8f6aab88f30de81a6714134b01b01c63c6e91"
+    },
+    {
+      "path": "brain-files/prompts/teams-app.prompt.md",
+      "size": 5950,
+      "sha256": "62cdfaf8e2fa2b2c778231c77a7d9596800e5c6f527d4e75f2c72db4b1957112"
+    },
+    {
+      "path": "brain-files/prompts/tdd.prompt.md",
+      "size": 1874,
+      "sha256": "4d4911d24a4893f4284e37378ae726028403adc7f93ee0c38b03270a4365e921"
+    },
+    {
+      "path": "brain-files/prompts/spec.prompt.md",
+      "size": 1217,
+      "sha256": "a69a33eb99466e26bc72a5f0c99745cc894086606ded61587ce376271d23e267"
+    },
+    {
+      "path": "brain-files/prompts/setup-ai-memory.prompt.md",
+      "size": 1770,
+      "sha256": "081974d82c110cf968f4d1afb3b7a8c6898c3b2f55d9f85774ef9648b47c2285"
+    },
+    {
+      "path": "brain-files/prompts/self-actualize.prompt.md",
+      "size": 6787,
+      "sha256": "3c83b331698a193e913826068b8d20db079db07326f238800b5fe5b6a4248e99"
+    },
+    {
+      "path": "brain-files/prompts/secrets.prompt.md",
+      "size": 3575,
+      "sha256": "240b20facb3ed172b65596b972238cf50f550f192dd568c48bd06ea42ae2863f"
+    },
+    {
+      "path": "brain-files/prompts/root-cause-analysis.prompt.md",
+      "size": 1458,
+      "sha256": "ff4af23c9148d08add9b8173a04d9850bd0e6db0861fcd095c6f3d339f9705a9"
+    },
+    {
+      "path": "brain-files/prompts/review.prompt.md",
+      "size": 1738,
+      "sha256": "37c2998b92595984aaae7fc3142b1ed03c15fd3dc9f21fb5cd7f1211efa26f8e"
+    },
+    {
+      "path": "brain-files/prompts/release.prompt.md",
+      "size": 2208,
+      "sha256": "ac5657f1db24a6eafd3f04e4c398f8be49bbaa1b192d9ab534a60765df2d290c"
+    },
+    {
+      "path": "brain-files/prompts/refactor.prompt.md",
+      "size": 1735,
+      "sha256": "a0cbefad1fd3cb805f1a12e6b205cec25e019029b47c1e7d2ad56e64db26d4cb"
+    },
+    {
+      "path": "brain-files/prompts/publish-all.prompt.md",
+      "size": 1936,
+      "sha256": "d8a56ee27f93b900343e5b88dd84f9a6616c6bff16abc220928008a94a9ced5f"
+    },
+    {
+      "path": "brain-files/prompts/propose-change.prompt.md",
+      "size": 7062,
+      "sha256": "e3551b1221e54fa944e920ad9ab1eee24d17f3758d2ad181fa6fa224bcb97c1c"
+    },
+    {
+      "path": "brain-files/prompts/project-dashboard.prompt.md",
+      "size": 2403,
+      "sha256": "f2a031b4c77b6261121084b2b2f9e0e2fb87f7825d86572917b73af5fb8b4872"
+    },
+    {
+      "path": "brain-files/prompts/presentation.prompt.md",
+      "size": 3052,
+      "sha256": "36b3a5ebc8ff4440ce3ed4528f630e381a32238d6500204157a564f8354f7ae7"
+    },
+    {
+      "path": "brain-files/prompts/plan.prompt.md",
+      "size": 3575,
+      "sha256": "8723c6e1eda0894f78a5b98df55c20d13c15a39c35c74bdde684d6ade2326dfc"
+    },
+    {
+      "path": "brain-files/prompts/meditate.prompt.md",
+      "size": 2547,
+      "sha256": "f9309b8cbb94a2aab5fb78febd88beedfe273809625d6ac2b5df36e58ea27d0e"
+    },
+    {
+      "path": "brain-files/prompts/md-scaffold.prompt.md",
+      "size": 3148,
+      "sha256": "93f0bd92277dd301162c66b88fa30ede1863767408d930e21e15a705e565d4ff"
+    },
+    {
+      "path": "brain-files/prompts/mcp-server.prompt.md",
+      "size": 5417,
+      "sha256": "18c0f8a31d4bbc46e83ce21a4cbfd0f4909eac483bb174593fbf91e8157fbf22"
+    },
+    {
+      "path": "brain-files/prompts/masteraudit.prompt.md",
+      "size": 1841,
+      "sha256": "9875de275874f01bd944eac1df5ec3a7572b22487de5fbac102eac96c8bb344a"
+    },
+    {
+      "path": "brain-files/prompts/marp.prompt.md",
+      "size": 3899,
+      "sha256": "6133ae9398eb33187ced56247b2a486e9c8c7c7f5a65775ca7849e1ca111fb9a"
+    },
+    {
+      "path": "brain-files/prompts/markdown-mermaid.prompt.md",
+      "size": 2854,
+      "sha256": "fb1e9fc2ce400b7aac800fc6236494055f21cf528f9cc90ce32a71206a21afe3"
+    },
+    {
+      "path": "brain-files/prompts/interpret.prompt.md",
+      "size": 2040,
+      "sha256": "4d4add328fed300c5365c4de5a7eb5bb66966b0f9eaebcdf77d5673716a4e7a1"
+    },
+    {
+      "path": "brain-files/prompts/image-handling.prompt.md",
+      "size": 3616,
+      "sha256": "8011cd95c1a831dbb4cea6c9091d850d09c0a3166783baee98c5abd5b2ff752f"
+    },
+    {
+      "path": "brain-files/prompts/identity-customization.prompt.md",
+      "size": 1009,
+      "sha256": "eda4a7ae9cb3016e660d1fd0c4a69d8793ce7e0a1b1bb98c1e3e15375c760d90"
+    },
+    {
+      "path": "brain-files/prompts/graph-api.prompt.md",
+      "size": 6553,
+      "sha256": "ba3c24bfe797c80726e7ff29ad68c6c8857f7fe2d525f9459ac1cb7d7624e9ad"
+    },
+    {
+      "path": "brain-files/prompts/gamma.prompt.md",
+      "size": 6250,
+      "sha256": "682de01b6f67fd412bebf36a42b1f23bde03a13a00c2a14971d1d2d7ddfc9656"
+    },
+    {
+      "path": "brain-files/prompts/fleet-upgrade.prompt.md",
+      "size": 1527,
+      "sha256": "7bad68f10be659f8cca2181aea267bd2eb57ddee3b5000f6bda1de6f5c2e8f05"
+    },
+    {
+      "path": "brain-files/prompts/fix.prompt.md",
+      "size": 996,
+      "sha256": "cf753ad7385475c04d4272a1393dc4e4cae7601b4072a66195a9c915e231935a"
+    },
+    {
+      "path": "brain-files/prompts/explain.prompt.md",
+      "size": 653,
+      "sha256": "ed4a19c1df76c3762ce77ce7095c0a53c53357112614e6048d94e92d42b7895d"
+    },
+    {
+      "path": "brain-files/prompts/debug.prompt.md",
+      "size": 1696,
+      "sha256": "0763ad0632d8ae1b3dbd651824c4e5e99937a0e3e9fad4a103158f901d73a13f"
+    },
+    {
+      "path": "brain-files/prompts/dashboard.prompt.md",
+      "size": 1785,
+      "sha256": "4f68f06da43a203a49edcbcbe0a4a7dd3ae1ff422473906aaab4f10d203d6d6e"
+    },
+    {
+      "path": "brain-files/prompts/customize-welcome.prompt.md",
+      "size": 1231,
+      "sha256": "7a058fb2dc9fa00f41809306514f17e65f5d86248c46447c62e2d4a438414e5f"
+    },
+    {
+      "path": "brain-files/prompts/customize-sidebar.prompt.md",
+      "size": 1624,
+      "sha256": "acb31af330cc1c5dadbd07ab9ab638c27bd1aab75b2dcacec1fe9a426403a27c"
+    },
+    {
+      "path": "brain-files/prompts/currency-audit.prompt.md",
+      "size": 1804,
+      "sha256": "99a41ff487aec370d2d4caea72ec8e540a35ba8f69df1ef28a225aaa6bd3da5f"
+    },
+    {
+      "path": "brain-files/prompts/critical-thinking.prompt.md",
+      "size": 953,
+      "sha256": "7bf086f0c884cf01fdf188a56a900e3de27e90ce756989cb93ebe774426a37ba"
+    },
+    {
+      "path": "brain-files/prompts/brand.prompt.md",
+      "size": 1160,
+      "sha256": "5405fb8bf096d53fef7a9a188110906f851564e634277cc98bf7b725712eeac5"
+    },
+    {
+      "path": "brain-files/prompts/blog-write.prompt.md",
+      "size": 661,
+      "sha256": "2a6bb48e675606312ce1b92d1286a169c8f57e20ac2b83209f643bc44882dac3"
+    },
+    {
+      "path": "brain-files/prompts/audit-writing.prompt.md",
+      "size": 2032,
+      "sha256": "1b5be20c008da3ab4a7a8f0764cd69c16e5ed7dfc08b95adb2c880096a7d1c13"
+    },
+    {
+      "path": "brain-files/hooks/README.md",
+      "size": 2200,
+      "sha256": "d236dc7f72924e827d13b1f501120d76c0b2225ae96d230508283abbbaf1f4f4"
+    },
+    {
+      "path": "brain-files/hooks/pre-commit.cjs",
+      "size": 6121,
+      "sha256": "2c105a5bac6201d8d71221ea64d73509f2967f8922ff58c2cca44760df2a34c7"
+    },
+    {
+      "path": "brain-files/hooks/pre-commit",
+      "size": 266,
+      "sha256": "f8f5b79882212dd6d1a313de41e1cd60d35c1c21befdbc4b980fb01acbfe5098"
+    },
+    {
+      "path": "brain-files/muscles/visual-memory.cjs",
+      "size": 20367,
+      "sha256": "31e3144e7f64b3edb14ed44769b7fbf2610603331f25d07c8447067d33d07e35"
+    },
+    {
+      "path": "brain-files/muscles/validate-skills.cjs",
+      "size": 5423,
+      "sha256": "f72c602c210857a4fd05b6037d88201b6269f724d77823badd1efb2e9d07c46a"
+    },
+    {
+      "path": "brain-files/muscles/update-registry.cjs",
+      "size": 11667,
+      "sha256": "a336b04283601d5bc1c91764f5e6913d2703a17200fcaeea92595e5e2e9f2ab1"
+    },
+    {
+      "path": "brain-files/muscles/update-notes.cjs",
+      "size": 6814,
+      "sha256": "259eb4e1b03de2983b01c52b57a844443501355c2c10d1ce1dc537cdfca2945a"
+    },
+    {
+      "path": "brain-files/muscles/token-cost-report.test.cjs",
+      "size": 3281,
+      "sha256": "cc7fa973204abf349a6ecdaa27f4f6ba43c1e39ac65e4a098caceb36871e95e6"
+    },
+    {
+      "path": "brain-files/muscles/token-cost-report.cjs",
+      "size": 9155,
+      "sha256": "ab6e70305befc14c6e59ed39607c6f6213aaa9f4900b093a0b16cfba5c62e2e3"
+    },
+    {
+      "path": "brain-files/muscles/session-name.cjs",
+      "size": 7975,
+      "sha256": "96af7d260b0d5ee826bbe505e919e0b7d7afdf55007908eee92bc93d7eee4d2a"
+    },
+    {
+      "path": "brain-files/muscles/self-actualization-snapshot.test.cjs",
+      "size": 8936,
+      "sha256": "62ea37139811d1c88cb79f788d41c31b6f668de8766a5c1ed141c20f12c41cdd"
+    },
+    {
+      "path": "brain-files/muscles/self-actualization-snapshot.cjs",
+      "size": 13813,
+      "sha256": "e847e4a1dd22e9156fbd275f56c23cf86bcb2345608235794d43850c0df135d0"
+    },
+    {
+      "path": "brain-files/muscles/README.md",
+      "size": 12133,
+      "sha256": "8b7321db3f18183a34905ac58a86779f58a73b4cd6a263cb4cd48f88b3019fa6"
+    },
+    {
+      "path": "brain-files/muscles/ralph-loop.cjs",
+      "size": 23693,
+      "sha256": "d33027f0a88d1fc2f99a2420082bd4443fdb8fa2e150cf68971b1dbaa4f73e09"
+    },
+    {
+      "path": "brain-files/muscles/pptx-to-md.cjs",
+      "size": 5754,
+      "sha256": "171a70e2675dc812fb42eb770650eb949647be55d86038b2989f8223507bba49"
+    },
+    {
+      "path": "brain-files/muscles/normalize-paths.cjs",
+      "size": 8926,
+      "sha256": "1e7e0438916836aa41b75b740b1822689f7adc9e916c441e3946768b952cdcfe"
+    },
+    {
+      "path": "brain-files/muscles/new-skill.cjs",
+      "size": 6241,
+      "sha256": "0661945a8881c9892a5af70b5084d81b6f0b4cdd56c2fe77932c328d059a947a"
+    },
+    {
+      "path": "brain-files/muscles/nav-inject.cjs",
+      "size": 7645,
+      "sha256": "4b1db08b444fbf08085dc32c097b6a37d0a4372292d11ffe935f91a956fe5afc"
+    },
+    {
+      "path": "brain-files/muscles/meditation-snapshot.test.cjs",
+      "size": 5569,
+      "sha256": "007571eaa7a6ac1a4a37b76d1c874c9c96c4456712213682057218925415c085"
+    },
+    {
+      "path": "brain-files/muscles/meditation-snapshot.cjs",
+      "size": 6166,
+      "sha256": "da3ca7996f46d7d3f0a70589e24a1a4f3b04c3aa1509d70f79f39883e17eda4e"
+    },
+    {
+      "path": "brain-files/muscles/md-to-word.cjs",
+      "size": 49412,
+      "sha256": "746611c8ac339272c9db4439d9c7a64ee432cfc4817d5c186c8244491b06c23f"
+    },
+    {
+      "path": "brain-files/muscles/md-to-txt.cjs",
+      "size": 4550,
+      "sha256": "ed7910be177e29a915eb346e26caf3b6d0f6d1a056d54c7fd99600422928d12d"
+    },
+    {
+      "path": "brain-files/muscles/md-to-pptx.cjs",
+      "size": 6652,
+      "sha256": "ac71be048c47194f2a6ecbf2a3d59471d108c1c79449a70603d0cb26daa0a230"
+    },
+    {
+      "path": "brain-files/muscles/md-to-pdf.cjs",
+      "size": 13956,
+      "sha256": "dafd4243bc8460c86de19d7e9921a499e60a4571bf32b814200ff2d21358b76d"
+    },
+    {
+      "path": "brain-files/muscles/md-to-latex.cjs",
+      "size": 7783,
+      "sha256": "be4d2f7f9d7a3d316e82dcd5b84d0ec16372c2be1dc4f7bbd860ca0695b55dac"
+    },
+    {
+      "path": "brain-files/muscles/md-to-html.cjs",
+      "size": 16749,
+      "sha256": "864aa431633bfc5e1a071b9478bc0314d9c4198302c9b1ff1e02bbd668e3e08f"
+    },
+    {
+      "path": "brain-files/muscles/md-to-gamma.cjs",
+      "size": 10234,
+      "sha256": "23d370f4688197cc716f113952c53f86084c26e28342b4c438a513120322b3c0"
+    },
+    {
+      "path": "brain-files/muscles/md-to-epub.cjs",
+      "size": 7335,
+      "sha256": "2fb92afadba8610db851f9226637889bee1d74cfd054e9d93f10ff99c20a7fbb"
+    },
+    {
+      "path": "brain-files/muscles/md-to-eml.cjs",
+      "size": 16581,
+      "sha256": "a1e364467d97553f0263b6eee9d0d6b83021a80bea290c5b4afbbcae6b7c7e00"
+    },
+    {
+      "path": "brain-files/muscles/md-scaffold.cjs",
+      "size": 11679,
+      "sha256": "538bb8a5d2fca4f1a175f69c196d37d7df6c67cfdd7b4c49935bb68ed59b5178"
+    },
+    {
+      "path": "brain-files/muscles/markdown-lint.test.cjs",
+      "size": 5300,
+      "sha256": "74b5707f9a04c35778eb40b7fbbffa278418c5b0a60be9bac9174bd82d02fd8d"
+    },
+    {
+      "path": "brain-files/muscles/markdown-lint.cjs",
+      "size": 14988,
+      "sha256": "4674cabe4177b91b8fe256fbb4f9be43ea32f5cfa719236e16219f762819a239"
+    },
+    {
+      "path": "brain-files/muscles/install-hooks.cjs",
+      "size": 2724,
+      "sha256": "45472370d190b624de2b7edbd458f0f59d7a5e642d451b0934ac9e922c5eb932"
+    },
+    {
+      "path": "brain-files/muscles/insight-pipeline.cjs",
+      "size": 7998,
+      "sha256": "b6ccf9cf1d0ff3428b43e3577d00dcea4152e1aa56321672643b3e04c4dcfdf4"
+    },
+    {
+      "path": "brain-files/muscles/html-to-md.cjs",
+      "size": 6413,
+      "sha256": "b41b3205d3ca2ebffdc3fd1552396a4f95dd8e781bafcea9fcf4d47b4d3a5b0e"
+    },
+    {
+      "path": "brain-files/muscles/gamma-generator.cjs",
+      "size": 34626,
+      "sha256": "d80dcc9b93da5fee5576252701fbc602033b2a711723fa094cf2b7bcf3dafef2"
+    },
+    {
+      "path": "brain-files/muscles/fleet-pattern-aggregator.cjs",
+      "size": 11923,
+      "sha256": "6a84d19493efa5febd335594e4670c90c7f5d545d2d213b7720cb9df79382985"
+    },
+    {
+      "path": "brain-files/muscles/fleet-feedback-aggregator.cjs",
+      "size": 8230,
+      "sha256": "8a4a782aa35408429dee90622f78e7898c629dae83924ab7322ce2576e1c2b3a"
+    },
+    {
+      "path": "brain-files/muscles/fix-fence-bug.cjs",
+      "size": 6697,
+      "sha256": "6c7a689030d7dece6980bb7f761f1156e5af81df2a5ff17d5bac1f4d64f9d6a3"
+    },
+    {
+      "path": "brain-files/muscles/dream-creativity-score.cjs",
+      "size": 7341,
+      "sha256": "db2a720aaf1d1fb061e75549482d4a5bb650a491dd0b5b095341dfa77ac22a92"
+    },
+    {
+      "path": "brain-files/muscles/docx-to-md.cjs",
+      "size": 12441,
+      "sha256": "edfb74de4475bc2678fe0309dbadb6ae956a06ce211d46729429f841dadc24d8"
+    },
+    {
+      "path": "brain-files/muscles/data-profile.cjs",
+      "size": 10555,
+      "sha256": "84fb0cf86f4dcfa6cd05dc7d65857d616a3bdd2e4d01a6555da734ba55d3e0a8"
+    },
+    {
+      "path": "brain-files/muscles/data-ingest.cjs",
+      "size": 12924,
+      "sha256": "fb483cc608b182e7ce715826dd13579161541a8dd40453eca809bc32aec952b4"
+    },
+    {
+      "path": "brain-files/muscles/dashboard-scaffold.cjs",
+      "size": 12567,
+      "sha256": "3b4ddf35fe7bb3289b469ad2a372b61079458a19fdeb3fff832d8ccfd7e58cbc"
+    },
+    {
+      "path": "brain-files/muscles/converter-qa.test.cjs",
+      "size": 2485,
+      "sha256": "dcb3694f2df2960bb8f16066ac0847bd795705cc80a4e9bf28f5d812722ca68f"
+    },
+    {
+      "path": "brain-files/muscles/CONVERTER-CHANGELOG.md",
+      "size": 6434,
+      "sha256": "86cd1bd1fb3c2c43399e782ae04afb2bf8560722e3efdfd7f2fbd55dec1a1193"
+    },
+    {
+      "path": "brain-files/muscles/chart-recommend.cjs",
+      "size": 9828,
+      "sha256": "dc584df47fbecb223d20e5cecf153275e73d26e15fdecd3b4495ed7889beebd5"
+    },
+    {
+      "path": "brain-files/muscles/brain-upgrade.test.cjs",
+      "size": 12006,
+      "sha256": "708c7b37ab9ffa1975bf42c87ac855803237aa511874f86a3523313db77fdb62"
+    },
+    {
+      "path": "brain-files/muscles/brain-upgrade.cjs",
+      "size": 29407,
+      "sha256": "9acdc7e6dbb1771a20709a1326ee3f37ce79f18230f9a705cc0eac77edfb49d3"
+    },
+    {
+      "path": "brain-files/muscles/brain-qa.test.cjs",
+      "size": 9926,
+      "sha256": "0d6c1f88cb417835fde1c05577e9c939637d3b6960c045c15fadf790a640cdf3"
+    },
+    {
+      "path": "brain-files/muscles/brain-qa.cjs",
+      "size": 73426,
+      "sha256": "3d59c530b1e43bd8b22b2bb25b72240dd386c2c3169f3b52da85b410099e91d7"
+    },
+    {
+      "path": "brain-files/muscles/audit-token-waste.cjs",
+      "size": 12658,
+      "sha256": "770a4a8dca718b0af54d0127e9f87a0c2f6f71b7f85ffb7e789d09614b888f0f"
+    },
+    {
+      "path": "brain-files/muscles/analyze-assignments.cjs",
+      "size": 3812,
+      "sha256": "3cf36954e88dbfef7216a9816f557d90ce8b124a9b8b054ea68ec4a178190fc6"
+    },
+    {
+      "path": "brain-files/instructions/worldview-moral-psychology.instructions.md",
+      "size": 3344,
+      "sha256": "f32804ad7ddf124759051d7c74d16dde85d4f150f4d63265fede8ddfe8dfc60e"
+    },
+    {
+      "path": "brain-files/instructions/worldview-integration.instructions.md",
+      "size": 4385,
+      "sha256": "b0218adc0fca83d80343deb935565cb13c7f6ab7b499d87ed2421ff90215140a"
+    },
+    {
+      "path": "brain-files/instructions/worldview-constitutional-ai.instructions.md",
+      "size": 2966,
+      "sha256": "57c45abe61167bab23f9748fe382581ba56cbde8c3cbf92cd9e178720c7afde9"
+    },
+    {
+      "path": "brain-files/instructions/wiki-publish.instructions.md",
+      "size": 1090,
+      "sha256": "e26050c17c1c2d497750b0dd4c35ad5ad150eb373e27855b7879f909284dcaa6"
+    },
+    {
+      "path": "brain-files/instructions/welcome-experience-customization.instructions.md",
+      "size": 1666,
+      "sha256": "b8d7ad45496bf4525d2f041bf9914b308a4787e6549998b7721c4e3e95178a22"
+    },
+    {
+      "path": "brain-files/instructions/user-config-manager.instructions.md",
+      "size": 1031,
+      "sha256": "c86f07e81ab92bad1859d043f66e0db4d2344c4b17c1395a05fbf3ec39b6206c"
+    },
+    {
+      "path": "brain-files/instructions/token-waste-elimination.instructions.md",
+      "size": 1243,
+      "sha256": "54b85ec698f4b1c063a23c8eb3b477054bb17559023d99d4627c2dede9871e64"
+    },
+    {
+      "path": "brain-files/instructions/svg-graphics.instructions.md",
+      "size": 326,
+      "sha256": "bff4a37730fe446cc108e05b60604658d1e7c4708062d772881b9f7f974fd9cd"
+    },
+    {
+      "path": "brain-files/instructions/sse-streaming.instructions.md",
+      "size": 370,
+      "sha256": "e25bee08d95372f574b3a5e596ec435780287db087f69863084cc4966bca54f9"
+    },
+    {
+      "path": "brain-files/instructions/skill-selection-optimization.instructions.md",
+      "size": 9548,
+      "sha256": "b5fa1f9d17278b0d5c134e12a7e4ac9423992f8b24054fbffb6f3e98548735c2"
+    },
+    {
+      "path": "brain-files/instructions/skill-development.instructions.md",
+      "size": 841,
+      "sha256": "4d043fe7c97a974ae5dde44fd2c1fc976648da6003261800c33e782e2080f0a2"
+    },
+    {
+      "path": "brain-files/instructions/skill-creator.instructions.md",
+      "size": 1273,
+      "sha256": "6939a5648f7eaf19ec828c91d2e667fc0912bc339f19ff979b2767435f0a4330"
+    },
+    {
+      "path": "brain-files/instructions/skill-building.instructions.md",
+      "size": 735,
+      "sha256": "fcc818a81f33a93011d7951013259674a378f1858ceefee737acc8dacf279350"
+    },
+    {
+      "path": "brain-files/instructions/sidebar-customization.instructions.md",
+      "size": 558,
+      "sha256": "a0cbaeb0bfdca124b82fc2b4abb9e125550221b477f3c864cf4bf85f447870f8"
+    },
+    {
+      "path": "brain-files/instructions/session-notes.instructions.md",
+      "size": 1866,
+      "sha256": "f16fbc1b92456f3a57a223db3e01f79cfef222030e1d4007d289b36b4c6712be"
+    },
+    {
+      "path": "brain-files/instructions/session-health-monitoring.instructions.md",
+      "size": 3677,
+      "sha256": "90770908b00a91014eaa03376d54962283cc951fc97856f7014be3cf1ec12f4d"
+    },
+    {
+      "path": "brain-files/instructions/separation-of-concerns.instructions.md",
+      "size": 7903,
+      "sha256": "f6776fc52abe808d423974b67240747f90cc1b8f76661bb3babb51c0c3421299"
+    },
+    {
+      "path": "brain-files/instructions/self-actualization.instructions.md",
+      "size": 2217,
+      "sha256": "b6c9afd58332a2aa1f439abd1dfa88eeae614e9c938b5745090d6ea46ad557c9"
+    },
+    {
+      "path": "brain-files/instructions/research-first-workflow.instructions.md",
+      "size": 13120,
+      "sha256": "91c8916d97a3bcb135473436b96c295444991fdde64351e66e698617668933db"
+    },
+    {
+      "path": "brain-files/instructions/research-first-development.instructions.md",
+      "size": 573,
+      "sha256": "99c64219d2e982cf49c6dfb8b3990c4d680cdd3712307db7338e8adfd46bf032"
+    },
+    {
+      "path": "brain-files/instructions/repository-readiness-eval.instructions.md",
+      "size": 3522,
+      "sha256": "d626c6280f0de4e144bd7a5b0918ab6e0a023104994d1d2a8f075f566e94654f"
+    },
+    {
+      "path": "brain-files/instructions/release-process.instructions.md",
+      "size": 645,
+      "sha256": "cf06a343bbd30008857d398e3dcfac709d572c93ac2e291d48ffd2276afdbc64"
+    },
+    {
+      "path": "brain-files/instructions/protocol-triggers.instructions.md",
+      "size": 11831,
+      "sha256": "7526da6f6e197dd870d5a935aa1828ec26db273931fb74c00482a8e38084965f"
+    },
+    {
+      "path": "brain-files/instructions/prompt-builder.instructions.md",
+      "size": 996,
+      "sha256": "5c649ec0fe79334371cd5c7fa970eb3aa8efd5bdfd743968951460776e38e230"
+    },
+    {
+      "path": "brain-files/instructions/prompt-authoring-standard.instructions.md",
+      "size": 6137,
+      "sha256": "33378aa30c1ad7a672409b2fc0a5f037171546a6f874848ddd16c7f0f90da47e"
+    },
+    {
+      "path": "brain-files/instructions/project-taglines.instructions.md",
+      "size": 528,
+      "sha256": "223e269c688cc0e411aef1fbaa87a718508355c3665aacf4f56dbbc75babf250"
+    },
+    {
+      "path": "brain-files/instructions/project-registration.instructions.md",
+      "size": 1686,
+      "sha256": "7f9bd3cdd921319194df6d352cd12e18622c9f2b3afb196f1685bfd717f8e490"
+    },
+    {
+      "path": "brain-files/instructions/proactive-awareness.instructions.md",
+      "size": 4670,
+      "sha256": "1337a926950bb50b7435f36e31dd15b3c6b4f86f9b73f0ad3690b7009b0cd0a8"
+    },
+    {
+      "path": "brain-files/instructions/planning-first-development.instructions.md",
+      "size": 7561,
+      "sha256": "4d85ba1161312a86dd872494bd34f58905b17d3648fd38e8642ed16a69582dc2"
+    },
+    {
+      "path": "brain-files/instructions/pii-memory-filter.instructions.md",
+      "size": 3333,
+      "sha256": "07e04f7ed8e62aba02d9eac02bcea83fa73571ab2c801f416bfe35ad6ab2de89"
+    },
+    {
+      "path": "brain-files/instructions/organic-evolution-policy.instructions.md",
+      "size": 6507,
+      "sha256": "9dfef861278fc0a9f04809c65a0ec9693a187e8e988008e07d84e00ed0221bc5"
+    },
+    {
+      "path": "brain-files/instructions/north-star.instructions.md",
+      "size": 2618,
+      "sha256": "84c93ad098a439e608ffb871d8e272775ff020f6582124a9c9556503b88dc355"
+    },
+    {
+      "path": "brain-files/instructions/msal-authentication.instructions.md",
+      "size": 390,
+      "sha256": "5e42083a23ff138e419635e2fed34e4805af01ff6a1a017824c008660a6e7ef0"
+    },
+    {
+      "path": "brain-files/instructions/memory-export.instructions.md",
+      "size": 1385,
+      "sha256": "1d28021623dda0710dd723bef3b8bdc10bb4abbc2a69a8aba31693f616738a10"
+    },
+    {
+      "path": "brain-files/instructions/memory-curation.instructions.md",
+      "size": 1115,
+      "sha256": "44d9a7054323ffa519e494bd13e6638691f2489a2086b02076c1313b94454fab"
+    },
+    {
+      "path": "brain-files/instructions/meditation.instructions.md",
+      "size": 946,
+      "sha256": "76e11bd70412830cc0066474a311a94db97457b491d84c99808461a3bb940f80"
+    },
+    {
+      "path": "brain-files/instructions/mechanical-semantic-design.instructions.md",
+      "size": 6682,
+      "sha256": "9bc35d3b4d28c1a57877d1579ccf0da1e54ea2f311fb7df6a14fb8b4ac684748"
+    },
+    {
+      "path": "brain-files/instructions/localization.instructions.md",
+      "size": 373,
+      "sha256": "b815d3e612c7883f97fd683e43aaf5b1c416da058277ce7d1a2d98a95dcf86b6"
+    },
+    {
+      "path": "brain-files/instructions/learned-patterns.instructions.md",
+      "size": 21182,
+      "sha256": "c3e1485e7ffea5b735253cafba3cccba47b2aca69ddfb272f8483fc1d7c1593c"
+    },
+    {
+      "path": "brain-files/instructions/kql.instructions.md",
+      "size": 408,
+      "sha256": "589bf78ff9560e0407637e76d0e2f809532baa9c7bbaf319db01aa9129bd315d"
+    },
+    {
+      "path": "brain-files/instructions/knowledge-synthesis.instructions.md",
+      "size": 439,
+      "sha256": "35f66214e496b4aa279f7cf800fdc2092d19860feeeab20c8b8da5461181a424"
+    },
+    {
+      "path": "brain-files/instructions/knowledge-coverage.instructions.md",
+      "size": 3171,
+      "sha256": "61840f704c9f1e498439e45647f86e4ef1bd1f71a37a6e74820862913edb1fb4"
+    },
+    {
+      "path": "brain-files/instructions/infrastructure-as-code.instructions.md",
+      "size": 422,
+      "sha256": "04022e01627afb684bbdcd4a279531f71fd977feae3366d488e06e62bc898284"
+    },
+    {
+      "path": "brain-files/instructions/identity-customization.instructions.md",
+      "size": 2405,
+      "sha256": "8641a314235e84cb2768b76f5d887bb9eb216cbb37020d85e93ab2dd8fbc0b45"
+    },
+    {
+      "path": "brain-files/instructions/heir-sync-management.instructions.md",
+      "size": 2730,
+      "sha256": "1b7a7c881e8bd2c6788088704f93a73771d7141b2bd6cc8be3ac48c293e989e1"
+    },
+    {
+      "path": "brain-files/instructions/heir-project-improvement.instructions.md",
+      "size": 16379,
+      "sha256": "1ebb356557c7b3dd6d14d534a6f330ae3110304bfe5b98a914eea5192f996503"
+    },
+    {
+      "path": "brain-files/instructions/heir-feedback.instructions.md",
+      "size": 1365,
+      "sha256": "cf26dd4c7fb629bfd07090a51a56b57e45963a071aec88cbeecf1dc22a11c6c5"
+    },
+    {
+      "path": "brain-files/instructions/heir-bootstrap.instructions.md",
+      "size": 446,
+      "sha256": "a612ff42051f55d6f4258fb9e0eb4e6099502ba081c253f5ba5306681be7735c"
+    },
+    {
+      "path": "brain-files/instructions/global-knowledge.instructions.md",
+      "size": 3194,
+      "sha256": "07f89ad47efe3d0705812390a3f84784c38f068ac67873af41b78bef575a4d7b"
+    },
+    {
+      "path": "brain-files/instructions/global-knowledge-sync.instructions.md",
+      "size": 1758,
+      "sha256": "4883e6bdff89a3d976b3feb24891de7fb26b5f05f30c0bf90105dcb2f6f4972a"
+    },
+    {
+      "path": "brain-files/instructions/fleet-management.instructions.md",
+      "size": 1687,
+      "sha256": "8d2ce61d2e066a0d99092950deedbfbcdce60faafaaaae5e79ff7b16ce4e7340"
+    },
+    {
+      "path": "brain-files/instructions/extension-audit-methodology.instructions.md",
+      "size": 1178,
+      "sha256": "13c82498319e34f4b395e9872111d26eb205e1cd75ad067bf09f120733055f99"
+    },
+    {
+      "path": "brain-files/instructions/epistemic-calibration.instructions.md",
+      "size": 2260,
+      "sha256": "39bd29ce03cb1073606c900e59030c83320fe27e5dd52bcf87a2ece30c08ace3"
+    },
+    {
+      "path": "brain-files/instructions/dream-state-automation.instructions.md",
+      "size": 2954,
+      "sha256": "ff1a9d2d4a28f71ab10f819f2cc6a65f2b811c1141dbae4b4addce53c56c1f1c"
+    },
+    {
+      "path": "brain-files/instructions/doc-hygiene.instructions.md",
+      "size": 385,
+      "sha256": "56b7a2594cedb0234bb34d658e735556ebaa253bf9e2838a21fe518453b775d6"
+    },
+    {
+      "path": "brain-files/instructions/currency-audit.instructions.md",
+      "size": 1538,
+      "sha256": "f167017e92ae76d5347f519a71a1eec48691cbae9f833616e76192b51fc9c79b"
+    },
+    {
+      "path": "brain-files/instructions/cross-project-isolation.instructions.md",
+      "size": 4732,
+      "sha256": "db5050d3b63f3233df680955f0e22576b31df3718f2f2c10fceb5f493a81681e"
+    },
+    {
+      "path": "brain-files/instructions/cognitive-benchmarking.instructions.md",
+      "size": 7200,
+      "sha256": "396bccbfeb0e9dd5b3fc309c6c5abc7ad2a562fd3e172a8ff207fdd4b1991f5a"
+    },
+    {
+      "path": "brain-files/instructions/cloud-solution-architect.instructions.md",
+      "size": 424,
+      "sha256": "61430d2455fe98552d38bc8939e937b41d05c096f6655be3803990904ed6aa89"
+    },
+    {
+      "path": "brain-files/instructions/character-aging-progression.instructions.md",
+      "size": 537,
+      "sha256": "429c3a6d8abc22dc00153c7d6ed68e8bdd18caf616854f5c66f5e07fac498ce0"
+    },
+    {
+      "path": "brain-files/instructions/brand-asset-management.instructions.md",
+      "size": 777,
+      "sha256": "b70ecb44b6ccfe5256f72a93d3bf683561217e307830cddb96488c7a8d82a15d"
+    },
+    {
+      "path": "brain-files/instructions/brain-upgrade.instructions.md",
+      "size": 6635,
+      "sha256": "c59164aede1fac57b6b8aad36ff83c2a343b4d1bcb4042c5558c2b8961a477fe"
+    },
+    {
+      "path": "brain-files/instructions/blog-writer.instructions.md",
+      "size": 1254,
+      "sha256": "d714ca1d4a6430cd1bb3cccd78720fe6eef786527665b6d1a8f4240003265a4e"
+    },
+    {
+      "path": "brain-files/instructions/bicep-avm-mastery.instructions.md",
+      "size": 374,
+      "sha256": "4473326907f2eaccfd9a9dccc565b7ac3fc0e96d666f7d76e9db294735a9ddef"
+    },
+    {
+      "path": "brain-files/instructions/automated-quality-gates.instructions.md",
+      "size": 4348,
+      "sha256": "853f13ae4ff57f43c342b159d014192aebbd2f230aad4717b365732864520b19"
+    },
+    {
+      "path": "brain-files/instructions/alex-identity-integration.instructions.md",
+      "size": 10246,
+      "sha256": "c99a374175a3c473a0cfe8ffacd793157e42d9ea540567c8719b2ebc312ef170"
+    },
+    {
+      "path": "brain-files/instructions/alex-core.instructions.md",
+      "size": 27814,
+      "sha256": "c40f9325b9501a17032350cf6fedd315196b75bc90b21da384aaf8a3a885243e"
+    },
+    {
+      "path": "brain-files/instructions/ai-character-reference-generation.instructions.md",
+      "size": 707,
+      "sha256": "0f11b7adb259b6abd76dbb26d191aa9e29b1b7517b9c635d53242faa57134c3b"
+    },
+    {
+      "path": "brain-files/instructions/agent-debug-panel.instructions.md",
+      "size": 317,
+      "sha256": "b95654443a356bd74627355cbfb204fafb44ad7023a52a15b0e9f1ce515123e3"
+    },
+    {
+      "path": "brain-files/instructions/afcp-mission-coordination.instructions.md",
+      "size": 3883,
+      "sha256": "6449c686939ccc1e2779176d920e4ce54956aca3cb409ae43a2fb637efed169d"
+    },
+    {
+      "path": "brain-files/instructions/afcp-artifact-management.instructions.md",
+      "size": 3476,
+      "sha256": "8218de90709349176609e509112462e0e903f0923e4ffb50bb504ec06f7f4319"
+    },
+    {
+      "path": "brain-files/config/user-profile.template.json",
+      "size": 1185,
+      "sha256": "0cf78f3433bf246cf71f6c0903d99db315c18f3d750af37935568d7fec9f6f12"
+    },
+    {
+      "path": "brain-files/config/unknowns.json",
+      "size": 750,
+      "sha256": "4dc8b775968e36d35c1f89c1b1cbdf1fc3494ad7c535002938c80b765fd99582"
+    },
+    {
+      "path": "brain-files/config/token-budget.schema.json",
+      "size": 1708,
+      "sha256": "82fce079c329943749c98fa8102edcea5716d91eed459c3cc3fb40a83f051230"
+    },
+    {
+      "path": "brain-files/config/token-budget.json",
+      "size": 772,
+      "sha256": "ae3f42960c2249ca12837ab01d2b3c03b511193e74946760e2d491a30982b3d3"
+    },
+    {
+      "path": "brain-files/config/taglines.schema.json",
+      "size": 2099,
+      "sha256": "43824d642e169cc7387cff5a1b658c20f87f49daad20fcf05cdc78ebe89fd5cc"
+    },
+    {
+      "path": "brain-files/config/taglines.json",
+      "size": 1193,
+      "sha256": "4b3affac01c33a4ea1bfef8e1a2584534f8152382591c4984f235b95c2db171c"
+    },
+    {
+      "path": "brain-files/config/review-rules.schema.json",
+      "size": 1680,
+      "sha256": "685c23b30693a454551b71003b848f1754ab47410977e0839f24687e7db199c3"
+    },
+    {
+      "path": "brain-files/config/review-rules.json",
+      "size": 2979,
+      "sha256": "84d7b6af8638b69ab7d1119bf4d77032d32d64158c3c5bd0b8189daa5445aca2"
+    },
+    {
+      "path": "brain-files/config/rai-reliance-metrics.json",
+      "size": 600,
+      "sha256": "67724db15b7d9da4f051c6af70158cfcafa96a6d949b0a715fcf984c257779d1"
+    },
+    {
+      "path": "brain-files/config/markdown-light.css",
+      "size": 21410,
+      "sha256": "918c59559c26f3d1797b2901997674b013dcecd09ddbec7149ccf7b08e00d9ff"
+    },
+    {
+      "path": "brain-files/config/loop-menu.json",
+      "size": 7453,
+      "sha256": "0e369082ca0fc9e3206de08db9606c224c46cfa15b0cd3bd31719619cf537acd"
+    },
+    {
+      "path": "brain-files/config/loop-config.schema.json",
+      "size": 6820,
+      "sha256": "5a0adf6cc060a2b57d12ecf3699337a4726bcfdd83bfd6325a61e3be6413b6d9"
+    },
+    {
+      "path": "brain-files/config/knowledge-artifacts.json",
+      "size": 998,
+      "sha256": "ca5f8bbe4c4b949dadcfb54d51da0feaf2f9d33becfb686ee9bc4f99e93edcd4"
+    },
+    {
+      "path": "brain-files/config/goals.json",
+      "size": 307,
+      "sha256": "c2514564c503a92a480e1198d242de804acb7cc7958feafd99438458582ae9e3"
+    },
+    {
+      "path": "brain-files/config/context-discovery.json",
+      "size": 1764,
+      "sha256": "6d85543400bf3ca17d8d02d94a8961fe2e26fb43f6e6ccaf6d0897f2586dc1ce"
+    },
+    {
+      "path": "brain-files/config/config-layers.json",
+      "size": 1487,
+      "sha256": "d4a75d3a1e6bf7810758ad1f8db1cdadc28ee98f073f83d8e5c584e4af150059"
+    },
+    {
+      "path": "brain-files/config/cognitive-config.json",
+      "size": 1587,
+      "sha256": "5842cecc60d97b02d5a0a343dafc76b64edc886b7cd1afb6f67a64a409f826b5"
+    },
+    {
+      "path": "brain-files/config/cognitive-config-template.json",
+      "size": 1062,
+      "sha256": "e9d388b659b74bb567bdb328163360cbf4327d8acc254b1844374030864fd117"
+    },
+    {
+      "path": "brain-files/agents/alex.agent.md",
+      "size": 12027,
+      "sha256": "eb17ba7bb978a20ef41004621c7471f14c86105670a720d3062c7b890a46f7e1"
+    },
+    {
+      "path": "brain-files/agents/alex-skill-builder.agent.md",
+      "size": 11707,
+      "sha256": "65d893691dd41ce5ac168ee855ee1b9899acf31280fe97e3b2cc4cfaa181b429"
+    },
+    {
+      "path": "brain-files/agents/alex-security-cloud.agent.md",
+      "size": 1345,
+      "sha256": "c4fd82e16052528bc05af5ffabe0d2ec68cc69ac82b725729589af87174c48fd"
+    },
+    {
+      "path": "brain-files/agents/alex-researcher-cloud.agent.md",
+      "size": 1404,
+      "sha256": "93b587d48c4eff15d82719a6517e527e0d4d08f4e0396ef019518752ee45888b"
+    },
+    {
+      "path": "brain-files/agents/alex-maintenance-cloud.agent.md",
+      "size": 1266,
+      "sha256": "b23e2c9328e4d32c4de44ebb36e629966e3da3bc4a6132da55597df498b06f5c"
+    },
+    {
+      "path": "brain-files/agents/alex-docs-cloud.agent.md",
+      "size": 1359,
+      "sha256": "3b1d90cae1693ab9a96d260eafbe8f087a1afa6f558f0a01d96f8c8bc79bc926"
+    },
+    {
+      "path": "brain-files/agents/alex-brain-ops.agent.md",
+      "size": 13951,
+      "sha256": "4138cb1abde571d23f712b74c2c3eba095c95169fe969071aebba98d469dd77a"
+    },
+    {
+      "path": "brain-files/prompts/loop/write-email.prompt.md",
+      "size": 2662,
+      "sha256": "08ec6633473a7947d5a03fd5241f4f3119bf1e3f1413598a82ddf6a6a2d23521"
+    },
+    {
+      "path": "brain-files/prompts/loop/test.prompt.md",
+      "size": 1695,
+      "sha256": "2cc854119af235cd962dba4042e2021fe4314fedca20e72cb18abfe42963dc55"
+    },
+    {
+      "path": "brain-files/prompts/loop/tech-debt.prompt.md",
+      "size": 2949,
+      "sha256": "c7ae35e3d02ef4c2f62c89705290275794511401db9ec6d25928f339b71436e5"
+    },
+    {
+      "path": "brain-files/prompts/loop/tdd.prompt.md",
+      "size": 2282,
+      "sha256": "7ce8d02776fc6f65222541e179ea850f4806307808d69c7e4ae17317cb60ff25"
+    },
+    {
+      "path": "brain-files/prompts/loop/sfi-review.prompt.md",
+      "size": 2498,
+      "sha256": "b8d0760653959ee629c9395e70a7e9e118701c7103c034d6aa14ad0ac85bbd51"
+    },
+    {
+      "path": "brain-files/prompts/loop/security.prompt.md",
+      "size": 2865,
+      "sha256": "fc033f08a54a19b6047e514dcb6aeba19888f1b9b0ef17df2443207cf56781f9"
+    },
+    {
+      "path": "brain-files/prompts/loop/review.prompt.md",
+      "size": 1670,
+      "sha256": "9db317b032ed33f52c64ab66b7b9b72c3365576e56071d539cd0272e3efe9b68"
+    },
+    {
+      "path": "brain-files/prompts/loop/responsible-ai.prompt.md",
+      "size": 2201,
+      "sha256": "173385c4d1cdb146e4ef15ad3e1560b00f2a3bf1848de467275d01b2639593ce"
+    },
+    {
+      "path": "brain-files/prompts/loop/research.prompt.md",
+      "size": 2082,
+      "sha256": "655d4dc66b25877b2bf1fb948adeb25e23c2ef2cbbf5fa75f34bf00ea4ba6dc8"
+    },
+    {
+      "path": "brain-files/prompts/loop/release.prompt.md",
+      "size": 1426,
+      "sha256": "7b3ba70203aafcc86853d45f362d884f3a37268c966d231dd10b71fb8e815e0f"
+    },
+    {
+      "path": "brain-files/prompts/loop/refactor.prompt.md",
+      "size": 1603,
+      "sha256": "2197e07d3073655ab7a64d25974a12f06618fda110cefae7313df09ef8be4243"
+    },
+    {
+      "path": "brain-files/prompts/loop/presentation.prompt.md",
+      "size": 2045,
+      "sha256": "d30f56b3ac77c0cf6c106f88eac91bef7ace4ac071a6adcd1b85bbdbed286dc0"
+    },
+    {
+      "path": "brain-files/prompts/loop/plan.prompt.md",
+      "size": 1804,
+      "sha256": "f9a2e814eb2cd241f7b2e3934a1cb0f247c470abe55efdfa2d1640613f3149b8"
+    },
+    {
+      "path": "brain-files/prompts/loop/north-star.prompt.md",
+      "size": 2467,
+      "sha256": "e95c613f0483de3b30fdaedc938bda8b7c9b23bc92c8db9b84d5fa69015f6d97"
+    },
+    {
+      "path": "brain-files/prompts/loop/meeting-notes.prompt.md",
+      "size": 2120,
+      "sha256": "6178bec6ff9b2a8dae29be46114b7cd038d0a5c841d460deb77a31a98795d113"
+    },
+    {
+      "path": "brain-files/prompts/loop/literature.prompt.md",
+      "size": 2272,
+      "sha256": "7153b3f2f66a2353578642d69093a9c64b8f992ba6237d43a3c35c975db444f7"
+    },
+    {
+      "path": "brain-files/prompts/loop/learn.prompt.md",
+      "size": 1709,
+      "sha256": "2d7fc8b59105d6e60bae8f808f9576d07a1bd6675cf6639967046fc9693d1baf"
+    },
+    {
+      "path": "brain-files/prompts/loop/improve.prompt.md",
+      "size": 1294,
+      "sha256": "bd06d1fa0fdf29f8fd2f1b7c33346fb90fb0089b3d261500063b3b3718b4fc6f"
+    },
+    {
+      "path": "brain-files/prompts/loop/ideate.prompt.md",
+      "size": 1586,
+      "sha256": "ec4f4840fe70da7c6a928292b6bb103a8447018681c8f25719de3b7f170731c1"
+    },
+    {
+      "path": "brain-files/prompts/loop/health-check.prompt.md",
+      "size": 2775,
+      "sha256": "75218c53ea88b3a84eeae0c2171f02445e5dcf5e8bae4ec7ba44b83847a362cd"
+    },
+    {
+      "path": "brain-files/prompts/loop/gap-analysis.prompt.md",
+      "size": 2189,
+      "sha256": "a3f9691e7f407d068861c9ffb8b6a57de0cb879a3350e2f08c60ceb9db35bac1"
+    },
+    {
+      "path": "brain-files/prompts/loop/doc-audit.prompt.md",
+      "size": 2328,
+      "sha256": "77a31762bab43c861e174b58b2906b39452e8d9a5e0a206210bcb6f72d3e5c5d"
+    },
+    {
+      "path": "brain-files/prompts/loop/diagram.prompt.md",
+      "size": 2161,
+      "sha256": "abe1ea393c9b6b5a6e0c46ce38e1af10a4f816f0f7e4ef582ec92e563e5ec4ec"
+    },
+    {
+      "path": "brain-files/prompts/loop/dependencies.prompt.md",
+      "size": 3035,
+      "sha256": "b82887938c6ee1abba69a5ebf8b92c917fad60ca26e89a9f3d02674f1fb33aa1"
+    },
+    {
+      "path": "brain-files/prompts/loop/debug.prompt.md",
+      "size": 1956,
+      "sha256": "db208d9143f1560bde75a59a0557d383604afbaee4bd2840dd0fe5190a10f2d9"
+    },
+    {
+      "path": "brain-files/prompts/loop/data-story.prompt.md",
+      "size": 2413,
+      "sha256": "368807c665fa07ead211b518b84a599f92ea7cc0ca1e89d853bbccdb46bfd53a"
+    },
+    {
+      "path": "brain-files/prompts/loop/build.prompt.md",
+      "size": 1896,
+      "sha256": "8ef41daa2d7dbea99277b065dad7e716286ed16bed38d793321a97636db45e5d"
+    },
+    {
+      "path": "brain-files/prompts/loop/analyze-data.prompt.md",
+      "size": 2271,
+      "sha256": "419b10346c11dab07de3bdec6cecbdba8c1e4850994308f7e6a2be86947125af"
+    },
+    {
+      "path": "brain-files/muscles/shared/svg-pipeline.cjs",
+      "size": 13276,
+      "sha256": "ed6a1ac199ff3930d2e56af339b36871327ae90b584a2039cdcffe09b9a02577"
+    },
+    {
+      "path": "brain-files/muscles/shared/skill-meta.cjs",
+      "size": 4063,
+      "sha256": "1a1ff1716eb40588bdb55ac5f963eb3fffb99395044a859bfafd90e6c454e6c5"
+    },
+    {
+      "path": "brain-files/muscles/shared/round-trip-validator.cjs",
+      "size": 8110,
+      "sha256": "7c29c053d9822fe7c7459ae47875157ef50e68a30ad5d99e20b6013ac84ca661"
+    },
+    {
+      "path": "brain-files/muscles/shared/replicate-core.cjs",
+      "size": 16645,
+      "sha256": "8544037edeabcab4f8d80c58f3b6366b6b9f052f8c8766d15cabc198e3a85ec1"
+    },
+    {
+      "path": "brain-files/muscles/shared/prompt-preprocessor.cjs",
+      "size": 5171,
+      "sha256": "25893deb381950c3f6d9919f7f07dc6c2cec3fd5a203e18c147b4bcbee4d764b"
+    },
+    {
+      "path": "brain-files/muscles/shared/phase2-rollback.cjs",
+      "size": 4263,
+      "sha256": "21b58ff33fa3194de0343a50d0ef331fd24210620d749386c71a8d48e8235cef"
+    },
+    {
+      "path": "brain-files/muscles/shared/phase2-decision-log.cjs",
+      "size": 6437,
+      "sha256": "b4ea319673ef0d0319b9202dd58fe96a53c2b51405996486217036eb42147ef3"
+    },
+    {
+      "path": "brain-files/muscles/shared/mermaid-pipeline.cjs",
+      "size": 15623,
+      "sha256": "611ae84366a52b9546343df507b25b878b031a23136f15aeb6ebf21af0789dfb"
+    },
+    {
+      "path": "brain-files/muscles/shared/markdown-preprocessor.cjs",
+      "size": 11797,
+      "sha256": "94e65c98cace88bde58b1213b51cfe0f9000f8b57667ac0b91a46e619d84f77b"
+    },
+    {
+      "path": "brain-files/muscles/shared/index.mjs",
+      "size": 2483,
+      "sha256": "2a818b2b06ce360990c3660e93a792f041c526ae918e477e17bb0f1db4945061"
+    },
+    {
+      "path": "brain-files/muscles/shared/generation-report.mjs",
+      "size": 3690,
+      "sha256": "a70fdbbd96c965302b44bd740cc0025535de4c079a7a78234e6e725a208ddc01"
+    },
+    {
+      "path": "brain-files/muscles/shared/data-uri.cjs",
+      "size": 3369,
+      "sha256": "5f97fe26a624d9ebd986ac528678cfeacda804161996ecc3748b5992df721dff"
+    },
+    {
+      "path": "brain-files/muscles/shared/converter-config.example.json",
+      "size": 1551,
+      "sha256": "7f0489cdf2c4e478e7752126275156669818f0878df798a2a7fa9b35167fd395"
+    },
+    {
+      "path": "brain-files/muscles/shared/converter-config.cjs",
+      "size": 5762,
+      "sha256": "acad2d980b8aceedae1de7e43def5048a520e54bab20ca0c4dd9ce6be826b788"
+    },
+    {
+      "path": "brain-files/muscles/shared/conversion-report.cjs",
+      "size": 2844,
+      "sha256": "c512964d9be22c2b2c06a42096a3d948eb43338d366af24abd3671730cf1bcd5"
+    },
+    {
+      "path": "brain-files/muscles/shared/brain-upgrade-core.cjs",
+      "size": 26432,
+      "sha256": "f9a875ad10f4b3be02302a72f1825475aaa91925b1e3897852dab5d958af49da"
+    },
+    {
+      "path": "brain-files/muscles/lua-filters/word-table-style.lua",
+      "size": 851,
+      "sha256": "72a3abfc5695b62bc4d47820433fcda73bee6cfddda5d39994636509afabf569"
+    },
+    {
+      "path": "brain-files/muscles/lua-filters/keep-headings.lua",
+      "size": 908,
+      "sha256": "dace934fc626608ccb8e7b0ccd9f10ec78a6428dad85131425b24d379c4ed217"
+    },
+    {
+      "path": "brain-files/muscles/lua-filters/caption-labels.lua",
+      "size": 1030,
+      "sha256": "78246625571f07c25f97ff06bad7749eb431e1a27d4178301b13b061de9033ff"
+    },
+    {
+      "path": "brain-files/muscles/hooks/validator-session-start.cjs",
+      "size": 2204,
+      "sha256": "03f6b4fc8b292824fb0db667f48e3bde3bd9f6bbd292ec058ebb361c5b3ea5bf"
+    },
+    {
+      "path": "brain-files/muscles/hooks/validator-pre-tool-use.cjs",
+      "size": 1843,
+      "sha256": "2511b9b378abecc68fc6510179e0cf691b16afd3505046d8ecd2c6569adcc2a3"
+    },
+    {
+      "path": "brain-files/muscles/hooks/researcher-stop.cjs",
+      "size": 1907,
+      "sha256": "0e906745d0d9a6e5d268c19c3e8f2b758eae8df57057f7512d3d1834f6571093"
+    },
+    {
+      "path": "brain-files/muscles/hooks/researcher-session-start.cjs",
+      "size": 2504,
+      "sha256": "c99113b02d3cc96e032b78985fd7f6beab2afab60898b66a5c0e44bc2d6f4adb"
+    },
+    {
+      "path": "brain-files/muscles/hooks/documentarian-post-tool-use.cjs",
+      "size": 2824,
+      "sha256": "1ef3a3c7d074ee8cb598e199e81508af083062fb89a458a7065ff8702aadc4d7"
+    },
+    {
+      "path": "brain-files/muscles/hooks/builder-post-tool-use.cjs",
+      "size": 1346,
+      "sha256": "493be4c64e24cc8ea67c558d210555b75d11e442d5125d9704671e256bf99e27"
+    },
+    {
+      "path": "brain-files/skills/wiki-publish/SKILL.md",
+      "size": 7079,
+      "sha256": "d268fc8fbbe6253858a91415113e3d47e1907d3c967472d8160b1c35f255e590"
+    },
+    {
+      "path": "brain-files/skills/welcome-experience-customization/SKILL.md",
+      "size": 11019,
+      "sha256": "379ad6550d2ced67dc5bbcb70e481d627efd31a10e3add185b5d259210c17d89"
+    },
+    {
+      "path": "brain-files/skills/work-life-balance/SKILL.md",
+      "size": 3486,
+      "sha256": "0342717b9f34bb547f6d7e0272915e038dbf2b55a704f024be4c8e5c9208a3fb"
+    },
+    {
+      "path": "brain-files/skills/vscode-environment/SKILL.md",
+      "size": 2155,
+      "sha256": "22aadfb0f116b33c2a7521cb05e5b13992d7a031cbbb1d2c233e26cc204b8877"
+    },
+    {
+      "path": "brain-files/skills/vscode-configuration-validation/SKILL.md",
+      "size": 7675,
+      "sha256": "cf3cf71f9ebe30b13d959c01dbf9e5e7afcbb6285f26cee58d009d603e7df1dd"
+    },
+    {
+      "path": "brain-files/skills/visual-memory/SKILL.md",
+      "size": 14405,
+      "sha256": "cd39cf09518092275d1787265392255e8b11fdf08b085bdb3477f81b933e8eaf"
+    },
+    {
+      "path": "brain-files/skills/vscode-extension-patterns/SKILL.md",
+      "size": 6825,
+      "sha256": "bac82a4a0e4825c0c3b00428a17ba3afa100d1c22b4fa12c53421d046e09f02f"
+    },
+    {
+      "path": "brain-files/skills/video-generation/SKILL.md",
+      "size": 11588,
+      "sha256": "b74fed3a5156da113a284de97213caad2966063d17be6b46e8bdc1d1cfdb4597"
+    },
+    {
+      "path": "brain-files/skills/user-config-manager/SKILL.md",
+      "size": 5516,
+      "sha256": "3cb33fe0469b4a29ab404d2ff09720bfb546252be2ee57f3c666b76f344b4250"
+    },
+    {
+      "path": "brain-files/skills/ui-ux-design/SKILL.md",
+      "size": 21616,
+      "sha256": "f0a42d0428aba99f59b13652aa7874f82940f95f2072851c786e04d1db015d45"
+    },
+    {
+      "path": "brain-files/skills/token-waste-elimination/SKILL.md",
+      "size": 7019,
+      "sha256": "cfc4e317696816a72f5e0a7b178903295af3014d68c6bb78ba3093a4f0531533"
+    },
+    {
+      "path": "brain-files/skills/text-to-speech/SKILL.md",
+      "size": 7669,
+      "sha256": "01c6c872edc6e902646f1a8838a5a34fb068d34a60a50060bd95453c52c81985"
+    },
+    {
+      "path": "brain-files/skills/text-to-speech/README.md",
+      "size": 762,
+      "sha256": "17e5e45872ab59c4dd4dcee751ed3bd9e0aafa51530c320603db9818601a6b2b"
+    },
+    {
+      "path": "brain-files/skills/testing-strategies/SKILL.md",
+      "size": 7071,
+      "sha256": "ca3e1c10b23f68e328311ab7c5e7fc4fe67bcb809a2a1e7e39979f42ad4cbe41"
+    },
+    {
+      "path": "brain-files/skills/test-quality-analysis/SKILL.md",
+      "size": 9847,
+      "sha256": "ef7fd7badc54f7cabdfe44befc309db31538475a6cd89d42cd9ad5d0a8c5c74d"
+    },
+    {
+      "path": "brain-files/skills/terminal-image-rendering/SKILL.md",
+      "size": 3406,
+      "sha256": "cf56b9db6a7b825c18ca43dc0c7a687f0b48e11554ec2bbe4e3e7c9f7466f4b8"
+    },
+    {
+      "path": "brain-files/skills/terminal-command-safety/SKILL.md",
+      "size": 2758,
+      "sha256": "977fd290326405ada5a94b9b813078c41d15229183532b0ced6fa0e830582b5a"
+    },
+    {
+      "path": "brain-files/skills/tech-debt-discovery/SKILL.md",
+      "size": 8320,
+      "sha256": "e7929086519ef524231fb5090107a049b64d8909287fa54ffafb4066d3513152"
+    },
+    {
+      "path": "brain-files/skills/svg-graphics/SKILL.md",
+      "size": 5003,
+      "sha256": "31db7e39c053b44bbf3174c5beafaf6b359fad60eb463abee33484fb490c3ba4"
+    },
+    {
+      "path": "brain-files/skills/teams-app-patterns/SKILL.md",
+      "size": 6804,
+      "sha256": "0c17dddf4099c1ec123bc838603c2c541af287130e61348b36d41db9a0c9d6df"
+    },
+    {
+      "path": "brain-files/skills/status-reporting/SKILL.md",
+      "size": 7408,
+      "sha256": "a450132e643c62f617bd2cf5e9687e775eccb5e38f3894ff39e9b3d7de3a0dea"
+    },
+    {
+      "path": "brain-files/skills/stakeholder-management/SKILL.md",
+      "size": 9465,
+      "sha256": "8e9cf83dadd148f1bf61ae3569d6d43102c20601334f2d4de587d6b88202b757"
+    },
+    {
+      "path": "brain-files/skills/sse-streaming/SKILL.md",
+      "size": 7639,
+      "sha256": "3e82ab6a8df570ea2a2d7c8456cb62b28e71d0d902632940bad5bc70b2c29697"
+    },
+    {
+      "path": "brain-files/skills/socratic-questioning/SKILL.md",
+      "size": 4558,
+      "sha256": "8134b4680e16fa324dc023f5e6cafd0f7d401d55e128c355d6928ccaff85dc52"
+    },
+    {
+      "path": "brain-files/skills/slide-design/SKILL.md",
+      "size": 10313,
+      "sha256": "46e644734d90e8af030825eea12d768420f8b6cf7ac1df6cbf99053b8d098987"
+    },
+    {
+      "path": "brain-files/skills/skill-development/SKILL.md",
+      "size": 12894,
+      "sha256": "a971906976f46d4e3c93e332e5dadf41a7a7e4423790649a62d0a351b3d9df80"
+    },
+    {
+      "path": "brain-files/skills/skill-creator/SKILL.md",
+      "size": 11654,
+      "sha256": "eaa711108f2033cbb2de26f580b00ce730dc5324e0beb50280177b8ba279816c"
+    },
+    {
+      "path": "brain-files/skills/silence-as-signal/SKILL.md",
+      "size": 11938,
+      "sha256": "4c7751a5b9f0b153b4575de30cf421b2591ed5e9fb4ae594c6d9d22210a3a51f"
+    },
+    {
+      "path": "brain-files/skills/session-notes/SKILL.md",
+      "size": 4286,
+      "sha256": "c1a76253909aca6ceab6680e07e9ce051051ab2efc7883b14d170f69fdf3b272"
+    },
+    {
+      "path": "brain-files/skills/sidebar-customization/SKILL.md",
+      "size": 5666,
+      "sha256": "bb38957e2621b5fa590ece6b4f196dc8dd842a65555092150c6ad6de089598e0"
+    },
+    {
+      "path": "brain-files/skills/service-worker-offline-first/SKILL.md",
+      "size": 7385,
+      "sha256": "4a244509c55d7ab0ed26268ec4c61839f1f0d5cc04fdcd99a12f39427b147edc"
+    },
+    {
+      "path": "brain-files/skills/security-threat-modeler/SKILL.md",
+      "size": 11039,
+      "sha256": "a4c366a418d9449d93b18ed49d4f8b616c08c9c1eb7bee491ef571bf34868b6e"
+    },
+    {
+      "path": "brain-files/skills/self-actualization/SKILL.md",
+      "size": 9918,
+      "sha256": "1a5588174b47cbda341ab7a94fcbbc72cad3d8fa4956069f15f6d8790a3c608c"
+    },
+    {
+      "path": "brain-files/skills/security-review/SKILL.md",
+      "size": 9572,
+      "sha256": "f2c73604fe8920b87f7e9088cd59f1c7744a49c8b326ef1661dbddd8bd81a4d7"
+    },
+    {
+      "path": "brain-files/skills/secrets-management/SKILL.md",
+      "size": 15416,
+      "sha256": "2fda8dfb17ba869c77f385d49fbf276b2ca75c2e93df9444cfc72efd56daab85"
+    },
+    {
+      "path": "brain-files/skills/scope-management/SKILL.md",
+      "size": 8170,
+      "sha256": "4e62757cfc75a9623b5100ee0c2afb1614a1185b720d1b3aaa052ff4b55dbc37"
+    },
+    {
+      "path": "brain-files/skills/sales-enablement/SKILL.md",
+      "size": 7545,
+      "sha256": "8e9eef54960e3ad80bef1acdc422715c1c51340bb28c19cb66b179792fa6facb"
+    },
+    {
+      "path": "brain-files/skills/root-cause-analysis/SKILL.md",
+      "size": 5904,
+      "sha256": "27fd2d3fa6cbda708490d038e9a804fdf7feb45d0047066c53fa4c2a2794e230"
+    },
+    {
+      "path": "brain-files/skills/rubber-duck-debugging/SKILL.md",
+      "size": 5938,
+      "sha256": "b794b53d9ff7aee673c420a00cd00bdb0b7b2b0aaef26acb5ced779d1433a26e"
+    },
+    {
+      "path": "brain-files/skills/research-first-development/SKILL.md",
+      "size": 16917,
+      "sha256": "d953c0c7d2a0561fa5a07db69bead81868ec66cedd7b82f7a21555a5ce3a1d0e"
+    },
+    {
+      "path": "brain-files/skills/release-preflight/SKILL.md",
+      "size": 6843,
+      "sha256": "2e164f2bfb613b8c43b76d717b422d2634abb130af164def0be20fec709f6a1e"
+    },
+    {
+      "path": "brain-files/skills/react-vite-performance/SKILL.md",
+      "size": 7392,
+      "sha256": "d6afb298ffbff02606058528d45ddc7f3278d71d5c89aa17c302f99de44ddd74"
+    },
+    {
+      "path": "brain-files/skills/refactoring-patterns/SKILL.md",
+      "size": 6377,
+      "sha256": "ded34d9118d40e37a39b9cba3d4040411e854476337777b0e507342cc7ed8052"
+    },
+    {
+      "path": "brain-files/skills/ralph-loop/SKILL.md",
+      "size": 8576,
+      "sha256": "6f7d19901946fafa566d28c3744f7538536767a06d92a58ad60f2661313c526a"
+    },
+    {
+      "path": "brain-files/skills/prompt-evolution-system/SKILL.md",
+      "size": 6347,
+      "sha256": "4e9a004286a313ee9df53269a1bd163f155f09ecc81a6257975ed75c9c80d566"
+    },
+    {
+      "path": "brain-files/skills/rag-architecture/SKILL.md",
+      "size": 14684,
+      "sha256": "c0ec51ca62fecd007ed764dbf20693ebb96ce2e038f9033d0dfc7a771dc1d367"
+    },
+    {
+      "path": "brain-files/skills/prompt-engineering/SKILL.md",
+      "size": 9570,
+      "sha256": "3b7b19e7fac848493fa9ccbf8c0ce2b722e716575538222ebabf144c23fa991f"
+    },
+    {
+      "path": "brain-files/skills/project-taglines/SKILL.md",
+      "size": 5252,
+      "sha256": "0a69d71cdf516ccf7d871c6f46b227dcadadddddcd790028b74344d1696a7ed4"
+    },
+    {
+      "path": "brain-files/skills/prompt-builder/SKILL.md",
+      "size": 5231,
+      "sha256": "010b2f5d85ea172cd007603af08056cfa8b80347ef757f3ccb49e430463f2509"
+    },
+    {
+      "path": "brain-files/skills/project-scaffolding/SKILL.md",
+      "size": 3574,
+      "sha256": "c84bef8d200b9ef7432a1145baa7c433510871fd4fff331f21164b95de9e8a46"
+    },
+    {
+      "path": "brain-files/skills/project-risk-analysis/SKILL.md",
+      "size": 25413,
+      "sha256": "16300cd28fb7c5b221762213d434f68fa0daa09a2ceffab3c0871d0d95424b73"
+    },
+    {
+      "path": "brain-files/skills/project-registration/SKILL.md",
+      "size": 7865,
+      "sha256": "8d1f7693a39b949181b3ef38ca47ec0ee4c35c5cfb56c1a065623b3a208718c4"
+    },
+    {
+      "path": "brain-files/skills/project-management/SKILL.md",
+      "size": 8538,
+      "sha256": "2b562d2e60543f740bdb1ed6bd9e4a3865df6d09cde6f59fd40d277c83c5f0f5"
+    },
+    {
+      "path": "brain-files/skills/proactive-assistance/SKILL.md",
+      "size": 7980,
+      "sha256": "8ebb418d9134d8d5b505d325d2d8952562a8ca37976a93aab8e2729191084ab6"
+    },
+    {
+      "path": "brain-files/skills/privacy-responsible-ai/SKILL.md",
+      "size": 9114,
+      "sha256": "9dd85e5b54c01f8387951c03dbedb383f3fcd4cd3d9b8ad174649f0262153ee9"
+    },
+    {
+      "path": "brain-files/skills/project-deployment/SKILL.md",
+      "size": 6350,
+      "sha256": "8d4db41c450a42bdd6c86f95672014f66e3b0e76b7aac781e62d1b6a36e1598c"
+    },
+    {
+      "path": "brain-files/skills/presentation-tool-selection/SKILL.md",
+      "size": 8231,
+      "sha256": "aad17ef18456c21cf8d2dc6f4e3cd510f77838623e180ecf578e2d5b545c716e"
+    },
+    {
+      "path": "brain-files/skills/postmortem/SKILL.md",
+      "size": 10411,
+      "sha256": "433fd61e01b7be1509f0657447c0ed570af46cc44a3a836f9d658161eb044b43"
+    },
+    {
+      "path": "brain-files/skills/pptx-generation/SKILL.md",
+      "size": 4325,
+      "sha256": "cc8cc6d3dd916ca5e0ce1c32108685f009c364f5b1a1aac2ae4407830a17a374"
+    },
+    {
+      "path": "brain-files/skills/pii-privacy-regulations/SKILL.md",
+      "size": 12066,
+      "sha256": "04657aebccecdb106275a6ac4a0ab439ad90bf28c68b817da150789509b7f50d"
+    },
+    {
+      "path": "brain-files/skills/persona-detection/SKILL.md",
+      "size": 4550,
+      "sha256": "d2dd169b04af20daa5edb7f7193e97939e4d7377dbd02cc5eaebfbc9477b02ff"
+    },
+    {
+      "path": "brain-files/skills/performance-profiling/SKILL.md",
+      "size": 13413,
+      "sha256": "1c055cd17f257de562d48f68a594b7f4ae84fcdb290b8e060d7e1249bbfdfb7f"
+    },
+    {
+      "path": "brain-files/skills/observability-monitoring/SKILL.md",
+      "size": 9702,
+      "sha256": "a7ad41e319fdcae93013c71ececabae04c3a7a0ef9f8d669faa0e9c2016f8303"
+    },
+    {
+      "path": "brain-files/skills/north-star/SKILL.md",
+      "size": 9864,
+      "sha256": "25aec0539f4261397eca36cc26bcc06a837b2db532da2281f3f1b63177b3abf7"
+    },
+    {
+      "path": "brain-files/skills/nav-inject/SKILL.md",
+      "size": 3323,
+      "sha256": "c85305233e772e5288a9b8a8181ca756bb17b7628a1bc06f4161e387b5a0f485"
+    },
+    {
+      "path": "brain-files/skills/muscle-memory-recognition/SKILL.md",
+      "size": 7183,
+      "sha256": "d81d90c7f6f88e740143463317582f66b9375c0d4a1a62741a056436d981a962"
+    },
+    {
+      "path": "brain-files/skills/multi-agent-orchestration/SKILL.md",
+      "size": 9320,
+      "sha256": "c23c3d418487bfb9ff28e8dd4ac9f3aeb7848f9bd24e2606b3271dc3a9010adf"
+    },
+    {
+      "path": "brain-files/skills/music-generation/SKILL.md",
+      "size": 5869,
+      "sha256": "f0ec5afe50974ae333a5f9824c13e73d034c78bfc175b251a0e3596bcf529ac1"
+    },
+    {
+      "path": "brain-files/skills/msal-authentication/SKILL.md",
+      "size": 7175,
+      "sha256": "bb5cd48402e30f70aecca4186f07d254a3ff81ba5836e56ebe8d20bace0c4c94"
+    },
+    {
+      "path": "brain-files/skills/microsoft-graph-api/SKILL.md",
+      "size": 17778,
+      "sha256": "49aa570ff223cf540974620746046101bef611795fdce9c292d288e94fc04d4a"
+    },
+    {
+      "path": "brain-files/skills/memory-export/SKILL.md",
+      "size": 4830,
+      "sha256": "01f6cc1787e28ef7e7b328c5361b1d070064411775a87bb9bfb439e6e16c1b64"
+    },
+    {
+      "path": "brain-files/skills/microsoft-fabric/SKILL.md",
+      "size": 9849,
+      "sha256": "a4487d70d358f77c44d343f831092b6ea83d494d41191b7ca082df05c4c14c5c"
+    },
+    {
+      "path": "brain-files/skills/memory-activation/SKILL.md",
+      "size": 84507,
+      "sha256": "5543c4853a79adad0ad99787139a6fef5d2e46547cce47ce23884bb6f305ca38"
+    },
+    {
+      "path": "brain-files/skills/memory-curation/SKILL.md",
+      "size": 8236,
+      "sha256": "f08220e3a030deb05ad55ed07bc9c802a50554e70e00d303396a59e21a9ddcdf"
+    },
+    {
+      "path": "brain-files/skills/meeting-efficiency/SKILL.md",
+      "size": 10085,
+      "sha256": "6abfb6209e298dfd59d65cd60fe6cf837d11d5e99e4279b19889e5cb0de1fa16"
+    },
+    {
+      "path": "brain-files/skills/meditation/SKILL.md",
+      "size": 9645,
+      "sha256": "1933355abad0ffe6903ab9482f4966224f19e7f3a75ac8291ce91b14471dd7e4"
+    },
+    {
+      "path": "brain-files/skills/md-to-word/SKILL.md",
+      "size": 15893,
+      "sha256": "5cf778d3c82e420704a19fb737439d276eff99f702c9c258697a0b86a7ecc3dd"
+    },
+    {
+      "path": "brain-files/skills/md-to-eml/SKILL.md",
+      "size": 7571,
+      "sha256": "21ad1c5dd5b4b820b8744c4fa409500e8a352d8d15243e23288f88f05e293b57"
+    },
+    {
+      "path": "brain-files/skills/md-to-html/SKILL.md",
+      "size": 8109,
+      "sha256": "3f09d5ab21f87cb9d1015555832804e97de78ba658ba685c99167f56f4af22c9"
+    },
+    {
+      "path": "brain-files/skills/mcp-development/SKILL.md",
+      "size": 24304,
+      "sha256": "5468eeaa1cfae77566bd894ecad662c295a1decfd9c3ca88efdb538a1640be7f"
+    },
+    {
+      "path": "brain-files/skills/md-scaffold/SKILL.md",
+      "size": 5351,
+      "sha256": "ed308a011afd809ff32fe8e2513fb63a6cfa7f0b7b655bf60021cd5d2f0338d5"
+    },
+    {
+      "path": "brain-files/skills/mcp-builder/SKILL.md",
+      "size": 9845,
+      "sha256": "a2b2f0c1337257d2d71ef07a0df87c638a1627854bbcf48fcb7f2febc64690a8"
+    },
+    {
+      "path": "brain-files/skills/m365-agent-debugging/SKILL.md",
+      "size": 6181,
+      "sha256": "c5c9915ebd446b2fa427bfda930047b716993f080fa875c904450e9aff9c53b9"
+    },
+    {
+      "path": "brain-files/skills/markdown-mermaid/SKILL.md",
+      "size": 45773,
+      "sha256": "e4c9c9be1c7629dd43c0b0ebdb2cff89cf369b0377e77f8bc349bc734f16240c"
+    },
+    {
+      "path": "brain-files/skills/markdown-mermaid/polish-mermaid-setup.prompt.md",
+      "size": 3790,
+      "sha256": "e850a9e94c4ce13c8f38087de4a36372136fefd5f63fd41fd00520727e46c5ba"
+    },
+    {
+      "path": "brain-files/skills/markdown-mermaid/markdown-light.css",
+      "size": 16628,
+      "sha256": "f71adcf40a23af0219eab533221102d1463402121eca33303f3bbb26a01ee2c2"
+    },
+    {
+      "path": "brain-files/skills/llm-model-selection/SKILL.md",
+      "size": 8346,
+      "sha256": "6322f4ad775b8f019463e47d4ae9f36f052ce52b354d6c56b9501e4cce8bfc73"
+    },
+    {
+      "path": "brain-files/skills/localization/SKILL.md",
+      "size": 24286,
+      "sha256": "2541c4e06bc58a6bc9723a03a4dccbd7f57e65501effbc1a434e48cf8987e629"
+    },
+    {
+      "path": "brain-files/skills/literature-review/SKILL.md",
+      "size": 9952,
+      "sha256": "730ebe7779e72d5674456edb5af12aa7c03d34ee51a41229794363ff60d38157"
+    },
+    {
+      "path": "brain-files/skills/lint-clean-markdown/SKILL.md",
+      "size": 3355,
+      "sha256": "d49179e1ba9eeb2acd45aefb9d509f93520fd54512a340b8ab351c3b1345885e"
+    },
+    {
+      "path": "brain-files/skills/legal-compliance/SKILL.md",
+      "size": 6102,
+      "sha256": "0136010b712957b9908d27776ad7d3eb3e798b5c6c5222a12b2de392bd369ca7"
+    },
+    {
+      "path": "brain-files/skills/learning-psychology/SKILL.md",
+      "size": 5725,
+      "sha256": "104414cd3e9ae22d0b2720ebde3c32d6b6f27070e67a09a43764a2fce847c8c2"
+    },
+    {
+      "path": "brain-files/skills/kql/SKILL.md",
+      "size": 17537,
+      "sha256": "6c943c9a2780530107ce64f5bb21b36634dad573614f190fffcdfc4a004fc7bb"
+    },
+    {
+      "path": "brain-files/skills/knowledge-synthesis/SKILL.md",
+      "size": 12109,
+      "sha256": "3764e134fa3ade1fbd76c45535edcd08562a779c7fd14eccf806905fb73cd6a0"
+    },
+    {
+      "path": "brain-files/skills/journalism/SKILL.md",
+      "size": 7876,
+      "sha256": "9a7370436c86ebb33940489c59fb2a2f85eb69e394dd840b80c5095f893f0957"
+    },
+    {
+      "path": "brain-files/skills/kdp-publishing/SKILL.md",
+      "size": 9874,
+      "sha256": "4861ffc6b621d7220ffc48de6b0146925d575207733d767bb10f2b357a029ca5"
+    },
+    {
+      "path": "brain-files/skills/infrastructure-as-code/SKILL.md",
+      "size": 23874,
+      "sha256": "046ae6396892384dd435f72c91c28b6eca7fd25c5dbc0498395f50a36daea863"
+    },
+    {
+      "path": "brain-files/skills/incident-response/SKILL.md",
+      "size": 4305,
+      "sha256": "5cc5c1fba9ebfb55f9fd4b8c3a0d6cca095634af6e975c768d51d824b1ee5cb0"
+    },
+    {
+      "path": "brain-files/skills/identity-customization/SKILL.md",
+      "size": 7115,
+      "sha256": "6009c89bfbfcf741ea909fc8bed6229e96b0b1cdf494bb0cc2471c7e2a4fe353"
+    },
+    {
+      "path": "brain-files/skills/image-handling/SKILL.md",
+      "size": 21347,
+      "sha256": "02d80535af5965a78b1ec6483e8c9c00e296b26dd7bcb05ec3e976742ce0d114"
+    },
+    {
+      "path": "brain-files/skills/hypothesis-driven-debugging/SKILL.md",
+      "size": 8357,
+      "sha256": "f5f66924e06e4a9a174017cc3e3f8100efac67573b81b6d8527f295b5a3fb8a0"
+    },
+    {
+      "path": "brain-files/skills/hr-people-operations/SKILL.md",
+      "size": 8059,
+      "sha256": "1bd8907e31827b56e9557ad1f41756116eb443846e25a82567add34177d239e3"
+    },
+    {
+      "path": "brain-files/skills/heir-feedback/SKILL.md",
+      "size": 5575,
+      "sha256": "aab5dcc12d010a030070a851a4e8a7bffb9a74ad88a38f68a35b68587b75500c"
+    },
+    {
+      "path": "brain-files/skills/healthcare-informatics/SKILL.md",
+      "size": 6253,
+      "sha256": "4d171d41b41cf245d0769fe9093cab8ca5af23022ab487a3d6fa33b66558f817"
+    },
+    {
+      "path": "brain-files/skills/heir-bootstrap/SKILL.md",
+      "size": 7565,
+      "sha256": "48f090cc6bc5becaa408db092fce38b70defaa100d325e3964aaac9fcb63650c"
+    },
+    {
+      "path": "brain-files/skills/health-pulse/SKILL.md",
+      "size": 8520,
+      "sha256": "8e3202a4e8bd4afb0b122590d8c7fb479b48b7889ba73e032fdff3441abe9986"
+    },
+    {
+      "path": "brain-files/skills/graphic-design/SKILL.md",
+      "size": 14337,
+      "sha256": "760f8901e97e7c7a6c505cf310d3099d94005131741315754cf04f540b5ac5fc"
+    },
+    {
+      "path": "brain-files/skills/grant-writing/SKILL.md",
+      "size": 6246,
+      "sha256": "bf30814e357e312c592f997cb0f79b5f92f102ebb2e2c899e434dc9e309285a9"
+    },
+    {
+      "path": "brain-files/skills/global-knowledge-sync/SKILL.md",
+      "size": 4429,
+      "sha256": "e14ebe3d08940e73cd94e8b3157365afd2206914fa0ecf1049ac9facafb7a273"
+    },
+    {
+      "path": "brain-files/skills/global-knowledge/SKILL.md",
+      "size": 11527,
+      "sha256": "b2cac015ac63fc0b28098d8ddf9a5ef4e58cfbd65e7d82ddebb8c7bc4728eb41"
+    },
+    {
+      "path": "brain-files/skills/gamma-presentation/SKILL.md",
+      "size": 12057,
+      "sha256": "a9eb60db076c170678a87fc066591d0e539ad195d82dd0d3810fc8885ccb1266"
+    },
+    {
+      "path": "brain-files/skills/git-workflow/SKILL.md",
+      "size": 3682,
+      "sha256": "9eecde99517c1b67f82d1f81771df707d6d5d5281e690ca24db6412aa43c6b0a"
+    },
+    {
+      "path": "brain-files/skills/game-design/SKILL.md",
+      "size": 7719,
+      "sha256": "c9041d8c7a05a14fc67ded66f6d2a18878bc4116ea00cc443bc2797e1b721ebe"
+    },
+    {
+      "path": "brain-files/skills/frontend-design-review/SKILL.md",
+      "size": 9311,
+      "sha256": "afd3fbab5ef29228c20e5cbde115d5f30e8291943506f79cd38ff67491741900"
+    },
+    {
+      "path": "brain-files/skills/foundry-agent-platform/SKILL.md",
+      "size": 8973,
+      "sha256": "2ae192154f79bfad4a190490b5210f43c736a6a1072b4c949a745ae5bc519550"
+    },
+    {
+      "path": "brain-files/skills/fleet-management/SKILL.md",
+      "size": 5959,
+      "sha256": "6b381b313740d57ba7c4eb7368c5b2370585a1f19112cd300f28b3b4796c2fcf"
+    },
+    {
+      "path": "brain-files/skills/financial-analysis/SKILL.md",
+      "size": 6255,
+      "sha256": "ed606732662a163bdac0e69ebeaa23a1d8ae27672c45f7a153d5a2d2a7a17689"
+    },
+    {
+      "path": "brain-files/skills/flux-brand-finetune/SKILL.md",
+      "size": 13392,
+      "sha256": "bea82016995f784bf2e062009793c2050c6b741757f15d47b6ae8a8cd789d875"
+    },
+    {
+      "path": "brain-files/skills/fabric-notebook-publish/SKILL.md",
+      "size": 4880,
+      "sha256": "6d9eb126750c10f00642a846b5b61dc5b8867cb321bb0521b9996c88864f895f"
+    },
+    {
+      "path": "brain-files/skills/extension-audit-methodology/SKILL.md",
+      "size": 5802,
+      "sha256": "3b38eb99129213de2b7f0b126dd08069154facf07e5edfcc85e4ecde1a00fede"
+    },
+    {
+      "path": "brain-files/skills/executive-storytelling/SKILL.md",
+      "size": 14325,
+      "sha256": "0e9ad61683fe6536ee8cb4a1f99c0adc3ab2fec4ca59b59bb9c85e7af7fcf7a7"
+    },
+    {
+      "path": "brain-files/skills/error-recovery-patterns/SKILL.md",
+      "size": 5582,
+      "sha256": "b7db58748020ca037e114b333ee89713c77f93ffad6f7f79f89c1fa4a75f1a31"
+    },
+    {
+      "path": "brain-files/skills/entra-agent-id/SKILL.md",
+      "size": 9524,
+      "sha256": "5686ec60a29ec1b1ef5e69adc3b4252d018d4a811a797dd5e85a344003514f14"
+    },
+    {
+      "path": "brain-files/skills/enterprise-integration/SKILL.md",
+      "size": 6661,
+      "sha256": "e4bff10bf53a0a26a86864533d9d654c258256ec11a5abe50e4ff3a67a65c4d2"
+    },
+    {
+      "path": "brain-files/skills/dream-state/SKILL.md",
+      "size": 7884,
+      "sha256": "887350de267df4422f0160f322e9884d0b7a681662188eb4bc69efeac6dd41b8"
+    },
+    {
+      "path": "brain-files/skills/early-filter-optimization/SKILL.md",
+      "size": 3964,
+      "sha256": "4b3cf7c9c462923c319e7a46590122f7d162835a0c2361d5852b40d32cd37aaa"
+    },
+    {
+      "path": "brain-files/skills/docx-to-md/SKILL.md",
+      "size": 8619,
+      "sha256": "b60eabf5fbe7e7299302d4300d1cc92798432a04018dd6b167e3f7a05a00b563"
+    },
+    {
+      "path": "brain-files/skills/doc-hygiene/SKILL.md",
+      "size": 5719,
+      "sha256": "c561f04d98e918ef35bc20740d7d16af2b011c4425e2acc39c4b63139fdf1608"
+    },
+    {
+      "path": "brain-files/skills/distribution-security/SKILL.md",
+      "size": 9127,
+      "sha256": "9f44919cff8b338ba5fa330eba780df68a162883661abf143da1cd24a73f4d5d"
+    },
+    {
+      "path": "brain-files/skills/dissertation-defense/SKILL.md",
+      "size": 18966,
+      "sha256": "e4e8f27c124e65439a9858adf6a71f0ecca81dddea191cbd39837a5a6f009621"
+    },
+    {
+      "path": "brain-files/skills/documentation-quality-assurance/SKILL.md",
+      "size": 14905,
+      "sha256": "279d79a2064a2f4ab6a6738476a4163af3042d099a0125a25e616782cdcd256e"
+    },
+    {
+      "path": "brain-files/skills/dialog-engineering/SKILL.md",
+      "size": 6121,
+      "sha256": "32ea35ecde56c3783fac883852d0492439acb1a50418465a78a65bb8404e799a"
+    },
+    {
+      "path": "brain-files/skills/deep-work-optimization/SKILL.md",
+      "size": 11277,
+      "sha256": "13521febb3a97bcb5b3ab932416b35025dbcf48966337624b37d0c196e61cb3a"
+    },
+    {
+      "path": "brain-files/skills/debugging-patterns/SKILL.md",
+      "size": 3095,
+      "sha256": "55c29dc7039cd3df77ce3b08ba9ed49ccef950824ea4a46be7a88724804d697f"
+    },
+    {
+      "path": "brain-files/skills/database-design/SKILL.md",
+      "size": 11056,
+      "sha256": "d48c5756690850a183653ebc1c754f403b371a2b6692fd2c2e8898932c09cab5"
+    },
+    {
+      "path": "brain-files/skills/data-visualization/SKILL.md",
+      "size": 20268,
+      "sha256": "33e31fb51fbd996e5a0434780a5c2bda5b16505815fea6ef5f044652d55ca36a"
+    },
+    {
+      "path": "brain-files/skills/data-storytelling/SKILL.md",
+      "size": 9021,
+      "sha256": "b4092d33bfd13b5e4255a1cd727254d44bff7e4618b245815f16f829c8f36354"
+    },
+    {
+      "path": "brain-files/skills/data-quality-monitoring/SKILL.md",
+      "size": 6994,
+      "sha256": "3fdee99480c436b27cd759e8c0f56336719a58d1a1a7b0e009d5dee4ef602e14"
+    },
+    {
+      "path": "brain-files/skills/data-analysis/SKILL.md",
+      "size": 11266,
+      "sha256": "3330d2bb6d5009a0b1c518e1dcf4ab97ae1b8148fc5237355752a2602f3063cf"
+    },
+    {
+      "path": "brain-files/skills/currency-audit/SKILL.md",
+      "size": 17178,
+      "sha256": "2f1ef83650f6502f9549c618d32021bad423ed69b3cc1b5e2737a806760ec400"
+    },
+    {
+      "path": "brain-files/skills/cross-cultural-collaboration/SKILL.md",
+      "size": 14104,
+      "sha256": "17a7bafcbcf6f77e6e0a469649e316e0d4f3fe402b831c0b1568ec0645714258"
+    },
+    {
+      "path": "brain-files/skills/critical-thinking/SKILL.md",
+      "size": 22379,
+      "sha256": "195c0e647d5038aecd8e6f0c17d83833c500b654f7ee9e7f84285ecf65b135c3"
+    },
+    {
+      "path": "brain-files/skills/dashboard-design/SKILL.md",
+      "size": 12714,
+      "sha256": "de1ebd3dc871fcfab5fd8cc69ec26083361d4988dbd419bbfa2e74e41d6729e4"
+    },
+    {
+      "path": "brain-files/skills/creative-writing/SKILL.md",
+      "size": 13464,
+      "sha256": "ad6b3093354681f71e3d9a6f610453d7d386f841af4488008a4c1bff02fb6b80"
+    },
+    {
+      "path": "brain-files/skills/counseling-psychology/SKILL.md",
+      "size": 9697,
+      "sha256": "a71295d7cfb64d18ce6a40b5262b5d61b4ce76f9d37736d886e68a0766da8a21"
+    },
+    {
+      "path": "brain-files/skills/copilot-sdk/SKILL.md",
+      "size": 14937,
+      "sha256": "7783d9f1944d773846737cedfb6e3a47d365aeec33380124808b20d0bd727fad"
+    },
+    {
+      "path": "brain-files/skills/converter-qa/SKILL.md",
+      "size": 3666,
+      "sha256": "e07661433a421f79d904dff9ecf90855842c2da830f4592e01d4904f59e1748d"
+    },
+    {
+      "path": "brain-files/skills/comedy-writing/SKILL.md",
+      "size": 5977,
+      "sha256": "805a5009fd03ca4a025f047501c51baea4a948e7c6f3f86585f60fcd604dba83"
+    },
+    {
+      "path": "brain-files/skills/content-safety-implementation/SKILL.md",
+      "size": 9788,
+      "sha256": "018eaff1e41ceabf52194a551abb482f629870e2eb0ccc55b75f31e83a73e2e9"
+    },
+    {
+      "path": "brain-files/skills/cognitive-load/SKILL.md",
+      "size": 5989,
+      "sha256": "f1fde8c74a26a81712127752de9bbb50cd21d1db601b22c51626d946b318657a"
+    },
+    {
+      "path": "brain-files/skills/cognitive-symbiosis/SKILL.md",
+      "size": 11593,
+      "sha256": "77f4e810a43be18489c39331cc07812d36ba2bf5e3b8264f6ca795cac0e35a4e"
+    },
+    {
+      "path": "brain-files/skills/code-review/SKILL.md",
+      "size": 8280,
+      "sha256": "2361c4bef61ca411d988bd35c28ffb76b1845c5966ca4e95a24851794972a20c"
+    },
+    {
+      "path": "brain-files/skills/coaching-techniques/SKILL.md",
+      "size": 9707,
+      "sha256": "c677c742cb98b9cfee93c367cec1911913d45959310fbdeaf49f9722c370bc14"
+    },
+    {
+      "path": "brain-files/skills/citation-management/SKILL.md",
+      "size": 8874,
+      "sha256": "8f52a4f2a8816467624ab918d642b6f8bf21404e93520c01f339b3dde861ef0c"
+    },
+    {
+      "path": "brain-files/skills/chat-participant-patterns/SKILL.md",
+      "size": 8191,
+      "sha256": "603c4ecdd1cf0394fb05cc302e92144ad07ab65333d9922a4df408873eb79456"
+    },
+    {
+      "path": "brain-files/skills/chart-interpretation/SKILL.md",
+      "size": 11577,
+      "sha256": "6c6b4f568a95bb5b423d8b46bedd7691be33a2991eb2f8d39917ebabb2bace63"
+    },
+    {
+      "path": "brain-files/skills/cloud-solution-architect/SKILL.md",
+      "size": 14833,
+      "sha256": "39d4a7aee243c1cde5652c8be4be7e23751da4bb2bc79c086dd163ef8ce6932a"
+    },
+    {
+      "path": "brain-files/skills/character-aging-progression/SKILL.md",
+      "size": 8426,
+      "sha256": "f27a1b47b18fdcd4782db7c81292fd033e4daee9a002e9f96a76341d0709cf9d"
+    },
+    {
+      "path": "brain-files/skills/business-analysis/SKILL.md",
+      "size": 7914,
+      "sha256": "90e80262ef333db79333b83a4c77ee3fc6bf91352b40f0e064c572467620692f"
+    },
+    {
+      "path": "brain-files/skills/career-development/SKILL.md",
+      "size": 9049,
+      "sha256": "0825b4aead53068faffd6884c4d0ef69941483c45fb60f68b3005119442c7dd5"
+    },
+    {
+      "path": "brain-files/skills/change-management/SKILL.md",
+      "size": 7239,
+      "sha256": "189b62d17da14ba069d4c11f1e27c7ecd04753c22002a66b05d0d11338340872"
+    },
+    {
+      "path": "brain-files/skills/brain-upgrade/SKILL.md",
+      "size": 16440,
+      "sha256": "b9ae3d79e3e5c25e31cba3ddbaf0838855d63120109e130808ed719e44092303"
+    },
+    {
+      "path": "brain-files/skills/brand-asset-management/SKILL.md",
+      "size": 4723,
+      "sha256": "fab2e89e592c1ff521cd95b24f88786f5c291bb5db4249dc7a75c8ad32e44ce7"
+    },
+    {
+      "path": "brain-files/skills/brain-qa/SKILL.md",
+      "size": 17239,
+      "sha256": "96b89d0ef30079f08ceda9ea4f854c779dea021408c67b342aa52a6f0425126c"
+    },
+    {
+      "path": "brain-files/skills/book-publishing/SKILL.md",
+      "size": 8824,
+      "sha256": "5b937a39ac354587473858b9abe1500d28825cd4d8e49f48196331af0d1d7b72"
+    },
+    {
+      "path": "brain-files/skills/bootstrap-learning/SKILL.md",
+      "size": 4751,
+      "sha256": "8f7d024e7483be90296a03d3784c7e5dd0a56c2d343b7757804473daed237aa7"
+    },
+    {
+      "path": "brain-files/skills/book-launch-content/SKILL.md",
+      "size": 6113,
+      "sha256": "079348ee89a2c9e58e5e17a79d00a352db4e6a6a9945621af9cb0141c4c0233a"
+    },
+    {
+      "path": "brain-files/skills/blog-writer/SKILL.md",
+      "size": 5283,
+      "sha256": "069212cdc6a8397f59cb882bdfe86c87f4d680a94874e7b1f84284610cf8790d"
+    },
+    {
+      "path": "brain-files/skills/azure-openai-patterns/SKILL.md",
+      "size": 9841,
+      "sha256": "ce4d4f2237127a211085cece7624b6f2fd31fecdd96a0d8f2f6fe27024e2577b"
+    },
+    {
+      "path": "brain-files/skills/bicep-avm-mastery/SKILL.md",
+      "size": 11391,
+      "sha256": "627e3aa2e35c907552219886405897f035f6d7ce19990c58e072c2313b54eb9f"
+    },
+    {
+      "path": "brain-files/skills/azure-devops-automation/SKILL.md",
+      "size": 10514,
+      "sha256": "8c45d815884310358c93832340f92392b20d5aabe5e91649f24092a90e564c22"
+    },
+    {
+      "path": "brain-files/skills/azure-deployment-operations/SKILL.md",
+      "size": 9351,
+      "sha256": "026ff0c35827bb43fd3dcb5348f7106d5f7101276710af22c876a21ad64c21d8"
+    },
+    {
+      "path": "brain-files/skills/azure-architecture-patterns/SKILL.md",
+      "size": 5465,
+      "sha256": "423fa78ee0683e25359b2cd5c04be7926253a52ab9a5eebece85b58737e71e59"
+    },
+    {
+      "path": "brain-files/skills/audio-memory/SKILL.md",
+      "size": 7653,
+      "sha256": "cb5c912f9ade4a4a5420aa1f2b82e7e31c7238a00efe4666a76f2cc33e02f99b"
+    },
+    {
+      "path": "brain-files/skills/awareness/SKILL.md",
+      "size": 11768,
+      "sha256": "92521475605f4307bbb7b835a9a8f2cd2cb8e22dd266249894358da7a83cf848"
+    },
+    {
+      "path": "brain-files/skills/ascii-project-dashboard/SKILL.md",
+      "size": 8103,
+      "sha256": "ddca800e3dbf8d46f6dce680df38a6dcb5f43d5df336602ebfb1d00caa20cba1"
+    },
+    {
+      "path": "brain-files/skills/architecture-health/SKILL.md",
+      "size": 4306,
+      "sha256": "304015afb0fc9b46fd4eaa1e61693ae6559a0674f505b0c64a925b32deac0512"
+    },
+    {
+      "path": "brain-files/skills/architecture-refinement/SKILL.md",
+      "size": 4233,
+      "sha256": "8782595e0ae5710316c62458af7017ef912d3210687c4ec27e8fe4f894fcf340"
+    },
+    {
+      "path": "brain-files/skills/architecture-audit/SKILL.md",
+      "size": 9521,
+      "sha256": "4c2b61789a43575f64a5304556b6b62e99cf75d7f54dc8d059c38d3869a9235c"
+    },
+    {
+      "path": "brain-files/skills/appropriate-reliance/SKILL.md",
+      "size": 18768,
+      "sha256": "6037c38099161367b502c6704c9b04fe1b01fc3aec10c8f1af0a835d295a96de"
+    },
+    {
+      "path": "brain-files/skills/api-documentation/SKILL.md",
+      "size": 7749,
+      "sha256": "359c7abc64147f4b10b20c609461ade1f9b91703f576e6136bfa8e84309fe9e1"
+    },
+    {
+      "path": "brain-files/skills/api-design/SKILL.md",
+      "size": 5441,
+      "sha256": "61493bb9f398c374d0678faa25725f2208d7a8473df7f5920a258f68cf795c83"
+    },
+    {
+      "path": "brain-files/skills/alex-effort-estimation/SKILL.md",
+      "size": 5570,
+      "sha256": "2fd5da23ff2f81e3c748d08b9592b70932f4effb505232e64205ff2b66a1673c"
+    },
+    {
+      "path": "brain-files/skills/anti-hallucination/SKILL.md",
+      "size": 5251,
+      "sha256": "b95cd09e3ebcb7cb0be31713dc3363410e1d2deca618d9912e5bfd87518160ce"
+    },
+    {
+      "path": "brain-files/skills/ai-writing-avoidance/SKILL.md",
+      "size": 10293,
+      "sha256": "05cde453b65c87804cbabc270f33588e6f8a972f3646296818215bd8b9010a22"
+    },
+    {
+      "path": "brain-files/skills/ai-generated-readme-banners/SKILL.md",
+      "size": 21704,
+      "sha256": "f907cf4101e61f44200c21e634c4287a5eb5cddfd4ba12356e9afc4687f5d532"
+    },
+    {
+      "path": "brain-files/skills/ai-character-reference-generation/SKILL.md",
+      "size": 11576,
+      "sha256": "c63fe87bec4241a57242816fad3edc6ae7a08ad80e07d39bb594b46c396e688a"
+    },
+    {
+      "path": "brain-files/skills/ai-agent-design/SKILL.md",
+      "size": 5592,
+      "sha256": "762e559996da70f20930aa31941f3aad9df68e31f3d4695ee5d6d6e4e4e9869f"
+    },
+    {
+      "path": "brain-files/skills/academic-research/SKILL.md",
+      "size": 9117,
+      "sha256": "59ee15cd951daf3b9807e79b07e321a29dd2d3be85c238ebd93bb2a7049a541a"
+    },
+    {
+      "path": "brain-files/skills/agent-debug-panel/SKILL.md",
+      "size": 5157,
+      "sha256": "f8402977b3d59ec860b749440519b4c9a2f5f670662549148984a6dcdd20b161"
+    },
+    {
+      "path": "brain-files/skills/academic-paper-drafting/SKILL.md",
+      "size": 19356,
+      "sha256": "0b877d7ae6ed128001d93d0bd602e95ad2940e05533fd3b0c4551312993b93aa"
+    },
+    {
+      "path": "brain-files/skills/user-config-manager/templates/toolset.md",
+      "size": 2512,
+      "sha256": "2b1dedf7ae15abfa0142fd17b56dcaa02e40acb28725d2b7f0d65ff48ba73215"
+    },
+    {
+      "path": "brain-files/skills/user-config-manager/templates/memories.md",
+      "size": 2222,
+      "sha256": "c572ab521815aea0369184a8863af13ce3dea41e770c10abda429a88784e8f28"
+    },
+    {
+      "path": "brain-files/skills/kql/references/query-templates.md",
+      "size": 8050,
+      "sha256": "371c4183e2d249caeb04c8c9bc2d51af23661b03286d76a37c2f62b208db4558"
+    },
+    {
+      "path": "brain-files/skills/kql/references/error-recovery.md",
+      "size": 10498,
+      "sha256": "f4ee1668033a155c9f319a96dea39a2c807a40e67f6b433faf005110cac24fb4"
+    },
+    {
+      "path": "brain-files/skills/kql/references/advanced-patterns.md",
+      "size": 10452,
+      "sha256": "6b6e34b0addde426870cc4150060aef6f7a5124c567de3c57435e5ee6ad7f330"
+    },
+    {
+      "path": "brain-files/skills/ai-character-reference-generation/resources/REPLICATE-API-STARTER-KIT.md",
+      "size": 19701,
+      "sha256": "f87f986ebc79e945c2468b1b5df2de2e24980ab8d0e08733d4cfbd12ff4caa67"
+    },
+    {
+      "path": "brain-files/skills/ai-generated-readme-banners/resources/REPLICATE-API-STARTER-KIT.md",
+      "size": 19701,
+      "sha256": "f87f986ebc79e945c2468b1b5df2de2e24980ab8d0e08733d4cfbd12ff4caa67"
+    }
+  ]
+}
