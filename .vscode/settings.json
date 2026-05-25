@@ -1,0 +1,8 @@
+{
+    "markdown.preview.fontSize": 12,
+    "markdown.preview.lineHeight": 1.4,
+    "markdown.preview.frontMatter": "codeBlock",
+    "markdown.styles": [
+        ".github/config/markdown-light.css"
+    ]
+}
