@@ -1,0 +1,111 @@
+{
+  "$schema": "./alex-master-signature.schema.json",
+  "purpose": "Signature detectors that identify a workspace previously bootstrapped by AlexMaster (Marketplace ID fabioc-aloha.alex-cognitive-architecture, v8.x or v9.x). Used by extension.js migration logic to decide whether to offer the AlexMaster -> ACT Edition migration modal.",
+  "source": "Captured 2026-05-24 from C:\\Development\\AlexMaster local repo (v9.0.1 HEAD; Marketplace published v8.4.0). v8.4.0 was never tagged locally; structural signatures below are stable across the v8.x-v9.x range that the 78 installed seats may carry.",
+  "detectionRule": "Workspace is considered AlexMaster-bootstrapped if ANY of `strongSignals` matches, OR if 2+ `weakSignals` match.",
+  "strongSignals": [
+    {
+      "type": "file",
+      "path": ".github/brain-version.json",
+      "rationale": "AlexMaster-only file; ACT Edition ships brain version inside copilot-instructions.md frontmatter, not as a separate JSON."
+    },
+    {
+      "type": "file",
+      "path": ".github/NORTH-STAR.md",
+      "rationale": "AlexMaster-only file; not part of ACT Edition's brain layout."
+    },
+    {
+      "type": "file",
+      "path": ".github/EXTERNAL-API-REGISTRY.md",
+      "rationale": "AlexMaster-only file."
+    },
+    {
+      "type": "file",
+      "path": ".github/hooks.json",
+      "rationale": "AlexMaster hooks system; ACT Edition does not use hooks.json."
+    },
+    {
+      "type": "file-contents",
+      "path": ".github/copilot-instructions.md",
+      "matchAny": [
+        "I am Alex Finch",
+        "Master Alex (source of truth"
+      ],
+      "rationale": "AlexMaster identity statements that ACT Edition's copilot-instructions.md never contains."
+    }
+  ],
+  "weakSignals": [
+    {
+      "type": "directory",
+      "path": ".github/episodic",
+      "rationale": "AlexMaster ships episodic/ for post-mortems and chronicle entries; ACT Edition does not."
+    },
+    {
+      "type": "directory",
+      "path": ".github/quality",
+      "rationale": "AlexMaster ships quality/ for dream reports and brain QA outputs; ACT Edition does not by default."
+    },
+    {
+      "type": "directory",
+      "path": ".github/hooks",
+      "rationale": "AlexMaster hooks scripts directory."
+    },
+    {
+      "type": "file",
+      "path": ".github/ABOUT.md",
+      "rationale": "AlexMaster ships ABOUT.md at brain root; ACT Edition does not."
+    },
+    {
+      "type": "file-glob",
+      "pattern": ".github-backup-*",
+      "rationale": "Prior AlexMaster upgrade backup dirs from older `/upgrade` cycles. Strong correlate but not exclusive (the ACT Edition migration itself produces .github-backup-<ISO>/, so this signal must be ignored AFTER migration runs once)."
+    }
+  ],
+  "doNotPreserve": [
+    {
+      "path": ".github/brain-version.json",
+      "reason": "Replaced by ACT Edition's own brain manifest."
+    },
+    {
+      "path": ".github/hooks.json",
+      "reason": "ACT Edition has no hooks system."
+    },
+    {
+      "path": ".github/hooks/",
+      "reason": "ACT Edition has no hooks system."
+    }
+  ],
+  "preserveAsLocal": [
+    {
+      "pattern": ".github/episodic/**",
+      "destination": ".github/local/episodic/",
+      "reason": "User-authored post-mortems and chronicle entries. Not replaced by ACT Edition; preserved as user content."
+    },
+    {
+      "pattern": ".github/quality/**",
+      "destination": ".github/local/quality/",
+      "reason": "User-authored quality reports and dream outputs. Preserved as user content."
+    },
+    {
+      "pattern": ".github/NORTH-STAR.md",
+      "destination": ".github/local/NORTH-STAR.md",
+      "reason": "Project-specific north-star statement; preserved as user content."
+    },
+    {
+      "pattern": ".github/EXTERNAL-API-REGISTRY.md",
+      "destination": ".github/local/EXTERNAL-API-REGISTRY.md",
+      "reason": "Project-specific API registry; preserved as user content."
+    },
+    {
+      "pattern": ".github/ABOUT.md",
+      "destination": ".github/local/ABOUT.md",
+      "reason": "Project-specific identity statement; preserved as user content."
+    }
+  ],
+  "alwaysBackup": {
+    "path": ".github-backup-<ISO>/",
+    "contents": "Verbatim snapshot of every file under .github/ at the moment migration starts, regardless of preservation rules. Never auto-deleted. User-managed via `Alex ACT: Clean Migration Backup` command."
+  },
+  "falsificationDeadline": "2026-08-24",
+  "wouldReviseIf": "False positive (ACT Edition workspace mis-detected as AlexMaster) or false negative (AlexMaster workspace not detected) reported in any of the first 78 installed seats during the 90-day post-migration window."
+}

@@ -1,26 +1,41 @@
 {
-    "name": "alex-act-edition",
-    "displayName": "Alex ACT Edition",
-    "description": "Artificial Critical Thinking for GitHub Copilot. 36 instructions, 18 skills, 23 prompts, 4 agents, and 15 muscles that teach your AI to reason honestly.",
-    "version": "2.0.5",
+    "name": "alex-cognitive-architecture",
+    "displayName": "Alex — ACT Edition",
+    "description": "Artificial Critical Thinking for GitHub Copilot. A living brain of skills, instructions, and prompts that teaches your AI to reason honestly. Successor to Alex Cognitive Architecture.",
+    "version": "9.0.0",
     "publisher": "fabioc-aloha",
-    "license": "MIT",
+    "license": "PolyForm-Noncommercial-1.0.0",
     "engines": {
-        "vscode": "^1.95.0"
+        "vscode": "^1.117.0"
     },
     "categories": [
-        "Machine Learning",
-        "Other"
+        "AI",
+        "Chat",
+        "Extension Packs",
+        "Education"
     ],
     "keywords": [
         "copilot",
         "ai",
         "critical-thinking",
+        "artificial-critical-thinking",
+        "act",
         "cognitive-architecture",
+        "brain",
         "instructions",
         "skills",
         "prompts",
         "agents"
+    ],
+    "extensionDependencies": [
+        "GitHub.copilot-chat"
+    ],
+    "extensionPack": [
+        "GitHub.copilot-chat",
+        "ms-vscode.powershell",
+        "redhat.vscode-yaml",
+        "bierner.markdown-mermaid",
+        "DavidAnson.vscode-markdownlint"
     ],
     "activationEvents": [
         "onStartupFinished"
@@ -129,12 +144,16 @@
     },
     "icon": "assets/icon.png",
     "galleryBanner": {
-        "color": "#1e293b",
+        "color": "#0f172a",
         "theme": "dark"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/fabioc-aloha/Alex_ACT_Edition"
+        "url": "https://github.com/fabioc-aloha/Alex_ACT_Extension"
     },
-    "homepage": "https://github.com/fabioc-aloha/Alex_ACT_Edition#readme"
+    "homepage": "https://github.com/fabioc-aloha/Alex_ACT_Extension/wiki",
+    "bugs": {
+        "url": "https://github.com/fabioc-aloha/Alex_ACT_Extension/issues"
+    },
+    "qna": "https://github.com/fabioc-aloha/Alex_ACT_Extension/discussions"
 }

@@ -2,13 +2,63 @@
 
 # Changelog
 
-All notable changes to Alex ACT Edition.
+All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
 ---
 
+## [9.0.0] - 2026-05-24 (pending Marketplace publish)
+
+### Alex — ACT Edition is the direct successor to Alex Cognitive Architecture (AlexMaster)
+
+This release re-points the Marketplace listing `fabioc-aloha.alex-cognitive-architecture` (78 installed seats, 2,818 served downloads, last published v8.4.0 on 2026-04-26) at the modern ACT Edition codebase. Installed users auto-update from v8.4.0 to v9.0.0.
+
+### Why the version jumps from 2.0.5 to 9.0.0
+
+This repo (`Alex_ACT_Extension`) developed in parallel at v1.x–v2.0.5 under the Marketplace ID `fabioc-aloha.alex-act-edition`. That ID is being retired. The new published version takes over the AlexMaster Marketplace ID, where monotonic semver requires the next version to be **greater than v8.4.0**. v9.0.0 satisfies that constraint and signals the major identity shift. The v1.x–v2.x git history is preserved in this repo's tags and is **not** the same product as the AlexMaster v1.x–v8.x history. See [docs/proposals/alexmaster-migration-2026-05-24.md](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/alexmaster-migration-2026-05-24.md) and [ADR-004](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-004-alexmaster-migration.md) in the Supervisor repo for full reasoning.
+
+### Changed
+
+- **Marketplace identity**: `fabioc-aloha.alex-act-edition` v2.0.5 → `fabioc-aloha.alex-cognitive-architecture` v9.0.0 (reused AlexMaster ID)
+- **Display name**: `Alex ACT Edition` → `Alex — ACT Edition`
+- **License**: MIT → **PolyForm Noncommercial 1.0.0** (preserved from AlexMaster; non-commercial use remains unrestricted)
+- **Icon**: AlexMaster blue-rocket icon adopted for visual continuity with installed seats
+- **Categories**: `Machine Learning, Other` → `AI, Chat, Extension Packs, Education`
+- **Engines**: `vscode ^1.95.0` → `^1.117.0` (AlexMaster's floor; matches installed-seat baseline)
+- **Repository field**: now points at `github.com/fabioc-aloha/Alex_ACT_Extension`; homepage points at the wiki
+- **README**: rewritten thin — Marketplace listing now points at the wiki for depth
+
+### Added
+
+- **`extensionPack`**: bundles `GitHub.copilot-chat`, `ms-vscode.powershell`, `redhat.vscode-yaml`, `bierner.markdown-mermaid`, `DavidAnson.vscode-markdownlint` for first-time installers (parity with AlexMaster v8.4.0)
+- **`migration/alex-master-signature.json`**: signature manifest that the migration logic uses to detect a workspace previously bootstrapped by AlexMaster
+
+### Migration flow (existing AlexMaster seats)
+
+When ACT Edition v9.0.0 activates in a workspace it identifies as AlexMaster-bootstrapped:
+
+1. Modal: **"This workspace looks like AlexMaster. Migrate now?"** — Migrate now / Later / Don't ask again
+2. On confirm, the `.github/` directory is backed up verbatim to `.github-backup-<ISO>/` (never auto-deleted)
+3. AlexMaster-specific authored content (`NORTH-STAR.md`, `episodic/`, `quality/`, `ABOUT.md`, `EXTERNAL-API-REGISTRY.md`) is preserved under `.github/local/`
+4. The ACT Edition brain is written into `.github/`
+5. A guided semantic pass (`/finalize-migration` prompt) invites the user to review what survived
+
+"Don't ask again" downgrades the prompt to a persistent `Alex ACT: Migration Available` status-bar item.
+
+### Removed
+
+- Old MIT LICENSE file (replaced with PolyForm)
+- Old `repository`/`homepage` pointing at the deprecated `Alex_ACT_Edition` GitHub repo
+
+### Known gaps
+
+- Tag history shows `v1.x → v2.0.5 → v9.0.0` with no `v3-v8` in this repo (the v8.x lineage lives in the AlexMaster repo, not here). The CHANGELOG entries below v9.0.0 describe the `Alex_ACT_Extension` development arc, not AlexMaster history.
+
+---
+
 ## [2.0.5] - 2026-05-21
+
 
 **Patch — 25 shared-core brain files gain `## Would Revise If` falsifier sections.** Mirror of Supervisor D2(a) commit `c6327bb`. Each WRI names specific failure modes that would invalidate the file's advice — not boilerplate. Brain epistemic-qa coverage rises 45.5% → ~91% in Edition. No behavioral change for heirs: the files still direct the same actions; the WRI is an epistemic addition that names the conditions under which each rule should be revisited.
 
