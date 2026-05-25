@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Alex ACT Edition — Artificial Critical Thinking for AI Assistants">
-  <title>Alex ACT Edition</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="Alex — ACT Edition — Artificial Critical Thinking for AI Assistants">
+  <title>Alex — ACT Edition</title>
   <desc>Artificial Critical Thinking for AI Assistants</desc>
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -63,7 +63,7 @@
   </g>
 
   <!-- Title -->
-  <text x="230" y="105" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="50" font-weight="700" fill="#f8fafc" letter-spacing="-1">Alex ACT Edition</text>
+  <text x="230" y="105" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="50" font-weight="700" fill="#f8fafc" letter-spacing="-1">Alex — ACT Edition</text>
 
   <!-- Tagline -->
   <text x="230" y="143" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#94a3b8" font-weight="400">Artificial Critical Thinking for AI assistants</text>
