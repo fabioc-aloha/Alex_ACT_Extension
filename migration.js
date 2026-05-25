@@ -114,9 +114,14 @@ function readJsonSafe(filePath) {
  * Scan a workspace for AlexMaster signature using migration/alex-master-signature.json.
  * Returns { detected: boolean, strongHits: string[], weakHits: string[], reason: string }.
  *
- * Detection rule: any strongSignal match → detected. Weak signals alone do
- * not trigger detection (too noisy: .github/episodic, .github/quality, etc.
- * may legitimately exist in non-AlexMaster workspaces).
+ * Detection rule:
+ *   1. Anti-signals are a hard kill-switch: if any antiSignal matches, return
+ *      detected:false immediately. Anti-signals identify constellation-author
+ *      repos (Supervisor, framework-author, Extension source) that must never
+ *      be migrated.
+ *   2. Otherwise: any strongSignal match → detected. Weak signals alone do
+ *      not trigger detection (too noisy: .github/episodic, .github/quality,
+ *      .github/EXTERNAL-API-REGISTRY.md may exist in non-AlexMaster brains).
  */
 function detectAlexMaster(workspaceRoot) {
     const sig = readJsonSafe(SIGNATURE_PATH);
@@ -127,6 +132,38 @@ function detectAlexMaster(workspaceRoot) {
     const ghDir = path.join(workspaceRoot, '.github');
     if (!fs.existsSync(ghDir)) {
         return { detected: false, strongHits: [], weakHits: [], reason: 'no .github directory' };
+    }
+
+    // Anti-signals: hard kill-switch for constellation-author repos
+    // (Supervisor, framework-author, Extension source). If any anti-signal
+    // matches, this workspace is NOT an AlexMaster heir and must never
+    // be offered migration.
+    for (const anti of sig.antiSignals || []) {
+        if (!anti.path) continue;
+        const candidate = path.join(workspaceRoot, anti.path);
+        if (!fs.existsSync(candidate)) continue;
+        const patterns = anti.matchAny || anti.contentMatch;
+        if (patterns) {
+            try {
+                const content = fs.readFileSync(candidate, 'utf8');
+                const pats = Array.isArray(patterns) ? patterns : [patterns];
+                if (pats.some((p) => content.includes(p))) {
+                    return {
+                        detected: false,
+                        strongHits: [],
+                        weakHits: [],
+                        reason: `anti-signal matched: ${anti.path} (${anti.rationale || 'constellation-author repo'})`,
+                    };
+                }
+            } catch { /* unreadable */ }
+        } else {
+            return {
+                detected: false,
+                strongHits: [],
+                weakHits: [],
+                reason: `anti-signal matched: ${anti.path} (${anti.rationale || 'constellation-author repo'})`,
+            };
+        }
     }
 
     const strongHits = [];

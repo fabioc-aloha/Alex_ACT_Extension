@@ -34,6 +34,11 @@ This repo (`Alex_ACT_Extension`) developed in parallel at v1.x–v2.0.5 under th
 - **`extensionPack`**: bundles `GitHub.copilot-chat`, `ms-vscode.powershell`, `redhat.vscode-yaml`, `bierner.markdown-mermaid`, `DavidAnson.vscode-markdownlint` for first-time installers (parity with AlexMaster v8.4.0)
 - **`migration/alex-master-signature.json`**: signature manifest that the migration logic uses to detect a workspace previously bootstrapped by AlexMaster
 
+### Pre-publish addenda (rolled in before first Marketplace publish)
+
+- **Brain bundle**: refreshed from Edition `v2.2.0` (was `v2.1.0`). Carries: added `no-deferred-debt` always-on instruction; `tool-awareness` documents VS Code 1.118+ skill picker surfacing; removed 6 always-on instructions not earning their tokens (`debugging`, `creative-loop`, `partnership-charter`, `alternatives-and-tradeoffs`, `scope-management`, `technical-writing`); retired heir migration tooling (`migrate-to-edition.cjs`, `MIGRATION.md`, `finalize-migration.prompt.md`). See [Edition v2.2.0 CHANGELOG](https://github.com/fabioc-aloha/Alex_ACT_Edition/blob/main/CHANGELOG.md).
+- **`build-extension.cjs`**: `--ref <tag>` now applies only to the Edition clone (was incorrectly applied to Mall, causing Mall clone to fail on Edition-only tags). Version-mismatch WARN replaced with informational NOTE — `package.json.version` (Marketplace identity sequence) and `brain/VERSION` (Edition semver) are dual-track by design per ADR-004.
+
 ### Migration flow (existing AlexMaster seats)
 
 When ACT Edition v9.0.0 activates in a workspace it identifies as AlexMaster-bootstrapped:

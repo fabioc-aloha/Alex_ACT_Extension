@@ -31,10 +31,10 @@ const ref = refIdx >= 0 && process.argv[refIdx + 1] ? process.argv[refIdx + 1] :
 
 const TMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'act-ext-build-'));
 
-function cloneRepo(remote, name) {
+function cloneRepo(remote, name, branch) {
     const dest = path.join(TMP_DIR, name);
-    console.log(`   Cloning ${name} (${ref})...`);
-    execSync(`git clone --depth 1 --branch ${ref} ${remote} ${dest}`, { stdio: 'pipe' });
+    console.log(`   Cloning ${name} (${branch})...`);
+    execSync(`git clone --depth 1 --branch ${branch} ${remote} ${dest}`, { stdio: 'pipe' });
     return dest;
 }
 
@@ -47,13 +47,13 @@ if (fs.existsSync(CATALOG_DST)) fs.rmSync(CATALOG_DST, { recursive: true });
 console.log('2. Fetching from remote repos...');
 let editionDir, mallDir;
 try {
-    editionDir = cloneRepo(EDITION_REMOTE, 'edition');
+    editionDir = cloneRepo(EDITION_REMOTE, 'edition', ref);
 } catch (e) {
     console.error(`FATAL: Could not clone Edition: ${e.message.split('\n')[0]}`);
     process.exit(1);
 }
 try {
-    mallDir = cloneRepo(MALL_REMOTE, 'mall');
+    mallDir = cloneRepo(MALL_REMOTE, 'mall', 'main');
 } catch (e) {
     console.warn(`WARN: Could not clone Mall (catalog will be empty): ${e.message.split('\n')[0]}`);
     mallDir = null;
@@ -142,7 +142,11 @@ console.log(`Brain:     v${version}`);
 console.log(`Files:     ${brainCount} brain + catalog + extension.js`);
 
 if (extPkg.version !== version) {
-    console.log(`\nWARN: package.json version (${extPkg.version}) differs from brain VERSION (${version}). Sync them before publishing.`);
+    // Dual-track by design (see ADR-004 alexmaster-migration):
+    //   - package.json.version = Marketplace identity sequence (locked to AlexMaster's reclaimed ID)
+    //   - brain/VERSION        = Edition brain semver (tracks .github/VERSION upstream)
+    // They are NOT supposed to match. This is informational only.
+    console.log(`\nNOTE: Marketplace v${extPkg.version} bundles brain v${version} (dual-track per ADR-004).`);
 }
 
 // ── Step 10: Build VSIX ──────────────────────────────────────────

@@ -93,12 +93,12 @@
             },
             {
                 "command": "alex-act.convert.docx-to-md",
-                "title": "Convert to Markdown",
+                "title": "Convert from Word (.docx) to Markdown",
                 "category": "ACT Convert"
             },
             {
                 "command": "alex-act.convert.html-to-md",
-                "title": "Convert to Markdown",
+                "title": "Convert from HTML to Markdown",
                 "category": "ACT Convert"
             }
         ],
