@@ -61,15 +61,15 @@
 
     <rect x="20" y="50" width="280" height="38" rx="8" fill="#14b8a6" opacity="0.15"/>
     <rect x="20" y="50" width="280" height="38" rx="8" fill="none" stroke="#14b8a6" stroke-width="1" opacity="0.4"/>
-    <text x="160" y="74" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#fdba74" text-anchor="middle">Challenge assumptions, not just assist</text>
+    <text x="160" y="74" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#5eead4" text-anchor="middle">Challenge assumptions, not just assist</text>
 
     <rect x="10" y="100" width="260" height="38" rx="8" fill="#06b6d4" opacity="0.12"/>
     <rect x="10" y="100" width="260" height="38" rx="8" fill="none" stroke="#06b6d4" stroke-width="1" opacity="0.35"/>
-    <text x="140" y="124" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#fca5a5" text-anchor="middle">Anti-sycophancy built into the brain</text>
+    <text x="140" y="124" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#67e8f9" text-anchor="middle">Anti-sycophancy built into the brain</text>
 
-    <rect x="30" y="150" width="240" height="38" rx="8" fill="#38bdf8" opacity="0.15"/>
-    <rect x="30" y="150" width="240" height="38" rx="8" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.35"/>
-    <text x="150" y="174" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#7dd3fc" text-anchor="middle">A growing plugin marketplace</text>
+    <rect x="30" y="150" width="240" height="38" rx="8" fill="#06b6d4" opacity="0.15"/>
+    <rect x="30" y="150" width="240" height="38" rx="8" fill="none" stroke="#06b6d4" stroke-width="1" opacity="0.35"/>
+    <text x="150" y="174" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#a5f3fc" text-anchor="middle">A growing plugin marketplace</text>
 
     <rect x="15" y="200" width="260" height="38" rx="8" fill="#34d399" opacity="0.15"/>
     <rect x="15" y="200" width="260" height="38" rx="8" fill="none" stroke="#34d399" stroke-width="1" opacity="0.35"/>
