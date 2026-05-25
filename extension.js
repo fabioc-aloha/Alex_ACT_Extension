@@ -224,9 +224,8 @@ async function cmdBootstrap() {
         const versionFile = path.join(ghDir, 'VERSION');
         const editionVersion = fs.existsSync(versionFile) ? fs.readFileSync(versionFile, 'utf8').trim() : '1.0.0';
         const marker = {
-            $schema: 'https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/fleet/schema/act-heir.schema.json',
             spec_version: '1.0',
-            edition: 'Alex_ACT_Edition',
+            edition: 'Alex',
             edition_version: editionVersion,
             heir_id: heirId,
             heir_name: heirName,
@@ -321,7 +320,7 @@ async function cmdBootstrap() {
                 registry.heirs[heirId] = {
                     heir_id: heirId,
                     heir_name: heirName,
-                    edition: 'Alex_ACT_Edition',
+                    edition: 'Alex',
                     edition_version: editionVersion,
                     repo_url: marker.repo_url,
                     deployed_at: marker.deployed_at,
@@ -596,7 +595,7 @@ function activate(context) {
     migration.checkActivationTrigger(context).catch(() => { /* silent */ });
 
     // Auto-open the Welcome walkthrough on first install or after version bump.
-    // Non-devs won't know to run a command — surface it on startup, once per version.
+    // Non-devs won't know to run a command, so surface it on startup, once per version.
     try {
         const pkg = require('./package.json');
         const currentVersion = pkg.version;

@@ -16,7 +16,7 @@ This release re-points the Marketplace listing `fabioc-aloha.alex-cognitive-arch
 
 ### Why the version jumps from 2.0.5 to 9.0.0
 
-This repo (`Alex_ACT_Extension`) developed in parallel at v1.x–v2.0.5 under the Marketplace ID `fabioc-aloha.alex-act-edition`. That ID is being retired. The new published version takes over the AlexMaster Marketplace ID, where monotonic semver requires the next version to be **greater than v8.4.0**. v9.0.0 satisfies that constraint and signals the major identity shift. The v1.x–v2.x git history is preserved in this repo's tags and is **not** the same product as the AlexMaster v1.x–v8.x history. See [docs/proposals/alexmaster-migration-2026-05-24.md](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/alexmaster-migration-2026-05-24.md) and [ADR-004](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-004-alexmaster-migration.md) in the Supervisor repo for full reasoning.
+This repo (`Alex_ACT_Extension`) developed in parallel at v1.x–v2.0.5 under the Marketplace ID `fabioc-aloha.alex-act-edition`. That ID is being retired. The new published version takes over the AlexMaster Marketplace ID, where monotonic semver requires the next version to be **greater than v8.4.0**. v9.0.0 satisfies that constraint and signals the major identity shift. The v1.x–v2.x git history is preserved in this repo's tags and is **not** the same product as the AlexMaster v1.x–v8.x history.
 
 ### Changed
 
@@ -36,7 +36,7 @@ This repo (`Alex_ACT_Extension`) developed in parallel at v1.x–v2.0.5 under th
 
 ### Pre-publish addenda (rolled in before first Marketplace publish)
 
-- **Brain bundle**: refreshed from Edition `v2.2.0` (was `v2.1.0`). Carries: added `no-deferred-debt` always-on instruction; `tool-awareness` documents VS Code 1.118+ skill picker surfacing; removed 6 always-on instructions not earning their tokens (`debugging`, `creative-loop`, `partnership-charter`, `alternatives-and-tradeoffs`, `scope-management`, `technical-writing`); retired heir migration tooling (`migrate-to-edition.cjs`, `MIGRATION.md`, `finalize-migration.prompt.md`). See [Edition v2.2.0 CHANGELOG](https://github.com/fabioc-aloha/Alex_ACT_Edition/blob/main/CHANGELOG.md).
+- **Brain bundle**: refreshed from `v2.2.0` (was `v2.1.0`). Carries: added `no-deferred-debt` always-on instruction; `tool-awareness` documents VS Code 1.118+ skill picker surfacing; removed 6 always-on instructions not earning their tokens (`debugging`, `creative-loop`, `partnership-charter`, `alternatives-and-tradeoffs`, `scope-management`, `technical-writing`); retired heir migration tooling (`migrate-to-edition.cjs`, `MIGRATION.md`, `finalize-migration.prompt.md`).
 - **`build-extension.cjs`**: `--ref <tag>` now applies only to the Edition clone (was incorrectly applied to Mall, causing Mall clone to fail on Edition-only tags). Version-mismatch WARN replaced with informational NOTE — `package.json.version` (Marketplace identity sequence) and `brain/VERSION` (Edition semver) are dual-track by design per ADR-004.
 
 ### Migration flow (existing AlexMaster seats)
@@ -54,7 +54,7 @@ When ACT Edition v9.0.0 activates in a workspace it identifies as AlexMaster-boo
 ### Removed
 
 - Old MIT LICENSE file (replaced with PolyForm)
-- Old `repository`/`homepage` pointing at the deprecated `Alex_ACT_Edition` GitHub repo
+- Old `repository`/`homepage` pointing at a deprecated GitHub repo
 
 ### Known gaps
 
@@ -67,7 +67,7 @@ When ACT Edition v9.0.0 activates in a workspace it identifies as AlexMaster-boo
 
 **Patch — 25 shared-core brain files gain `## Would Revise If` falsifier sections.** Mirror of Supervisor D2(a) commit `c6327bb`. Each WRI names specific failure modes that would invalidate the file's advice — not boilerplate. Brain epistemic-qa coverage rises 45.5% → ~91% in Edition. No behavioral change for heirs: the files still direct the same actions; the WRI is an epistemic addition that names the conditions under which each rule should be revisited.
 
-Closes the C1 falsifiability gap identified in [Supervisor brain-qa 2026-05-21 findings](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/brain-qa-2026-05-21.md) (decision D2 option a, both phases). Satisfies the Cardinal Rule 3 quarterly CT-trifecta refinement requirement for Q2 2026 — the four CT-trifecta files (critical-thinking instruction + skill, problem-framing-audit, system-prompt-skepticism) are among the 25 with file-specific WRIs.
+Closes the C1 falsifiability gap identified in brain-qa 2026-05-21 findings (decision D2 option a, both phases). Satisfies the Cardinal Rule 3 quarterly CT-trifecta refinement requirement for Q2 2026 — the four CT-trifecta files (critical-thinking instruction + skill, problem-framing-audit, system-prompt-skepticism) are among the 25 with file-specific WRIs.
 
 ### Added
 
@@ -212,7 +212,7 @@ None for the contract. Heirs on v2.0.0 reading the updated rules gain awareness 
 
 ### Proposal + audit trail
 
-- Proposal: `Alex_ACT_Supervisor/docs/proposals/vscode-1.120-1.121-adoption-2026-05-19.md`
+- Proposal: `docs/proposals/vscode-1.120-1.121-adoption-2026-05-19.md`
 - Supervisor commit: `b6dafc3` (origin/main)
 - Brain-qa: exit 0 across 79 Supervisor + 58 Edition files
 - `test-applyto-coverage`: 15/15 PASS, 0 capability gaps
@@ -293,9 +293,9 @@ If any fire: cut v2.0.1 with fix; document in Supervisor's `brain-qa-changelog.m
 
 ### References
 
-- Launch proposal: [`Alex_ACT_Supervisor/docs/proposals/edition-v2-launch-2026-05-19.md`](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/proposals/edition-v2-launch-2026-05-19.md)
-- Benchmark data: `Alex_ACT_Supervisor/benchmark/v2-candidate-baseline.md`
-- Plan: `Alex_ACT_Edition_v2/PLAN-v2-REASONING.md`
+- Launch proposal: `docs/proposals/edition-v2-launch-2026-05-19.md`
+- Benchmark data: `benchmark/v2-candidate-baseline.md`
+- Plan: `PLAN-v2-REASONING.md`
 
 ---
 
@@ -518,7 +518,7 @@ If reasoning quality degrades within 2 weeks (sycophancy returns, alternatives m
 ### Changed
 
 - Removed `.github-v0` pre-refactor brain backup (no longer needed post-v1.0.0).
-- Project docs (PLAN, decisions/) relocated to `Alex_ACT_Supervisor`.
+- Project docs (PLAN, decisions/) relocated to the development workspace.
 
 ---
 
