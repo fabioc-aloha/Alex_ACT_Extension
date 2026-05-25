@@ -570,6 +570,13 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.upgrade', cmdUpgrade),
         vscode.commands.registerCommand('alex-act.status', cmdStatus),
         vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
+        vscode.commands.registerCommand('alex-act.openWalkthrough', () => {
+            vscode.commands.executeCommand(
+                'workbench.action.openWalkthrough',
+                'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
+                false
+            );
+        }),
         vscode.commands.registerCommand('alex-act.migrate-from-alex-master', migration.migrateFromAlexMaster),
         vscode.commands.registerCommand('alex-act.rollback-migration', migration.rollbackMigration),
         vscode.commands.registerCommand('alex-act.clean-migration-backup', migration.cleanMigrationBackup),
@@ -587,6 +594,26 @@ function activate(context) {
 
     // Fire AlexMaster detection modal (respects "remind later" / "don't ask again")
     migration.checkActivationTrigger(context).catch(() => { /* silent */ });
+
+    // Auto-open the Welcome walkthrough on first install or after version bump.
+    // Non-devs won't know to run a command — surface it on startup, once per version.
+    try {
+        const pkg = require('./package.json');
+        const currentVersion = pkg.version;
+        const SHOWN_KEY = 'alex-act.walkthroughShownVersion';
+        const shownVersion = context.globalState.get(SHOWN_KEY);
+        if (shownVersion !== currentVersion) {
+            // Defer briefly so VS Code finishes restoring editors before we open the walkthrough.
+            setTimeout(() => {
+                vscode.commands.executeCommand(
+                    'workbench.action.openWalkthrough',
+                    'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
+                    false
+                );
+            }, 1500);
+            context.globalState.update(SHOWN_KEY, currentVersion);
+        }
+    } catch { /* silent */ }
 
     // Silent startup check: if workspace is a heir, show status bar item
     const root = getWorkspaceRoot();

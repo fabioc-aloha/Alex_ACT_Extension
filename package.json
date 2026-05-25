@@ -42,6 +42,11 @@
                 "category": "ACT"
             },
             {
+                "command": "alex-act.openWalkthrough",
+                "title": "Open Welcome Guide",
+                "category": "Alex"
+            },
+            {
                 "command": "alex-act.upgrade",
                 "title": "Upgrade Brain",
                 "category": "ACT"
@@ -148,7 +153,70 @@
                     "group": "2_to_md@2"
                 }
             ]
-        }
+        },
+        "walkthroughs": [
+            {
+                "id": "alex-getting-started",
+                "title": "Get Started with Alex",
+                "description": "Artificial Critical Thinking, in plain language. A second opinion that doesn't flinch.",
+                "steps": [
+                    {
+                        "id": "welcome",
+                        "title": "Meet Alex: Artificial Critical Thinking",
+                        "description": "Most AIs agree with you. Alex was built to push back, name uncertainty, and find what you're missing.",
+                        "media": {
+                            "markdown": "media/walkthrough/01-welcome.md"
+                        }
+                    },
+                    {
+                        "id": "copilot-check",
+                        "title": "Set up GitHub Copilot: subscription and model",
+                        "description": "Copilot ships built into VS Code now. Sign in, pick the tier that matches how you'll use Alex, and choose a reasoning model for sharper critical thinking.\n[Open Chat](command:workbench.action.chat.open)",
+                        "media": {
+                            "markdown": "media/walkthrough/02-copilot-check.md"
+                        }
+                    },
+                    {
+                        "id": "put-to-work",
+                        "title": "Put Alex to work on a real decision",
+                        "description": "Don't ask a search-engine question. Bring a decision, a plan, or a claim you want pressure-tested.\n[Open Chat](command:workbench.action.chat.open)",
+                        "media": {
+                            "markdown": "media/walkthrough/03-put-to-work.md"
+                        },
+                        "completionEvents": [
+                            "onCommand:workbench.action.chat.open"
+                        ]
+                    },
+                    {
+                        "id": "whats-different",
+                        "title": "What Alex does that other AIs don't",
+                        "description": "Two-hypothesis floor, frame audits, falsifiability, calibrated confidence, anti-sycophancy. This isn't another chatbot.\n[Open Chat](command:workbench.action.chat.open)",
+                        "media": {
+                            "markdown": "media/walkthrough/04-whats-different.md"
+                        }
+                    },
+                    {
+                        "id": "plugin-mall",
+                        "title": "The Plugin Mall: 300+ specialized skills on demand",
+                        "description": "A curated catalog of specialized skills across many categories. The core brain stays small and sharp; depth is pulled in only when your project needs it.\n[Search Plugin Mall](command:alex-act.mall-search)",
+                        "media": {
+                            "markdown": "media/walkthrough/05-practical-tools.md"
+                        },
+                        "completionEvents": [
+                            "onCommand:alex-act.mall-search"
+                        ]
+                    },
+                    {
+                        "id": "trust-and-help",
+                        "title": "Honest answers: data, failure, where to learn more",
+                        "description": "Where your data goes, how to push back when Alex is wrong, where to read the framework.",
+                        "media": {
+                            "markdown": "media/walkthrough/06-trust-and-help.md"
+                        }
+                    }
+                ]
+            }
+        ]
     },
     "icon": "assets/icon.png",
     "galleryBanner": {
