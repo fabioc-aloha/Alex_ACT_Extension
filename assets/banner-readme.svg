@@ -38,16 +38,6 @@
     <line x1="1100" y1="0" x2="1100" y2="320"/>
   </g>
 
-  <!-- Corner accents (warm) -->
-  <path d="M0,16 Q0,0 16,0 L80,0" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
-  <path d="M0,16 L0,80" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
-  <path d="M1120,0 L1184,0 Q1200,0 1200,16" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
-  <path d="M1200,16 L1200,80" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.6"/>
-  <path d="M0,304 Q0,320 16,320 L80,320" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
-  <path d="M0,240 L0,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
-  <path d="M1120,320 L1184,320 Q1200,320 1200,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
-  <path d="M1200,240 L1200,304" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
-
   <!-- ACT Logo: brain with question mark — critical thinking -->
   <g transform="translate(120, 160)" filter="url(#glow)">
     <!-- Outer thinking circle -->
