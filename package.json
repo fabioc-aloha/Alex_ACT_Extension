@@ -30,13 +30,6 @@
     "extensionDependencies": [
         "GitHub.copilot-chat"
     ],
-    "extensionPack": [
-        "GitHub.copilot-chat",
-        "ms-vscode.powershell",
-        "redhat.vscode-yaml",
-        "bierner.markdown-mermaid",
-        "DavidAnson.vscode-markdownlint"
-    ],
     "activationEvents": [
         "onStartupFinished"
     ],
