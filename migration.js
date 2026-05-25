@@ -620,6 +620,61 @@ async function rollbackMigration() {
     }
 }
 
+// ── Clean migration backup ────────────────────────────────────────
+
+/**
+ * Remove the `.github-backup-<ISO>/` directory referenced by the
+ * migration marker. User-initiated cleanup, never automatic. The
+ * marker's `backupPath` field is cleared after successful deletion
+ * so the rollback command knows the backup is gone.
+ */
+async function cleanMigrationBackup() {
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders || folders.length === 0) {
+        vscode.window.showErrorMessage('ACT: Open a workspace folder first.');
+        return;
+    }
+    const workspaceRoot = folders[0].uri.fsPath;
+
+    const markerPath = path.join(workspaceRoot, '.github', '.act-heir.json');
+    const marker = readJsonSafe(markerPath);
+    if (!marker || !marker.migratedFrom || !marker.backupPath) {
+        vscode.window.showWarningMessage('No migration backup recorded. Nothing to clean.');
+        return;
+    }
+
+    const backupDir = path.join(workspaceRoot, marker.backupPath);
+    if (!fs.existsSync(backupDir)) {
+        vscode.window.showInformationMessage(
+            `Backup directory already gone: ${marker.backupPath}. Clearing marker reference.`
+        );
+        delete marker.backupPath;
+        fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+        return;
+    }
+
+    const confirm = await vscode.window.showWarningMessage(
+        `Permanently delete the migration backup at ${marker.backupPath}/?\n\n` +
+        `• Once deleted, rollback is no longer possible.\n` +
+        `• Only do this when you are confident the migration is complete.`,
+        { modal: true },
+        'Delete backup',
+    );
+    if (confirm !== 'Delete backup') return;
+
+    try {
+        fs.rmSync(backupDir, { recursive: true, force: true });
+        delete marker.backupPath;
+        fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+        vscode.window.showInformationMessage(
+            `Migration backup deleted. Rollback is no longer available for this workspace.`
+        );
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(`Failed to delete backup: ${msg}`);
+    }
+}
+
 // ── Activation trigger (modal on detection) ───────────────────────
 
 const REMIND_LATER_KEY = 'alex-act.migration.remindLaterUntil';
@@ -667,6 +722,7 @@ module.exports = {
     // Commands
     migrateFromAlexMaster,
     rollbackMigration,
+    cleanMigrationBackup,
     // Activation
     registerDeprecatedStubs,
     checkActivationTrigger,

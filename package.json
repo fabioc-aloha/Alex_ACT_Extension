@@ -74,6 +74,11 @@
                 "category": "ACT"
             },
             {
+                "command": "alex-act.clean-migration-backup",
+                "title": "Clean Migration Backup",
+                "category": "ACT"
+            },
+            {
                 "command": "alex-act.convert.md-to-word",
                 "title": "Convert to Word (.docx)",
                 "category": "ACT Convert"

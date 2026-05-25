@@ -572,6 +572,7 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
         vscode.commands.registerCommand('alex-act.migrate-from-alex-master', migration.migrateFromAlexMaster),
         vscode.commands.registerCommand('alex-act.rollback-migration', migration.rollbackMigration),
+        vscode.commands.registerCommand('alex-act.clean-migration-backup', migration.cleanMigrationBackup),
     );
 
     // Register converter commands
