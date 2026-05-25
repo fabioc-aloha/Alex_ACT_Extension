@@ -63,16 +63,16 @@
   </g>
 
   <!-- Title -->
-  <text x="230" y="105" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="50" font-weight="700" fill="#f8fafc" letter-spacing="-1">Alex — ACT Edition</text>
+  <text x="230" y="140" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="50" font-weight="700" fill="#f8fafc" letter-spacing="-1">Alex — ACT Edition</text>
 
   <!-- Tagline -->
-  <text x="230" y="143" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#94a3b8" font-weight="400">Artificial Critical Thinking for AI assistants</text>
+  <text x="230" y="175" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#94a3b8" font-weight="400">Artificial Critical Thinking for AI assistants</text>
 
   <!-- Accent line (warm gradient) -->
-  <rect x="230" y="158" width="140" height="3" rx="1.5" fill="url(#accent)" opacity="0.8"/>
+  <rect x="230" y="190" width="140" height="3" rx="1.5" fill="url(#accent)" opacity="0.8"/>
 
   <!-- Bottom tagline -->
-  <text x="230" y="258" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#64748b">Teach your AI assistant to challenge its own reasoning — not just confirm yours</text>
+  <text x="230" y="215" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#64748b">Teach your AI assistant to challenge its own reasoning — not just confirm yours</text>
 
   <!-- Right side: value proposition cards -->
   <g transform="translate(790, 35)">
