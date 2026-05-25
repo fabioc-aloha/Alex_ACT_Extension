@@ -114,6 +114,7 @@ const vscodeignore = [
     'ACT_obsolete',
     'assets/banner-*.svg',
     '*.cjs',
+    '**/*.cjs',
     '!extension.js',
     'MIGRATION.md',
     'PLUGINS.md',
@@ -126,33 +127,11 @@ const vscodeignore = [
 ].join('\n') + '\n';
 fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 
-// ── Step 7: Copy README for marketplace ──────────────────────────
-console.log('7. Preparing marketplace README...');
-const readmeSrc = path.join(editionDir, 'README.md');
-const readmeDst = path.join(EXT_DIR, 'README.md');
-if (fs.existsSync(readmeSrc)) {
-    // Copy and fix relative image paths to absolute GitHub URLs
-    let readme = fs.readFileSync(readmeSrc, 'utf8');
-    readme = readme.replace(
-        /\(assets\//g,
-        '(https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Edition/main/assets/'
-    );
-    // vsce policy: SVGs are restricted in marketplace README. Swap the
-    // banner-readme.svg reference (Edition repo) for the PNG counterpart
-    // bundled in this Extension repo's assets/.
-    readme = readme.replace(
-        /https:\/\/raw\.githubusercontent\.com\/fabioc-aloha\/Alex_ACT_Edition\/main\/assets\/banner-readme\.svg/g,
-        'https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png'
-    );
-    fs.writeFileSync(readmeDst, readme);
-}
-
-// ── Step 8: Copy CHANGELOG and LICENSE ───────────────────────────
-console.log('8. Copying CHANGELOG and LICENSE...');
-for (const f of ['CHANGELOG.md', 'LICENSE']) {
-    const src = path.join(editionDir, f);
-    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(EXT_DIR, f));
-}
+// ── Step 7+8: Extension-identity files are repo-owned ────────────
+// README.md, CHANGELOG.md, and LICENSE are owned by this Extension repo
+// (post Phase 0.4-0.11 AlexMaster identity flip). They are NOT synced from
+// Edition. Edition's brain content still flows through brain/ (Step 3).
+console.log('7-8. Skipping README/CHANGELOG/LICENSE sync (Extension-owned).');
 
 // ── Step 9: Summary ──────────────────────────────────────────────
 const version = fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim();

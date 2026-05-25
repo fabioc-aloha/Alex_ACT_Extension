@@ -24,8 +24,7 @@ const HEIR_ROOT = process.cwd();
 const GH = path.join(HEIR_ROOT, '.github');
 const POLICY_PATH = path.join(GH, 'config', 'sync-policy.json');
 const MARKER_PATH = path.join(GH, '.act-heir.json');
-const IS_EDITION_TEMPLATE = fs.existsSync(path.join(HEIR_ROOT, 'init-edition.cjs')) &&
-    fs.existsSync(path.join(HEIR_ROOT, 'migrate-to-edition.cjs'));
+const IS_EDITION_TEMPLATE = fs.existsSync(path.join(HEIR_ROOT, 'init-edition.cjs'));
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');

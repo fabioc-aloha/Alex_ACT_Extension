@@ -5,6 +5,7 @@ ACT
 ACT_obsolete
 assets/banner-*.svg
 *.cjs
+**/*.cjs
 !extension.js
 MIGRATION.md
 PLUGINS.md
