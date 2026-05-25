@@ -6,6 +6,19 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+### Changed
+
+- **`cmdBootstrap` modal now reads version + counts dynamically from the bundled brain.** Previously hardcoded `v1.2.1` and a fixed file-count breakdown (`35 instructions, 18 skills, 23 prompts, 4 agents, and 21 muscles`) that drifted with every Edition release. Now reads `brain/VERSION` and counts files in `brain/{instructions,skills,prompts,agents,muscles}/` at call time.
+- **Bootstrap success toast replaced with action-button info message + `heir-doctor` run.** The dead-end "Start a Copilot Chat session to begin" message gave the user no actionable next step. The new toast:
+  - Runs `heir-doctor.cjs` post-bootstrap and surfaces a pass/issue line
+  - Offers three one-click buttons: **Run /welcome** (orientation tour, opens Copilot Chat with the slash-command pre-filled), **Run /configure-vscode** (applies user-scope VS Code settings), **Open README** (markdown preview)
+  - Reminds the user to fill in `## Project Context` in `.github/copilot-instructions.local.md` before the first real chat
+- **README**: updated install section to describe the new three-button toast and the pre-chat checklist.
+
+### Notes
+
+This release pairs with Edition v2.3.0 ([behaviour] release on the Edition side), which renames `/welcome` from a settings command to a read-only orientation tour and introduces `/configure-vscode` for the old settings behavior. The extension's bundled brain is rebuilt from Edition `main` at VSIX-pack time; the rebuild lands in the next packaged version.
+
 ---
 
 ## [9.0.0] - 2026-05-24 (pending Marketplace publish)

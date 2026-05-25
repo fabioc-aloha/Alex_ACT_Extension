@@ -22,7 +22,13 @@ ACT Edition installs from the Visual Studio Marketplace. Once installed, open an
 
 > **Alex ACT: Bootstrap This Workspace**
 
-The brain copies into `.github/` and Copilot begins using it on the next chat turn.
+The brain copies into `.github/` and the bootstrap toast offers three one-click follow-ups:
+
+- **Run /welcome** — opens Copilot Chat with a read-only orientation tour (identity, what's loaded, three good first prompts)
+- **Run /configure-vscode** — applies the fleet-baseline VS Code user-scope settings (Copilot model defaults, agent behaviors)
+- **Open README** — the project's own README in a preview pane
+
+Before your first real chat, open `.github/copilot-instructions.local.md` and fill in the `## Project Context` paragraph. Identity grounding from session 1 beats identity grounding at session 10.
 
 ## Coming from Alex Cognitive Architecture (AlexMaster)?
 

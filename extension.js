@@ -6,10 +6,56 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 
-// ── Paths ──────────────────────────────────────────────────────────
+// ── Paths ───────────────────────────────────────────────────────────────
 const BRAIN_DIR = path.join(__dirname, 'brain');
 const CATALOG_PATH = path.join(__dirname, 'catalog', 'CATALOG.json');
+
+// ── Bundled brain introspection ──────────────────────────────────────────
+function getBundledEditionVersion() {
+    try {
+        const v = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+        return v || 'unknown';
+    } catch { return 'unknown'; }
+}
+
+/**
+ * Count edition-shipped artifacts in the bundled brain. Returns an object with
+ * counts that are read at call time, never hardcoded in user-facing strings.
+ * Errors collapse to 0 silently — a bad count in a friendly prompt is less
+ * harmful than a thrown exception during bootstrap.
+ */
+function getBundledCounts() {
+    const count = (subdir, suffix) => {
+        const dir = path.join(BRAIN_DIR, subdir);
+        if (!fs.existsSync(dir)) return 0;
+        try {
+            return fs.readdirSync(dir).filter(n => n.endsWith(suffix)).length;
+        } catch { return 0; }
+    };
+    const countSkills = () => {
+        const dir = path.join(BRAIN_DIR, 'skills');
+        if (!fs.existsSync(dir)) return 0;
+        try {
+            return fs.readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory()).length;
+        } catch { return 0; }
+    };
+    const countMuscles = () => {
+        const dir = path.join(BRAIN_DIR, 'muscles');
+        if (!fs.existsSync(dir)) return 0;
+        try {
+            return fs.readdirSync(dir).filter(n => /\.(cjs|js|mjs|ts)$/.test(n)).length;
+        } catch { return 0; }
+    };
+    return {
+        instructions: count('instructions', '.instructions.md'),
+        skills: countSkills(),
+        prompts: count('prompts', '.prompt.md'),
+        agents: count('agents', '.agent.md'),
+        muscles: countMuscles(),
+    };
+}
 
 function getWorkspaceRoot() {
     const folders = vscode.workspace.workspaceFolders;
@@ -186,7 +232,8 @@ async function cmdBootstrap() {
     if (!heirName) return;
 
     const confirm = await vscode.window.showWarningMessage(
-        `Bootstrap ACT Edition v1.2.1 into this workspace?\n\nThis will create .github/ with 35 instructions, 18 skills, 23 prompts, 4 agents, and 21 muscles.`,
+        `Bootstrap ACT Edition v${getBundledEditionVersion()} into this workspace?\n\n` +
+        `This will create .github/ with ${(() => { const c = getBundledCounts(); return `${c.instructions} instructions, ${c.skills} skills, ${c.prompts} prompts, ${c.agents} agents, and ${c.muscles} muscles`; })()}.`,
         { modal: true },
         'Bootstrap'
     );
@@ -332,9 +379,46 @@ async function cmdBootstrap() {
             } catch { /* best-effort */ }
         }
 
-        vscode.window.showInformationMessage(
-            `ACT Edition v${editionVersion} bootstrapped. ${copied} files written. Start a Copilot Chat session to begin.`
+        // Run heir-doctor and surface exit code; non-fatal if it fails.
+        let doctorOk = null;
+        const doctorPath = path.join(getGitHubDir(root), 'muscles', 'heir-doctor.cjs');
+        if (fs.existsSync(doctorPath)) {
+            try {
+                doctorOk = await new Promise((resolve) => {
+                    const child = spawn(process.execPath, [doctorPath], { cwd: root, windowsHide: true });
+                    let out = '';
+                    child.stdout.on('data', d => { out += d.toString(); });
+                    child.stderr.on('data', d => { out += d.toString(); });
+                    child.on('close', code => resolve(code === 0));
+                    child.on('error', () => resolve(false));
+                });
+            } catch { doctorOk = false; }
+        }
+
+        const doctorLine = doctorOk === null
+            ? ''
+            : doctorOk ? ' ✓ heir-doctor passed.' : ' ⚠ heir-doctor reported issues (run /status for details).';
+
+        const ACT_WELCOME = 'Run /welcome (orientation)';
+        const ACT_CONFIG = 'Run /configure-vscode';
+        const ACT_README = 'Open README';
+        const choice = await vscode.window.showInformationMessage(
+            `ACT Edition v${editionVersion} bootstrapped. ${copied} files written.${doctorLine}\n\n` +
+            `Next: open .github/copilot-instructions.local.md and fill in ## Project Context, then start a Copilot Chat and run /welcome.`,
+            ACT_WELCOME, ACT_CONFIG, ACT_README
         );
+        if (choice === ACT_WELCOME) {
+            await vscode.commands.executeCommand('workbench.action.chat.open', { query: '/welcome' });
+        } else if (choice === ACT_CONFIG) {
+            await vscode.commands.executeCommand('workbench.action.chat.open', { query: '/configure-vscode' });
+        } else if (choice === ACT_README) {
+            const readme = path.join(root, 'README.md');
+            if (fs.existsSync(readme)) {
+                await vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(readme));
+            } else {
+                vscode.window.showWarningMessage('No README.md in this workspace.');
+            }
+        }
     });
 }
 
