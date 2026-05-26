@@ -232,14 +232,13 @@ const FORMAT_DEFAULTS = {
   txt: { replaceEmDashes: true, stripDecorativeRules: false },
   pdf: { replaceEmDashes: false, stripDecorativeRules: false },
   epub: { replaceEmDashes: false, stripDecorativeRules: false },
-  gamma: { replaceEmDashes: false, stripDecorativeRules: false },
 };
 
 /**
  * Full preprocessing pipeline. Options control which transforms run.
  *
  * @param {string} content - Raw markdown
- * @param {object} options - { format: 'docx'|'pdf'|'epub'|'email'|'gamma', stripFrontmatter: bool }
+ * @param {object} options - { format: 'docx'|'pdf'|'epub'|'email', stripFrontmatter: bool }
  * @returns {string} Preprocessed markdown
  */
 function preprocessMarkdown(content, options = {}) {

@@ -34,10 +34,6 @@
             "inlineImages": true,
             "defaultFrom": "team@example.com",
             "testTo": "dev@example.com"
-        },
-        "gamma": {
-            "defaultTheme": "professional",
-            "slideBreak": "h2"
         }
     }
 }
