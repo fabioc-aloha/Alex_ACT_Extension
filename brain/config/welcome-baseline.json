@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema",
-    "$comment": "Baseline VS Code user-scope settings applied by /welcome and audited by /welcome-verify. Edition-owned (overwritten on upgrade). Stable settings only by default; preview/experimental toggles are included only when explicitly requested by user policy and noted in CHANGELOG. To update the baseline, edit this file once; both prompts load from here.",
+    "$comment": "Baseline VS Code user-scope settings applied by /configure-vscode and audited by /configure-vscode-verify. Edition-owned (overwritten on upgrade). Stable settings only by default; preview/experimental toggles are included only when explicitly requested by user policy and noted in CHANGELOG. To update the baseline, edit this file once; both prompts load from here. Filename retained as welcome-baseline.json for backward compatibility with prior heir installs; the user-facing command was renamed in Edition v2.3.0 (was /welcome, now /configure-vscode).",
     "spec_version": "1.0",
     "settings": {
         "update.mode": "default",

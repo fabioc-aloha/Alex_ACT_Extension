@@ -138,7 +138,7 @@ if (editionManifest) {
 // ---- Check 5: copilot-instructions.local.md exists --------------------------
 const localId = path.join(GH, 'copilot-instructions.local.md');
 if (!IS_EDITION_TEMPLATE && !fs.existsSync(localId)) {
-    warn('Missing .github/copilot-instructions.local.md — your identity customizations have no home. Create it (see /welcome).');
+    warn('Missing .github/copilot-instructions.local.md — your identity customizations have no home. Create the file and fill in the ## Project Context section (see /welcome for guided orientation).');
 }
 
 // ---- Check 6: scripts present -----------------------------------------------

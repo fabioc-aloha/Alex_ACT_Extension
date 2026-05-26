@@ -1,10 +1,10 @@
 ---
 description: "Read-only audit of user-level VS Code/Copilot settings compliance"
 mode: agent
-lastReviewed: 2026-05-18
+lastReviewed: 2026-05-25
 ---
 
-# Welcome Verify
+# Configure VS Code — Verify
 
 Use this to verify fleet policy compliance on a machine without changing any settings.
 
@@ -14,7 +14,7 @@ Audit user-scope VS Code settings against the central baseline and report drift.
 
 ## Source of truth
 
-The baseline lives in `.github/config/welcome-baseline.json` (`settings` object). Both `/welcome` (apply) and `/welcome-verify` (this audit) load from the same file — update once.
+The baseline lives in `.github/config/welcome-baseline.json` (`settings` object). Both `/configure-vscode` (apply) and `/configure-vscode-verify` (this audit) load from the same file — update once.
 
 ## Read-Only Steps
 
@@ -27,7 +27,7 @@ The baseline lives in `.github/config/welcome-baseline.json` (`settings` object)
    - `drift` (key exists but value differs)
    - `missing` (key absent)
 6. Report compliance summary and drift table.
-7. Recommend running `/welcome` only if drift or missing keys are found.
+7. Recommend running `/configure-vscode` only if drift or missing keys are found.
 
 ## Output Format
 
@@ -43,7 +43,7 @@ Missing keys:
 - key: expected=<...>
 
 Recommendation:
-- No action required | Run /welcome to apply baseline
+- No action required | Run /configure-vscode to apply baseline
 ```
 
 ## Guardrails
