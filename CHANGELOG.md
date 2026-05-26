@@ -6,6 +6,10 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.9.10] - 2026-05-25
+
+**Patch [behaviour] — icon anti-aliasing fix.** Marketplace icon (`assets/icon.png`) was a PaletteAlpha (indexed) PNG with binary 1-bit transparency, causing visible stair-step jaggies on the rounded corners and diagonal chevron strokes. Rebuilt as RGBA truecolor at 256×256 using a 4× supersampled soft mask (Lanczos downscale) for the rounded rect plus alpha-channel blur (sigma 0.6) on the chevron art. Borders and chevron edges now render with proper anti-aliased gradients. No code changes — asset-only.
+
 ## [9.1.0] - 2026-05-25
 
 **Minor [behaviour] — status-bar menu, dynamic bootstrap modal, action-button success toast, and Edition v2.3.0 brain.** Pairs with [Edition v2.3.0](https://github.com/fabioc-aloha/Alex_ACT_Edition/releases/tag/v2.3.0) which renamed `/welcome` to a read-only orientation tour and introduced `/configure-vscode` for the old settings behaviour. No breaking changes for existing users; the Marketplace listing auto-updates from v9.0.0 to v9.1.0.
