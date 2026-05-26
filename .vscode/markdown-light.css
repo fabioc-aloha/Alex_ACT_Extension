@@ -2,8 +2,8 @@
    GitHub-flavored Markdown Preview Theme
    Alex Cognitive Architecture - Polished Edition
    
-   Lives at .github/config/markdown-light.css and is wired in .vscode/settings.json:
-   "markdown.styles": [".github/config/markdown-light.css"]
+   Lives at .vscode/markdown-light.css and is wired in .vscode/settings.json:
+   "markdown.styles": [".vscode/markdown-light.css"]
    ============================================================================ */
 
 /* ============================================
