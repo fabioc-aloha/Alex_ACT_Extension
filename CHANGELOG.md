@@ -6,6 +6,10 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+### Added
+
+- **Status-bar menu**: clicking the `$(brain) ACT vX.Y.Z` status-bar item now opens a QuickPick of common actions (Show Status, Upgrade Brain when available, Run /welcome, Run /configure-vscode, Search Plugin Mall, Open Brain README, Open Walkthrough, Open Extension README). Previously the click ran `cmdStatus` directly — discoverable but a dead-end. The new menu surfaces every chat-command and converter command behind a single click. An `$(arrow-up)` glyph is appended to the status-bar text when an upgrade is available, so users see the cue without hovering for the tooltip. New command `alex-act.statusBarMenu` registered in `package.json` so it also shows in the command palette.
+
 ### Changed
 
 - **`cmdBootstrap` modal now reads version + counts dynamically from the bundled brain.** Previously hardcoded `v1.2.1` and a fixed file-count breakdown (`35 instructions, 18 skills, 23 prompts, 4 agents, and 21 muscles`) that drifted with every Edition release. Now reads `brain/VERSION` and counts files in `brain/{instructions,skills,prompts,agents,muscles}/` at call time.

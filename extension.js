@@ -488,6 +488,99 @@ async function cmdUpgrade() {
 }
 
 /**
+ * Status-bar menu: QuickPick of common ACT actions, opened from the
+ * `$(brain) ACT vX.Y.Z` status-bar item. Each pick routes to an existing
+ * command — this is a discovery surface, not new logic.
+ */
+async function cmdStatusBarMenu() {
+    const root = getWorkspaceRoot();
+    const isHeir = root && fs.existsSync(getMarkerPath(root));
+
+    let upgradeAvailable = false;
+    let editionVersion = '';
+    let bundledVersion = '';
+    if (isHeir) {
+        try {
+            const marker = JSON.parse(fs.readFileSync(getMarkerPath(root), 'utf8'));
+            editionVersion = marker.edition_version;
+            bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+            upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
+        } catch { /* fall through */ }
+    }
+
+    const items = [];
+
+    if (isHeir) {
+        items.push({
+            label: '$(info) Show Status',
+            description: `Edition v${editionVersion}${upgradeAvailable ? ` → v${bundledVersion} available` : ''}`,
+            action: 'status',
+        });
+        if (upgradeAvailable) {
+            items.push({
+                label: '$(arrow-up) Upgrade Brain',
+                description: `Pull v${bundledVersion} into this workspace`,
+                action: 'upgrade',
+            });
+        }
+        items.push(
+            { label: '$(comment-discussion) Run /welcome', description: 'Orientation tour for this brain', action: 'welcome' },
+            { label: '$(settings-gear) Run /configure-vscode', description: 'Apply recommended VS Code settings', action: 'configure' },
+            { label: '$(search) Search Plugin Mall', description: 'Browse 297 community skills', action: 'mall' },
+            { label: '$(book) Open Brain README', description: '.github/copilot-instructions.local.md', action: 'localReadme' },
+        );
+    } else {
+        items.push({
+            label: '$(rocket) Bootstrap This Workspace',
+            description: 'Install the ACT brain into this folder',
+            action: 'bootstrap',
+        });
+    }
+
+    items.push(
+        { label: '$(milestone) Open Welcome Walkthrough', description: 'Extension getting-started guide', action: 'walkthrough' },
+        { label: '$(book) Open Extension README', description: 'About Alex — ACT Edition', action: 'extReadme' },
+    );
+
+    const pick = await vscode.window.showQuickPick(items, {
+        placeHolder: isHeir
+            ? `Alex ACT v${editionVersion} • pick an action`
+            : 'Alex ACT — not a heir yet • pick an action',
+        matchOnDescription: true,
+    });
+    if (!pick) return;
+
+    switch (pick.action) {
+        case 'status': return cmdStatus();
+        case 'upgrade': return cmdUpgrade();
+        case 'bootstrap': return cmdBootstrap();
+        case 'mall': return cmdMallSearch();
+        case 'welcome':
+            return vscode.commands.executeCommand('workbench.action.chat.open', { query: '/welcome' });
+        case 'configure':
+            return vscode.commands.executeCommand('workbench.action.chat.open', { query: '/configure-vscode' });
+        case 'walkthrough':
+            return vscode.commands.executeCommand(
+                'workbench.action.openWalkthrough',
+                'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
+                false
+            );
+        case 'localReadme': {
+            const local = root ? path.join(root, '.github', 'copilot-instructions.local.md') : null;
+            if (local && fs.existsSync(local)) {
+                return vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(local));
+            }
+            vscode.window.showWarningMessage('No .github/copilot-instructions.local.md in this workspace.');
+            return;
+        }
+        case 'extReadme': {
+            const readme = path.join(__dirname, 'README.md');
+            return vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(readme));
+        }
+    }
+}
+
+/**
  * Status: show brain version, heir info, AI-Memory health
  */
 async function cmdStatus() {
@@ -652,6 +745,7 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.bootstrap', cmdBootstrap),
         vscode.commands.registerCommand('alex-act.upgrade', cmdUpgrade),
         vscode.commands.registerCommand('alex-act.status', cmdStatus),
+        vscode.commands.registerCommand('alex-act.statusBarMenu', cmdStatusBarMenu),
         vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
         vscode.commands.registerCommand('alex-act.openWalkthrough', () => {
             vscode.commands.executeCommand(
@@ -704,10 +798,13 @@ function activate(context) {
         try {
             const marker = JSON.parse(fs.readFileSync(getMarkerPath(root), 'utf8'));
             const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+            const upgradeAvailable = bundledVersion !== marker.edition_version;
             const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
-            statusBar.text = `$(brain) ACT v${marker.edition_version}`;
-            statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${bundledVersion !== marker.edition_version ? ` (v${bundledVersion} available)` : ''}`;
-            statusBar.command = 'alex-act.status';
+            statusBar.text = upgradeAvailable
+                ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
+                : `$(brain) ACT v${marker.edition_version}`;
+            statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
+            statusBar.command = 'alex-act.statusBarMenu';
             statusBar.show();
             context.subscriptions.push(statusBar);
         } catch { /* silent */ }

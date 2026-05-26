@@ -57,6 +57,11 @@
                 "category": "ACT"
             },
             {
+                "command": "alex-act.statusBarMenu",
+                "title": "Open Status Bar Menu",
+                "category": "ACT"
+            },
+            {
                 "command": "alex-act.mall-search",
                 "title": "Search Plugin Mall",
                 "category": "ACT"
