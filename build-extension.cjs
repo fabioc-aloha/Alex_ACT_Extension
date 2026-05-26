@@ -2,14 +2,19 @@
 /**
  * build-extension.cjs -- assemble the VSIX package from remote repos.
  *
- * Clones Alex_ACT_Edition and Alex_Skill_Mall from GitHub (source of truth),
- * copies brain files into brain/, bundles CATALOG.json into catalog/,
- * then optionally runs `npx vsce package` to produce the .vsix.
+ * Clones Alex_ACT_Edition from GitHub (source of truth) and copies brain
+ * files into brain/, then optionally runs `npx vsce package` to produce
+ * the .vsix.
+ *
+ * Plugin Mall catalog is NOT bundled — Mall evolves faster than Extension
+ * releases, so users discover plugins via Copilot Chat (`/mall search`,
+ * `/mall install`) which queries the live Mall repo. See CHANGELOG v8.11.0
+ * for the removal rationale.
  *
  * Usage:
- *   node build-extension.cjs              # build from remote
+ *   node build-extension.cjs              # build from remote main
  *   node build-extension.cjs --no-vsix    # assemble only, skip vsce
- *   node build-extension.cjs --ref v1.0.0 # use a specific Edition tag/branch
+ *   node build-extension.cjs --ref v2.4.0 # use a specific Edition tag/branch
  */
 
 const fs = require('fs');
@@ -19,11 +24,9 @@ const { execSync, execFileSync } = require('child_process');
 
 const EXT_DIR = __dirname;
 const BRAIN_DST = path.join(EXT_DIR, 'brain');
-const CATALOG_DST = path.join(EXT_DIR, 'catalog');
 const ICON_PATH = path.join(EXT_DIR, 'assets', 'icon.png');
 
 const EDITION_REMOTE = 'https://github.com/fabioc-aloha/Alex_ACT_Edition.git';
-const MALL_REMOTE = 'https://github.com/fabioc-aloha/Alex_Skill_Mall.git';
 
 const noVsix = process.argv.includes('--no-vsix');
 const refIdx = process.argv.indexOf('--ref');
@@ -49,26 +52,21 @@ function cloneRepo(remote, name, branch) {
 // ── Step 1: Clean previous build ─────────────────────────────────
 console.log('1. Cleaning previous build...');
 if (fs.existsSync(BRAIN_DST)) fs.rmSync(BRAIN_DST, { recursive: true });
-if (fs.existsSync(CATALOG_DST)) fs.rmSync(CATALOG_DST, { recursive: true });
+// Legacy catalog/ directory (removed in v8.11.0). Clean if present from older builds.
+const LEGACY_CATALOG_DST = path.join(EXT_DIR, 'catalog');
+if (fs.existsSync(LEGACY_CATALOG_DST)) fs.rmSync(LEGACY_CATALOG_DST, { recursive: true });
 
-// ── Step 2: Clone remotes ────────────────────────────────────────
-console.log('2. Fetching from remote repos...');
-let editionDir, mallDir;
+// ── Step 2: Clone Edition ────────────────────────────────────────
+console.log('2. Fetching Edition...');
+let editionDir;
 try {
     editionDir = cloneRepo(EDITION_REMOTE, 'edition', ref);
 } catch (e) {
     console.error(`FATAL: Could not clone Edition: ${e.message.split('\n')[0]}`);
     process.exit(1);
 }
-try {
-    mallDir = cloneRepo(MALL_REMOTE, 'mall', 'main');
-} catch (e) {
-    console.warn(`WARN: Could not clone Mall (catalog will be empty): ${e.message.split('\n')[0]}`);
-    mallDir = null;
-}
 
 const BRAIN_SRC = path.join(editionDir, '.github');
-const MALL_CATALOG = mallDir ? path.join(mallDir, 'CATALOG.json') : null;
 
 // ── Step 3: Copy brain files ─────────────────────────────────────
 console.log('3. Copying brain files...');
@@ -92,28 +90,16 @@ function copyRecursive(src, dst) {
 const brainCount = copyRecursive(BRAIN_SRC, BRAIN_DST);
 console.log(`   Copied ${brainCount} brain files`);
 
-// ── Step 4: Bundle Mall catalog ──────────────────────────────────
-console.log('4. Bundling Mall catalog...');
-fs.mkdirSync(CATALOG_DST, { recursive: true });
-if (MALL_CATALOG && fs.existsSync(MALL_CATALOG)) {
-    fs.copyFileSync(MALL_CATALOG, path.join(CATALOG_DST, 'CATALOG.json'));
-    const plugins = JSON.parse(fs.readFileSync(MALL_CATALOG, 'utf8')).plugins;
-    console.log(`   Bundled ${plugins.length} plugins from Mall`);
-} else {
-    console.log('   WARN: Mall CATALOG.json not found at ' + MALL_CATALOG);
-    fs.writeFileSync(path.join(CATALOG_DST, 'CATALOG.json'), JSON.stringify({ plugins: [] }));
-}
-
-// ── Step 5: Ensure icon exists ───────────────────────────────────
-console.log('5. Checking icon...');
+// ── Step 4: Ensure icon exists ───────────────────────────────────
+console.log('4. Checking icon...');
 if (!fs.existsSync(ICON_PATH)) {
     fs.mkdirSync(path.dirname(ICON_PATH), { recursive: true });
     // Generate a minimal SVG-to-PNG placeholder (real icon should be designed)
     console.log('   WARN: No icon.png found. Create a 128x128 PNG at extension/assets/icon.png');
 }
 
-// ── Step 6: Create .vscodeignore ─────────────────────────────────
-console.log('6. Writing .vscodeignore...');
+// ── Step 5: Create .vscodeignore ─────────────────────────────────
+console.log('5. Writing .vscodeignore...');
 const vscodeignore = [
     '.git',
     '.github',
@@ -128,26 +114,25 @@ const vscodeignore = [
     'PLUGINS.md',
     'README.md',
     '!brain/**',
-    '!catalog/**',
     'node_modules',
     '.vscode-test',
     'build-extension.cjs',
 ].join('\n') + '\n';
 fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 
-// ── Step 7+8: Extension-identity files are repo-owned ────────────
+// ── Step 6+7: Extension-identity files are repo-owned ────────────
 // README.md, CHANGELOG.md, and LICENSE are owned by this Extension repo
 // (post Phase 0.4-0.11 AlexMaster identity flip). They are NOT synced from
 // Edition. Edition's brain content still flows through brain/ (Step 3).
-console.log('7-8. Skipping README/CHANGELOG/LICENSE sync (Extension-owned).');
+console.log('6-7. Skipping README/CHANGELOG/LICENSE sync (Extension-owned).');
 
-// ── Step 9: Summary ──────────────────────────────────────────────
+// ── Step 8: Summary ──────────────────────────────────────────────
 const version = fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim();
 const extPkg = JSON.parse(fs.readFileSync(path.join(EXT_DIR, 'package.json'), 'utf8'));
 console.log('');
 console.log(`Extension: ${extPkg.displayName} v${extPkg.version}`);
 console.log(`Brain:     v${version}`);
-console.log(`Files:     ${brainCount} brain + catalog + extension.js`);
+console.log(`Files:     ${brainCount} brain + extension.js`);
 
 if (extPkg.version !== version) {
     // Dual-track by design (see ADR-004 alexmaster-migration):
@@ -157,7 +142,7 @@ if (extPkg.version !== version) {
     console.log(`\nNOTE: Marketplace v${extPkg.version} bundles brain v${version} (dual-track per ADR-004).`);
 }
 
-// ── Step 10: Build VSIX ──────────────────────────────────────────
+// ── Step 9: Build VSIX ──────────────────────────────────────────
 if (!noVsix) {
     console.log('\n10. Building VSIX...');
     try {

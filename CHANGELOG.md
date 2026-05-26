@@ -6,6 +6,33 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.11.0] - 2026-05-26
+
+**Minor [behaviour] — remove bundled Plugin Mall catalog.** Mall evolves faster than Extension release cadence, so any snapshot bundled in the VSIX is stale by definition. Removed `catalog/CATALOG.json` (234 KB, 297 plugins) along with the `alex-act.mall-search` command, the QuickPick UI, and the status-bar menu entry. Mall discovery now goes exclusively through Copilot Chat (`/mall search <keyword>`, `/mall install <skill>`) which queries the live Mall via the brain's `mall-installation` instruction — always fresh, no staleness ceiling.
+
+### Removed
+
+- **`catalog/CATALOG.json`** (234 KB, 297-plugin snapshot from build time) — replaced by live Copilot Chat queries against the Mall repo.
+- **Command `alex-act.mall-search`** — removed from `contributes.commands`. Users with custom keybindings pointing at this command will see a "command not found" error; rebind to `workbench.action.chat.open` and prefix with `/mall search`.
+- **Status-bar menu entry "$(search) Search Plugin Mall"** — the QuickPick now skips straight from `/configure-vscode` to `Open Brain README`.
+- **`cmdMallSearch()` function in `extension.js`** (~50 lines) and its `CATALOG_PATH` constant.
+- **`MALL_REMOTE`, `CATALOG_DST`, `MALL_CATALOG` constants** + Step 4 "Bundle Mall catalog" in `build-extension.cjs`. Build now clones Edition only, in roughly half the time.
+- **`!catalog/**` allowlist entry** in the generated `.vscodeignore`.
+
+### Changed
+
+- **Welcome walkthrough step "plugin-mall"**: CTA changed from `[Search Plugin Mall](command:alex-act.mall-search)` to `[Open Copilot Chat](command:workbench.action.chat.open)` with prompt for `/mall search` and `/mall install`. Completion event removed (step is now informational; walkthrough no longer gates on the dead command).
+- **Build script docstring** updated to document why Mall is no longer bundled. Steps renumbered 1-9 (was 1-10) after removing Step 4.
+
+### Migration notes
+
+- **For users**: nothing breaks. Plugin Mall search still works via `/mall search` in Copilot Chat — same workflow heirs have always used. The dedicated VS Code command and status-bar entry are gone; the chat path is now the only path.
+- **For anyone bundling a catalog snapshot in fork**: see the v8.11.0 build script for the pure-Edition build pattern. Mall snapshot can still be regenerated on demand if a fork needs offline Mall search.
+
+### Semver note
+
+This release removes a published command (`alex-act.mall-search`), which is technically a breaking change. Bumped as **minor (8.11.0) rather than major (9.0.0)** because: (a) the v9.x line on this repo was previously claimed and abandoned (v9.0.0/v9.1.0 tagged 2026-05-25 then superseded by v8.9.x), making a v9 bump confusing; (b) functional Mall search continues uninterrupted via chat; (c) no user data or workflow is lost. If a user-visible breakage surfaces in the wild, future releases will reconsider the bump rule.
+
 ## [8.10.0] - 2026-05-26
 
 **Minor [behaviour] — bundle Edition v2.4.0 brain.** Pairs with [Edition v2.4.0](https://github.com/fabioc-aloha/Alex_ACT_Edition/releases/tag/v2.4.0). Substantial brain refresh: 45 Edition commits since v2.3.0 (25 [behaviour] + 20 [clarification]). Per-type review/creator pairs (instruction/prompt/agent + skills = four-way symmetry), `.github/muscles/` collapsed into `scripts/`, `.github/config/` pruned (goals.json, sync-policy.json, markdown-light.css all removed; policy inlined into `_registry.cjs`), `welcome-baseline.json` gains Claude Agent safety locks (`allowAutoPermissions`/`allowDangerouslySkipPermissions`) + `skillTool` lock, `markdown-mermaid` SKILL.md trimmed 1648 → 327 lines (refs extracted), `edition-manifest.json` extended to file-level bill-of-materials (`spec_version` 1.0 → 1.3) covering 139/139 shipped files across `.github/` + `.vscode/`. Mall catalog refreshed: 297 plugins. No breaking changes for existing Extension users; auto-updates from v8.9.11. No marketplace-surface changes in this release (status-bar, walkthrough, commands unchanged) — pure brain refresh.

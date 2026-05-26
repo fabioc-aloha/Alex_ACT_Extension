@@ -10,7 +10,6 @@ const { spawn } = require('child_process');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 const BRAIN_DIR = path.join(__dirname, 'brain');
-const CATALOG_PATH = path.join(__dirname, 'catalog', 'CATALOG.json');
 
 // ── Bundled brain introspection ──────────────────────────────────────────
 function getBundledEditionVersion() {
@@ -540,7 +539,6 @@ async function cmdStatusBarMenu() {
         items.push(
             { label: '$(comment-discussion) Run /welcome', description: 'Orientation tour for this brain', action: 'welcome' },
             { label: '$(settings-gear) Run /configure-vscode', description: 'Apply recommended VS Code settings', action: 'configure' },
-            { label: '$(search) Search Plugin Mall', description: 'Browse 297 community skills', action: 'mall' },
             { label: '$(book) Open Brain README', description: '.github/copilot-instructions.local.md', action: 'localReadme' },
         );
     } else {
@@ -568,7 +566,6 @@ async function cmdStatusBarMenu() {
         case 'status': return cmdStatus();
         case 'upgrade': return cmdUpgrade();
         case 'bootstrap': return cmdBootstrap();
-        case 'mall': return cmdMallSearch();
         case 'welcome':
             return vscode.commands.executeCommand('workbench.action.chat.open', { query: '/welcome' });
         case 'configure':
@@ -637,65 +634,6 @@ async function cmdStatus() {
     }
 }
 
-/**
- * Mall Search: search bundled CATALOG.json
- */
-async function cmdMallSearch() {
-    let catalog;
-    try {
-        catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
-    } catch {
-        vscode.window.showErrorMessage('ACT: Could not load Mall catalog.');
-        return;
-    }
-
-    const query = await vscode.window.showInputBox({
-        prompt: 'Search the Plugin Mall (keyword, category, or technology)',
-        placeHolder: 'e.g., azure, testing, mermaid, security',
-    });
-    if (!query) return;
-
-    const q = query.toLowerCase();
-    const matches = catalog.plugins.filter(p =>
-        (p.name && p.name.toLowerCase().includes(q)) ||
-        (p.title && p.title.toLowerCase().includes(q)) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
-        (p.description && p.description.toLowerCase().includes(q))
-    );
-
-    if (matches.length === 0) {
-        vscode.window.showInformationMessage(`No plugins found for "${query}". Try a broader term.`);
-        return;
-    }
-
-    const picks = matches.slice(0, 30).map(p => ({
-        label: `${p.name}  ${p.shape}`,
-        description: `${p.category} | ~${p.token_cost} tokens`,
-        detail: p.description,
-        plugin: p,
-    }));
-
-    const pick = await vscode.window.showQuickPick(picks, {
-        placeHolder: `${matches.length} plugin${matches.length === 1 ? '' : 's'} found`,
-        matchOnDescription: true,
-        matchOnDetail: true,
-    });
-
-    if (pick) {
-        const p = pick.plugin;
-        const detail = [
-            `**${p.name}** (${p.shape}, ${p.tier})`,
-            `Category: ${p.category}`,
-            `Token cost: ~${p.token_cost}`,
-            `Engines: ${(p.engines || []).join(', ')}`,
-            '',
-            `Install: \`/mall install ${p.name}\` in Copilot Chat`,
-            `Or clone the Mall and copy from \`${p.path}\``,
-        ].join('\n');
-        vscode.window.showInformationMessage(detail, { modal: true });
-    }
-}
-
 // ── Converter Commands ─────────────────────────────────────────────
 
 const CONVERTERS = {
@@ -760,7 +698,6 @@ function activate(context) {
         vscode.commands.registerCommand('alex-act.upgrade', cmdUpgrade),
         vscode.commands.registerCommand('alex-act.status', cmdStatus),
         vscode.commands.registerCommand('alex-act.statusBarMenu', cmdStatusBarMenu),
-        vscode.commands.registerCommand('alex-act.mall-search', cmdMallSearch),
         vscode.commands.registerCommand('alex-act.openWalkthrough', () => {
             vscode.commands.executeCommand(
                 'workbench.action.openWalkthrough',
