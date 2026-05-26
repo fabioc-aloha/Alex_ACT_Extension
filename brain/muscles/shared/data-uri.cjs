@@ -1,7 +1,7 @@
 /**
  * shared/data-uri.cjs - Shared data URI encoding and download utilities
  *
- * Extracted from 6+ Replicate generator scripts that each had their own
+ * Extracted from prior generator scripts that each had their own
  * copy of imageToDataUri, downloadImage, and MIME detection.
  *
  * Usage:

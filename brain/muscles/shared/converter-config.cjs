@@ -33,13 +33,6 @@ const DEFAULTS = {
     defaultFrom: null,
     testTo: null
   },
-  replicate: {
-    characterConfig: '.github/skills/alex-character/visual-memory/visual-memory.json',
-    defaultModel: 'google/nano-banana-pro',
-    costLimit: 5.00,
-    rateLimit: 3000,
-    maxRetries: 2
-  },
   gamma: {
     defaultTheme: 'professional',
     slideBreak: 'h2'
@@ -83,7 +76,7 @@ function deepMerge(a, b) {
 /**
  * Load converter config for a given section.
  *
- * @param {string} section - Config section: 'word', 'email', 'replicate', 'gamma'
+ * @param {string} section - Config section: 'word', 'email', 'gamma'
  * @param {object} [options] - Options
  * @param {string} [options.inputFile] - Input file path (used to find project root)
  * @param {string} [options.projectRoot] - Explicit project root directory

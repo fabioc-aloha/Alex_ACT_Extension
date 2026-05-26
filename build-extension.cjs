@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 
 const EXT_DIR = __dirname;
 const BRAIN_DST = path.join(EXT_DIR, 'brain');
@@ -29,12 +29,20 @@ const noVsix = process.argv.includes('--no-vsix');
 const refIdx = process.argv.indexOf('--ref');
 const ref = refIdx >= 0 && process.argv[refIdx + 1] ? process.argv[refIdx + 1] : 'main';
 
+// Reject anything that isn't a plausible git ref (branch/tag/sha). Prevents shell metachars
+// from reaching the clone call even though we use execFileSync below as defense in depth.
+if (!/^[A-Za-z0-9._/-]+$/.test(ref)) {
+    console.error(`FATAL: invalid --ref value: ${ref}`);
+    process.exit(1);
+}
+
 const TMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'act-ext-build-'));
 
 function cloneRepo(remote, name, branch) {
     const dest = path.join(TMP_DIR, name);
     console.log(`   Cloning ${name} (${branch})...`);
-    execSync(`git clone --depth 1 --branch ${branch} ${remote} ${dest}`, { stdio: 'pipe' });
+    // Array form bypasses the shell so branch/remote/dest cannot be interpreted as metachars.
+    execFileSync('git', ['clone', '--depth', '1', '--branch', branch, remote, dest], { stdio: 'pipe' });
     return dest;
 }
 

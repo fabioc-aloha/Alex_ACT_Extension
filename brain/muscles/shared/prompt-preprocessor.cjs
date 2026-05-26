@@ -2,7 +2,7 @@
  * shared/prompt-preprocessor.cjs -- Shared Prompt Preprocessing
  *
  * Section validation, trait injection, length checking, and structured
- * prompt building for all Replicate image/video generation scripts.
+ * prompt building for all image/video generation scripts.
  *
  * Usage:
  *   const { preprocessPrompt, validatePrompt, injectTraits } = require('./shared/prompt-preprocessor.cjs');

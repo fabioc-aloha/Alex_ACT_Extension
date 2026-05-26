@@ -2,7 +2,7 @@
 
 This file's history has been migrated to the unified Edition changelog managed by the Supervisor.
 
-**Canonical location**: `Alex_ACT_Supervisor/decisions/edition-changelog.md`
+**Canonical location**: `Alex_ACT_Supervisor/docs/ledgers/edition-changelog.md`
 
 That file uses two tables:
 

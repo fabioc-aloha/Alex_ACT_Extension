@@ -2,13 +2,11 @@
  * shared/index.mjs — ESM bridge for CJS shared modules
  * Version: 1.0.0
  *
- * Replicate generator scripts use ESM (import), shared modules use CJS (require).
- * This bridge re-exports everything via ESM for clean imports.
+ * Bridges CJS shared modules into ESM so ESM consumers can use clean imports.
  *
  * Usage in ESM scripts:
- *   import { encodeToDataUri, downloadFile, initReplicate, runBatch,
- *            estimateCost, writeOutput, writeReport, loadCharacterConfig,
- *            loadConfig } from '../.github/muscles/shared/index.mjs';
+ *   import { encodeToDataUri, downloadFile, loadConfig,
+ *            loadCharacterConfig } from '../.github/muscles/shared/index.mjs';
  * @inheritance inheritable
  */
 
@@ -18,13 +16,6 @@ const require = createRequire(import.meta.url);
 // Data URI utilities
 const dataUri = require('./data-uri.cjs');
 export const { encodeToDataUri, downloadFile, decodeDataUri, mimeFromExt, MIME_MAP } = dataUri;
-
-// Replicate core utilities
-const replicateCore = require('./replicate-core.cjs');
-export const { initReplicate, parseCliArgs, estimateCost, writeOutput,
-               runBatch, writeReport, postProcess, validateDuration,
-               checkModelFreshness, MODEL_COSTS, MODEL_REGISTRY,
-               DURATION_CONSTRAINTS } = replicateCore;
 
 // Converter config + character config
 const converterConfig = require('./converter-config.cjs');

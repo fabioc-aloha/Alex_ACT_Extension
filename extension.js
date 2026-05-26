@@ -89,14 +89,24 @@ function isHeirOwned(relPath, policy) {
 }
 
 // ── File operations ────────────────────────────────────────────────
-function listFilesRecursive(dir, base) {
+// Symlink cycle / depth guard: tracks resolved real paths and caps recursion depth.
+// Without this, a workspace with `a -> b` and `b -> a` symlinks would infinite-loop on Unix.
+const MAX_RECURSION_DEPTH = 50;
+function listFilesRecursive(dir, base, _seen, _depth) {
     base = base || dir;
+    _seen = _seen || new Set();
+    _depth = _depth || 0;
     let results = [];
     if (!fs.existsSync(dir)) return results;
+    if (_depth > MAX_RECURSION_DEPTH) return results;
+    let real;
+    try { real = fs.realpathSync(dir); } catch { return results; }
+    if (_seen.has(real)) return results;
+    _seen.add(real);
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
-            results = results.concat(listFilesRecursive(full, base));
+            results = results.concat(listFilesRecursive(full, base, _seen, _depth + 1));
         } else {
             results.push(path.relative(base, full));
         }
@@ -380,6 +390,7 @@ async function cmdBootstrap() {
         }
 
         // Run heir-doctor and surface exit code; non-fatal if it fails.
+        // 30s timeout so a wedged subprocess can't hang the bootstrap UI indefinitely.
         let doctorOk = null;
         const doctorPath = path.join(getGitHubDir(root), 'muscles', 'heir-doctor.cjs');
         if (fs.existsSync(doctorPath)) {
@@ -387,10 +398,13 @@ async function cmdBootstrap() {
                 doctorOk = await new Promise((resolve) => {
                     const child = spawn(process.execPath, [doctorPath], { cwd: root, windowsHide: true });
                     let out = '';
+                    let settled = false;
+                    const finish = (result) => { if (settled) return; settled = true; clearTimeout(timer); resolve(result); };
+                    const timer = setTimeout(() => { try { child.kill(); } catch { /* */ } finish(false); }, 30000);
                     child.stdout.on('data', d => { out += d.toString(); });
                     child.stderr.on('data', d => { out += d.toString(); });
-                    child.on('close', code => resolve(code === 0));
-                    child.on('error', () => resolve(false));
+                    child.on('close', code => finish(code === 0));
+                    child.on('error', () => finish(false));
                 });
             } catch { doctorOk = false; }
         }
