@@ -23,7 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { upsertHeir, resolveAiMemoryRoot, discoverCloudDrives, initAiMemory } = require('./_registry.cjs');
+const { upsertHeir, resolveAiMemoryRoot, discoverCloudDrives, initAiMemory, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
 
 const IDENTITY_TEMPLATE = `# Identity (heir-owned)
 
@@ -179,8 +179,6 @@ if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(HEIR_ID) || HEIR_ID.length < 2) {
 }
 
 const targetAbs = path.resolve(TARGET);
-const policyPath = path.join(EDITION_ROOT, '.github', 'config', 'sync-policy.json');
-const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
 const editionVersion = fs.readFileSync(path.join(EDITION_ROOT, '.github', 'VERSION'), 'utf8').trim();
 const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
@@ -253,7 +251,7 @@ function expandGlob(pattern) {
 }
 
 const filesToCopy = new Set();
-for (const pattern of policy.edition_owned) {
+for (const pattern of EDITION_OWNED) {
     for (const rel of expandGlob(pattern)) {
         filesToCopy.add(rel);
     }
@@ -314,7 +312,7 @@ for (const rel of sortedFiles) {
 // These files become heir-owned the moment they land — upgrade-self.cjs will
 // never touch them again. Skip any glob (e.g. **/local/**) without source files.
 let templatesRendered = 0;
-for (const pattern of (policy.heir_owned || [])) {
+for (const pattern of HEIR_OWNED) {
     for (const rel of expandGlob(pattern)) {
         const src = path.join(EDITION_ROOT, rel);
         const dst = path.join(targetAbs, rel);

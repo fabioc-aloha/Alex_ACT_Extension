@@ -1,12 +1,11 @@
 ---
 name: document-assembler
 description: Takes a draft markdown file containing `<!-- ILLUSTRATOR: ... -->` placeholders, dispatches the illustrator worker for each placeholder in parallel, and stitches the rendered diagrams back into the file. Use when a markdown draft has 2 or more diagram placeholders to render and assemble. Returns confirmation that the file was assembled.
-tools: ['edit', 'read', 'search/codebase', 'runSubagent']
+tools: ['edit', 'read', 'runSubagent']
 user-invocable: false
 disable-model-invocation: false
 model: ['Auto']
-currency: 2026-05-01
-lastReviewed: 2026-05-01
+lastReviewed: 2026-05-26
 ---
 
 # Document Assembler Worker
@@ -82,3 +81,12 @@ No preamble. No "I'll start by...". No diagram code in the output.
 Without this worker, the parent (often Opus) does the placeholder-replacement step itself. That means Opus generates 5+ KB of mostly mechanical text in a single `multi_replace_string_in_file` tool call (the rendered mermaid blocks copied verbatim into `newString` fields). That is Haiku-grade work being done by Opus. This worker absorbs it.
 
 The parent's job is to plan the document and decide *what* diagrams are needed. Your job is the mechanical assembly. Stay in your lane.
+
+## Would Revise If
+
+Revisit this agent by **2026-08-26** (90 days) or sooner if any of the following fires:
+
+- Sequential dispatch occurs (the agent forgot to parallel-batch) ≥1 time in observed work — the primary anti-pattern this agent exists to prevent
+- Illustrator re-dispatch (per step 4) fires ≥3 times in a quarter for the same brief shape — indicates a recurring illustrator output issue, not assembler issue, but signals the assembler's validation step needs sharpening
+- `multi_replace_string_in_file` failed-replacement recovery (step 5) is invoked ≥3 times in a quarter (placeholder-capture rule too brittle; tighten step 2)
+- The output contract drifts (assembler narrates, edits surrounding prose, or invents diagrams when the illustrator fails) ≥1 time

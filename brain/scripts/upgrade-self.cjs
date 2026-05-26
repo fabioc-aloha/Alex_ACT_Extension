@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
-const { upsertHeir } = require('./_registry.cjs');
+const { upsertHeir, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
 
 // ─── CLI & Config ────────────────────────────────────────────────────────────
 
@@ -87,12 +87,6 @@ if (!fs.existsSync(versionPath)) {
 }
 const newVersion = fs.readFileSync(versionPath, 'utf8').trim();
 
-const policyPath = path.join(tmp, '.github', 'config', 'sync-policy.json');
-if (!fs.existsSync(policyPath)) {
-    console.error('Cloned Edition has no sync-policy.json. Aborting.');
-    process.exit(1);
-}
-
 function semver(v) {
     const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v);
     if (!m) return [0, 0, 0];
@@ -125,15 +119,11 @@ console.log('');
 
 // ─── Collect Heir-Owned Files ────────────────────────────────────────────────
 
-// Read from the CURRENT policy (before it gets replaced)
-const currentPolicyPath = path.join(HEIR_ROOT, '.github', 'config', 'sync-policy.json');
+// Read the canonical heir-owned list from the imported policy.
 let heirOwnedFiles = [];
-if (fs.existsSync(currentPolicyPath)) {
-    const currentPolicy = JSON.parse(fs.readFileSync(currentPolicyPath, 'utf8'));
-    for (const pattern of (currentPolicy.heir_owned || [])) {
-        for (const rel of expandGlob(HEIR_ROOT, pattern)) {
-            heirOwnedFiles.push(rel);
-        }
+for (const pattern of HEIR_OWNED) {
+    for (const rel of expandGlob(HEIR_ROOT, pattern)) {
+        heirOwnedFiles.push(rel);
     }
 }
 
@@ -142,7 +132,6 @@ const alwaysRecover = [
     '.github/.act-heir.json',
     '.github/copilot-instructions.local.md',
     '.github/config/cognitive-config.json',
-    '.github/config/goals.json',
 ];
 for (const f of alwaysRecover) {
     if (fs.existsSync(path.join(HEIR_ROOT, f)) && !heirOwnedFiles.includes(f)) {
@@ -153,7 +142,7 @@ for (const f of alwaysRecover) {
 // Recover local/ directories
 const localDirs = [
     '.github/skills/local', '.github/instructions/local',
-    '.github/muscles/local', '.github/prompts/local',
+    '.github/scripts/local', '.github/prompts/local',
     '.github/agents/local',
 ];
 for (const ld of localDirs) {
@@ -176,7 +165,7 @@ if (fs.existsSync(episodicDir)) {
 }
 
 // ─── Detect Heir-Added Artifacts Outside local/ ──────────────────────────────
-// Skills/instructions/prompts/muscles added directly into edition-owned paths
+// Skills/instructions/prompts added directly into edition-owned paths
 // (pre-v1.0 pattern). These get relocated to local/ during upgrade.
 
 const editionManifestPath = path.join(tmp, '.github', 'config', 'edition-manifest.json');
@@ -239,25 +228,9 @@ if (fs.existsSync(heirPromptsDir)) {
     }
 }
 
-// Check muscles
-const editionMuscleDir = path.join(tmp, '.github', 'muscles');
-const editionMuscles = new Set();
-if (fs.existsSync(editionMuscleDir)) {
-    for (const f of walkDir(editionMuscleDir)) {
-        editionMuscles.add(path.relative(path.join(tmp, '.github', 'muscles'), f).replace(/\\/g, '/'));
-    }
-}
-const heirMuscleDir = path.join(HEIR_ROOT, '.github', 'muscles');
-if (fs.existsSync(heirMuscleDir)) {
-    for (const entry of fs.readdirSync(heirMuscleDir, { withFileTypes: true })) {
-        if (entry.name === 'local' || entry.name === 'shared' || entry.name === 'lua-filters') continue;
-        if (!entry.isFile()) continue;
-        if (editionMuscles.has(entry.name)) continue;
-        const rel = `.github/muscles/${entry.name}`;
-        const newRel = `.github/muscles/local/${entry.name}`;
-        relocations.push({ from: rel, to: newRel });
-    }
-}
+// Check muscles (legacy: muscles/ folder was removed in v2.4+; any remaining
+// heir content there is preserved via unmatched:preserve and should be moved
+// to scripts/local/ manually)
 
 // Include relocated files in heir-owned collection so they get preserved
 if (relocations.length > 0) {
@@ -270,16 +243,13 @@ if (relocations.length > 0) {
     }
 }
 
-// ─── Implement "unmatched: preserve" from sync-policy ────────────────────────
+// ─── Implement "unmatched: preserve" from the inlined policy ────────────────
 // Walk current .github/ and preserve any file that is NOT edition-owned.
 // This catches .github/workflows/, .github/ISSUE_TEMPLATE/, dependabot.yml, etc.
 
 const dotGithubDir = path.join(HEIR_ROOT, '.github');
 if (fs.existsSync(dotGithubDir)) {
-    const currentPolicy = fs.existsSync(currentPolicyPath)
-        ? JSON.parse(fs.readFileSync(currentPolicyPath, 'utf8'))
-        : {};
-    const editionOwnedPatterns = currentPolicy.edition_owned || [];
+    const editionOwnedPatterns = EDITION_OWNED;
 
     function isEditionOwned(relPath) {
         const normalized = relPath.replace(/\\/g, '/');

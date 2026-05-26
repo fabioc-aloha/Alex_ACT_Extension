@@ -1,6 +1,35 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
-    "$comment": "Baseline VS Code user-scope settings applied by /configure-vscode and audited by /configure-vscode-verify. Edition-owned (overwritten on upgrade). Stable settings only by default; preview/experimental toggles are included only when explicitly requested by user policy and noted in CHANGELOG. To update the baseline, edit this file once; both prompts load from here. Filename retained as welcome-baseline.json for backward compatibility with prior heir installs; the user-facing command was renamed in Edition v2.3.0 (was /welcome, now /configure-vscode).",
+    "$schema": "https://github.com/fabioc-aloha/Alex_ACT_Edition/blob/main/.github/config/welcome-baseline.schema.json",
+    "$comment": [
+        "Baseline VS Code user-scope settings applied by /configure-vscode and audited by /configure-vscode-verify.",
+        "Edition-owned (overwritten on upgrade). Stable settings only by default; preview/experimental toggles",
+        "are included only when explicitly requested by user policy and noted in CHANGELOG. To update the baseline,",
+        "edit this file once; both prompts load from here.",
+        "",
+        "Filename retained as welcome-baseline.json for backward compatibility with prior heir installs; the",
+        "user-facing command was renamed in Edition v2.3.0 (was /welcome, now /configure-vscode).",
+        "",
+        "Categories (2026-05-26 audit, refreshed against VS Code 1.121-1.122 release notes):",
+        "  (1) Updates infrastructure - keeps heirs current with Copilot feature rollouts.",
+        "  (2) Chat agent core REQUIRED - ACT brain depends on these to load skills/instructions and run the act-pass.",
+        "  (3) Copilot chat features REQUIRED - memory tiers, codesearch, deferred tool loading, skill picker surfacing.",
+        "  (4) Terminal in chat REQUIRED - per terminal-command-safety.instructions.md (1.117-1.121 features).",
+        "  (5) Utility model slots REQUIRED - per README practical recommendation.",
+        "  (6) UX cohesion - small chat surface conveniences, not policy-critical.",
+        "  (7) Experimental opt-outs REQUIRED - ACT prefers explicit context over implicit (epistemic-calibration",
+        "      discipline) and fresh symbol info over stable cache (verify-against-current discipline).",
+        "  (8) Safety locks REQUIRED - defensive false locks against dangerous Claude Agent permission modes added",
+        "      in VS Code 1.121 (allowAutoPermissions preview reduces permission prompts via classifier;",
+        "      allowDangerouslySkipPermissions enables YOLO bypass-all-permissions mode). ACT's permission discipline",
+        "      is non-negotiable; explicit false prevents accidental enablement if VS Code defaults change.",
+        "",
+        "Mermaid rendering ships built-in via Mermaid Markdown Features (VS Code 1.121+) and needs no setting;",
+        "prior mermaid-chat.enabled key was removed as dead (no extension publishes it).",
+        "",
+        "Format note: $comment is an array of strings purely for source readability. Per JSON Schema spec the",
+        "field is informational only; no validator enforces type. The /configure-vscode and /configure-vscode-verify",
+        "prompts only read the settings object."
+    ],
     "spec_version": "1.0",
     "settings": {
         "update.mode": "default",
@@ -17,8 +46,8 @@
         "github.copilot.chat.tools.memory.enabled": true,
         "github.copilot.chat.codesearch.enabled": true,
         "github.copilot.chat.responsesApi.toolSearchTool.enabled": true,
+        "github.copilot.chat.skillTool.enabled": true,
         "github.copilot.chat.agent.modelDetails.enabled": true,
-        "mermaid-chat.enabled": true,
         "chat.tools.terminal.backgroundNotifications": true,
         "chat.tools.terminal.detachBackgroundProcesses": true,
         "chat.tools.compressOutput.enabled": true,
@@ -26,6 +55,8 @@
         "chat.utilitySmallModel": "gpt-4o-mini",
         "terminal.integrated.tabs.allowAgentCliTitle": true,
         "chat.experimental.implicitContext.enabled": false,
-        "chat.experimental.symbolTools.cacheStable": false
+        "chat.experimental.symbolTools.cacheStable": false,
+        "github.copilot.chat.claudeAgent.allowAutoPermissions": false,
+        "github.copilot.chat.claudeAgent.allowDangerouslySkipPermissions": false
     }
 }

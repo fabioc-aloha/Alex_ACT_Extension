@@ -211,7 +211,7 @@ function discoverCloudDrives(heirRoot) {
 
 /**
  * Create the AI-Memory folder structure in the given cloud drive.
- * @param {string} driveName - cloud drive folder name (e.g. 'OneDrive - Correa Family') or full path
+ * @param {string} driveName - cloud drive folder name (e.g. 'OneDrive - Personal') or full path
  * @returns {{ ok: boolean, root: string, created: string[] }}
  */
 function initAiMemory(driveName) {
@@ -253,7 +253,52 @@ function initAiMemory(driveName) {
     return { ok: true, root, created };
 }
 
-module.exports = { resolveAiMemoryRoot, upsertHeir, discoverCloudDrives, initAiMemory };
+// ─── Sync policy (formerly .github/config/sync-policy.json) ──────────────────
+// Inlined here so the policy lives with the scripts that consume it.
+// Read by bootstrap-heir.cjs (initial install) and upgrade-self.cjs (overwrite-vs-preserve).
+// Heirs that need additional preserve paths add them under .github/<type>/local/**
+// (already covered below) — no per-heir policy customization is exposed.
+
+const EDITION_OWNED = [
+    '.github/copilot-instructions.md',
+    '.github/instructions/**',
+    '.github/skills/**',
+    '.github/prompts/**',
+    '.github/agents/**',
+    '.github/config/edition-manifest.json',
+    '.github/config/welcome-baseline.json',
+    '.github/config/README.md',
+    '.github/scripts/shared/**',
+    '.github/scripts/converter-qa.cjs',
+    '.github/scripts/audit-mall-drift.cjs',
+    '.github/scripts/upgrade-self.cjs',
+    '.github/scripts/bootstrap-heir.cjs',
+    '.github/scripts/build-edition-manifest.cjs',
+    '.github/scripts/_registry.cjs',
+    '.github/scripts/CONVERTER-CHANGELOG.md',
+    '.github/VERSION',
+    '.vscode/markdown-light.css',
+];
+
+const HEIR_OWNED = [
+    '.github/.act-heir.json',
+    '.github/copilot-instructions.local.md',
+    '.github/config/cognitive-config.json',
+    '.github/config/local/**',
+    '.github/instructions/local/**',
+    '.github/skills/local/**',
+    '.github/prompts/local/**',
+    '.github/scripts/local/**',
+    '.github/agents/local/**',
+    '.github/episodic/**',
+    '.github/workflows/**',
+    '.github/ISSUE_TEMPLATE/**',
+    '.github/dependabot.yml',
+    '.vscode/extensions.json',
+    '.vscode/settings.json',
+];
+
+module.exports = { resolveAiMemoryRoot, upsertHeir, discoverCloudDrives, initAiMemory, EDITION_OWNED, HEIR_OWNED };
 
 // ── CLI mode ───────────────────────────────────────────────────────
 // node _registry.cjs --discover          List cloud drives

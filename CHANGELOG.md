@@ -6,6 +6,34 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.10.0] - 2026-05-26
+
+**Minor [behaviour] — bundle Edition v2.4.0 brain.** Pairs with [Edition v2.4.0](https://github.com/fabioc-aloha/Alex_ACT_Edition/releases/tag/v2.4.0). Substantial brain refresh: 45 Edition commits since v2.3.0 (25 [behaviour] + 20 [clarification]). Per-type review/creator pairs (instruction/prompt/agent + skills = four-way symmetry), `.github/muscles/` collapsed into `scripts/`, `.github/config/` pruned (goals.json, sync-policy.json, markdown-light.css all removed; policy inlined into `_registry.cjs`), `welcome-baseline.json` gains Claude Agent safety locks (`allowAutoPermissions`/`allowDangerouslySkipPermissions`) + `skillTool` lock, `markdown-mermaid` SKILL.md trimmed 1648 → 327 lines (refs extracted), `edition-manifest.json` extended to file-level bill-of-materials (`spec_version` 1.0 → 1.3) covering 139/139 shipped files across `.github/` + `.vscode/`. Mall catalog refreshed: 297 plugins. No breaking changes for existing Extension users; auto-updates from v8.9.11. No marketplace-surface changes in this release (status-bar, walkthrough, commands unchanged) — pure brain refresh.
+
+### Added
+
+- **3 baseline skills** mirrored from Supervisor: `code-review`, `git-workflow`, `status-reporting`. Each with always-on routing instruction. Closes a real heir-baseline gap.
+- **6 per-type review/creator pair skills**: `instruction-review`/`instruction-creator`, `prompt-review`/`prompt-creator`, `agent-review`/`agent-creator` (per ADR-007). Brain users gain Supervisor's curation surface.
+- **`deep-review` skill** — adversarial code review with three parallel perspectives (Advocate, Skeptic, Architect). Complements single-pass `code-review` for high-stakes PRs.
+- **`doc-hygiene` skill** — anti-drift rules, link integrity, count elimination, living-document maintenance.
+- **3 new slash-prompts**: `/review-instruction`, `/review-prompt`, `/review-agent` — complete four-way symmetry with existing `/review-skill`.
+- **`markdown-mermaid/references/mermaid-reference.md`** (1339 lines) — deep-dive content extracted from SKILL.md.
+
+### Changed
+
+- **22 prompts** stripped deprecated `mode: agent` frontmatter (deprecated per current Microsoft Learn prompt-files spec).
+- **23 prompts gain `## Would Revise If`** + `lastReviewed: 2026-05-26` (per `falsifiability-deadlines` instruction).
+- **8 always-on shared-core instructions** mirrored byte-identical with Supervisor: `act-foundations`, `act-pass`, `critical-thinking`, `epistemic-calibration`, `privacy-responsible-ai`, `proactive-awareness`, `system-prompt-skepticism`, `falsifiability-deadlines`. Concrete 90-day falsifier windows (2026-08-26).
+- **4 worker agents tightened against Gate 6 (Tool Allowlist Minimality)** — `document-assembler` drops unused `search/codebase`; `illustrator` trims to `read`-only; `markdown-author` drops `search/*` + `search/usages`. `brain-auditor` retains `edit`.
+
+### Removed
+
+- **`audit-apis` workflow** (registry + muscle + prompt) — bundled into v8.9.x but no longer in Edition v2.4.0.
+- **`migrate-from-alex-master.prompt.md`** — obsolete migration tool.
+- **`academic-paper-drafting` skill** — 683 lines vs 500 cap; user-approved removal in Edition v2.4.0.
+- **3 dead config files**: `goals.json`, `mcp.json.template`, `sync-policy.json` (policy inlined to `_registry.cjs`).
+- **`.github/muscles/` folder** collapsed into `scripts/` (4 → 0 files); brain artifact types reduce to 4 (skills, instructions, prompts, agents).
+
 ## [8.9.11] - 2026-05-25
 
 **Patch [docs] — walkthrough refinement + wiki audit fixes.** Walkthrough pages (`media/walkthrough/01..06.md`) trimmed from ~3850 to ~1487 words (~61% reduction) by hoisting depth out to the GitHub wiki and keeping the in-extension pages at a high-level orientation. Wiki source (`docs/wiki/*.md`) audited and corrected: `Getting-Started` now matches the actual marketplace displayName ("Alex — ACT Edition"); `The-Plugin-Mall` fixes the `/mall install` → `/mall-install` slash-command syntax and drops `meditation` from the example list (not in the Mall catalog); `Project-Memory` replaces non-existent `/release-preflight` and `/triage-feedback` prompt examples with shipping ones (`/checkin`, `/meditate`, `/feedback`, `/note`); `AI-Memory` removes a misleading cross-page link. New `scripts/publish-wiki.ps1` mirrors `docs/wiki/` to the GitHub wiki repo (idempotent, supports `-DryRun`). No code changes — docs and scripts only.
