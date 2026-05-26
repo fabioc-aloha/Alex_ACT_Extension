@@ -45,7 +45,10 @@ function cloneRepo(remote, name, branch) {
     const dest = path.join(TMP_DIR, name);
     console.log(`   Cloning ${name} (${branch})...`);
     // Array form bypasses the shell so branch/remote/dest cannot be interpreted as metachars.
-    execFileSync('git', ['clone', '--depth', '1', '--branch', branch, remote, dest], { stdio: 'pipe' });
+    // `-c core.autocrlf=false` preserves Edition's committed line endings (LF) on Windows
+    // where global git config defaults to autocrlf=true. Without this, fresh clones
+    // convert LF -> CRLF on checkout and brain/ ships byte-different from the Edition tag.
+    execFileSync('git', ['-c', 'core.autocrlf=false', 'clone', '--depth', '1', '--branch', branch, remote, dest], { stdio: 'pipe' });
     return dest;
 }
 
@@ -68,27 +71,105 @@ try {
 
 const BRAIN_SRC = path.join(editionDir, '.github');
 
-// ── Step 3: Copy brain files ─────────────────────────────────────
-console.log('3. Copying brain files...');
-function copyRecursive(src, dst) {
-    let count = 0;
-    if (!fs.existsSync(src)) return count;
-    for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-        const srcPath = path.join(src, entry.name);
-        const dstPath = path.join(dst, entry.name);
-        if (entry.isDirectory()) {
-            count += copyRecursive(srcPath, dstPath);
-        } else {
-            fs.mkdirSync(path.dirname(dstPath), { recursive: true });
-            fs.copyFileSync(srcPath, dstPath);
-            count++;
-        }
-    }
-    return count;
+// ── Step 3: Copy brain files (manifest-driven) ───────────────────
+// We read .github/config/edition-manifest.json (Edition's authoritative bill
+// of materials) and copy ONLY the files it declares. This prevents leakage
+// of any untracked / dev-only / draft files that happen to live under
+// Edition's .github tree, and makes drift loud: a missing manifested file
+// fails the build immediately rather than shipping a silently-incomplete brain.
+console.log('3. Copying brain files (manifest-driven)...');
+
+const MANIFEST_PATH = path.join(BRAIN_SRC, 'config', 'edition-manifest.json');
+if (!fs.existsSync(MANIFEST_PATH)) {
+    console.error(`FATAL: Edition manifest missing at ${MANIFEST_PATH}. Edition tag '${ref}' may be pre-manifest.`);
+    process.exit(1);
+}
+let manifest;
+try {
+    manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+} catch (e) {
+    console.error(`FATAL: Edition manifest is not valid JSON: ${e.message}`);
+    process.exit(1);
 }
 
-const brainCount = copyRecursive(BRAIN_SRC, BRAIN_DST);
-console.log(`   Copied ${brainCount} brain files`);
+console.log(`   Edition manifest spec_version=${manifest.spec_version}, edition_version=${manifest.edition_version}`);
+
+// Build the explicit relative-path list (under .github/) from the manifest.
+// Each entry below mirrors what edition-manifest.json declares as edition-shipped.
+const filesToCopy = [
+    // Top-level
+    manifest.copilot_instructions,                                  // copilot-instructions.md
+    manifest.version_file,                                          // VERSION
+    // Category folders
+    ...(manifest.instructions || []).map(f => `instructions/${f}`),
+    ...(manifest.prompts || []).map(f => `prompts/${f}`),
+    ...(manifest.agents || []).map(f => `agents/${f}`),
+    ...(manifest.skill_files || []).map(f => `skills/${f}`),
+    ...(manifest.scripts || []).map(f => `scripts/${f}`),
+    ...(manifest.configs || []).map(f => `config/${f}`),
+];
+
+let brainCount = 0;
+const missing = [];
+for (const rel of filesToCopy) {
+    if (!rel) continue;
+    const srcPath = path.join(BRAIN_SRC, rel);
+    const dstPath = path.join(BRAIN_DST, rel);
+    if (!fs.existsSync(srcPath)) {
+        missing.push(rel);
+        continue;
+    }
+    fs.mkdirSync(path.dirname(dstPath), { recursive: true });
+    fs.copyFileSync(srcPath, dstPath);
+    brainCount++;
+}
+
+if (missing.length > 0) {
+    console.error(`FATAL: ${missing.length} manifested file(s) missing from Edition clone:`);
+    for (const m of missing) console.error(`   - ${m}`);
+    process.exit(1);
+}
+
+console.log(`   Copied ${brainCount} brain files (manifest-declared, no drift)`);
+
+// ── Step 3b: Copy .vscode/ assets (manifest-driven) ──────────────
+// Edition ships .vscode/settings.json (bootstrap_templates) and
+// .vscode/markdown-light.css (vscode_assets). Both live at Edition repo root,
+// not under .github/. Mirror them under brain/.vscode/ so they land at the
+// workspace root when the Extension installs the brain into a heir.
+console.log('3b. Copying .vscode/ assets...');
+const vscodeAssets = [];
+// bootstrap_templates entries that start with .vscode/
+for (const tpl of (manifest.bootstrap_templates || [])) {
+    if (tpl.startsWith('.vscode/')) vscodeAssets.push(tpl);
+}
+// vscode_assets entries (manifest lists basenames; they live under .vscode/)
+for (const name of (manifest.vscode_assets || [])) {
+    const rel = `.vscode/${name}`;
+    if (!vscodeAssets.includes(rel)) vscodeAssets.push(rel);
+}
+
+let vscodeCount = 0;
+const vscodeMissing = [];
+for (const rel of vscodeAssets) {
+    const srcPath = path.join(editionDir, rel);
+    const dstPath = path.join(BRAIN_DST, rel);
+    if (!fs.existsSync(srcPath)) {
+        vscodeMissing.push(rel);
+        continue;
+    }
+    fs.mkdirSync(path.dirname(dstPath), { recursive: true });
+    fs.copyFileSync(srcPath, dstPath);
+    vscodeCount++;
+}
+
+if (vscodeMissing.length > 0) {
+    console.error(`FATAL: ${vscodeMissing.length} manifested .vscode/ file(s) missing from Edition clone:`);
+    for (const m of vscodeMissing) console.error(`   - ${m}`);
+    process.exit(1);
+}
+
+console.log(`   Copied ${vscodeCount} .vscode/ asset(s)`);
 
 // ── Step 4: Ensure icon exists ───────────────────────────────────
 console.log('4. Checking icon...');
@@ -125,6 +206,23 @@ fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 // (post Phase 0.4-0.11 AlexMaster identity flip). They are NOT synced from
 // Edition. Edition's brain content still flows through brain/ (Step 3).
 console.log('6-7. Skipping README/CHANGELOG/LICENSE sync (Extension-owned).');
+
+// ── Step 7b: Brain faithfulness gate ─────────────────────────────
+// Audit brain/ against the Edition tag we just cloned. Any mismatch / drift /
+// missing-declared-file fails the build before we emit a VSIX. This is the
+// load-bearing gate that guarantees what we publish is byte-identical to the
+// tagged Edition release (modulo the manifested HEIR_OWNED exclusions).
+console.log('7b. Auditing brain faithfulness against tagged Edition...');
+try {
+    execFileSync(process.execPath,
+        [path.join(EXT_DIR, 'scripts', 'audit-brain-faithfulness.cjs'),
+            '--edition-repo', editionDir,
+            '--tag', ref === 'main' ? `v${fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim()}` : ref],
+        { stdio: 'inherit' });
+} catch (e) {
+    console.error('FATAL: brain faithfulness audit failed (see output above).');
+    process.exit(1);
+}
 
 // ── Step 8: Summary ──────────────────────────────────────────────
 const version = fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim();

@@ -6,7 +6,36 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-## [8.11.0] - 2026-05-26
+## [8.11.1] - 2026-05-26
+
+**Patch [behaviour] — manifest-driven brain payload + bundled `.vscode/`.** Build script now reads Edition's `.github/config/edition-manifest.json` as the authoritative bill of materials and copies only the files it declares (instructions, prompts, agents, skills, scripts, configs, plus `copilot-instructions.md` and `VERSION`). The previous recursive sweep of `.github/` shipped whatever happened to live in Edition's tree; the manifest-driven copy makes Edition the single source of truth and fails the build loudly if a declared file is missing. Also added a new Step 3b that copies `.vscode/settings.json` (per `bootstrap_templates`) and `.vscode/markdown-light.css` (per `vscode_assets`) into `brain/.vscode/` so heir workspaces get the markdown rendering and welcome settings on install. Faithfulness now verified at the git-blob level: 138/138 byte-identical against Edition v2.4.0 tag (one intentional exclusion: `config/cognitive-config.json`, which is `HEIR_OWNED` per manifest spec).
+
+### Changed
+
+- **`build-extension.cjs` Step 3 "Copy brain files"** — replaced ad-hoc `walk + fs.copyFileSync` with a manifest-driven loop reading `edition-manifest.json`. Missing manifested files → `process.exit(1)` instead of silent omission.
+- **`build-extension.cjs` Step 3b "Copy .vscode/ assets"** (new) — copies `manifest.bootstrap_templates` (`.vscode/settings.json`) and `manifest.vscode_assets` (`markdown-light.css`) into `brain/.vscode/`. Missing manifested files → fatal.
+- **LF preservation on Windows** — `git clone` invoked with `-c core.autocrlf=false` so brain bytes match Edition's committed LF line endings regardless of the builder's global git config. Without this, fresh Windows clones convert LF→CRLF on checkout and ship byte-different brain content.
+
+### Added
+
+- **`brain/.vscode/settings.json`** (bundled) — first-install template for heir VS Code workspaces.
+- **`brain/.vscode/markdown-light.css`** (bundled) — markdown rendering theme.
+- **`scripts/audit-brain-faithfulness.cjs`** (new) — git-blob-SHA audit comparing `brain/` against the Edition tag declared in `brain/VERSION`. Exits non-zero on any mismatch. Wire into CI or pre-release gate.
+
+### Removed
+
+- **`brain/config/cognitive-config.json`** — no longer bundled. This file is `HEIR_OWNED` per the manifest's `bootstrap_templates` contract (heirs generate their own at first install). Previous builds shipped it because the recursive sweep didn't honor the manifest's edition-shipped vs. heir-owned distinction.
+
+### Brain version
+
+Brain pinned to Edition v2.4.0 (same as v8.11.0). Brain content unchanged from v8.11.0 except for line-ending normalization (CRLF → LF, matching Edition's committed bytes) and the addition of `.vscode/` assets.
+
+### Migration notes
+
+- **For users**: no action required. Auto-updates from v8.11.0. `.vscode/` assets land in the workspace on install; existing user `.vscode/settings.json` is not overwritten — the bundled file is a template for first-install, not a runtime override.
+- **For anyone forking the build**: the new `audit-brain-faithfulness.cjs` script is the recommended verification step before publishing any VSIX. Run `node scripts/audit-brain-faithfulness.cjs` after build; non-zero exit means the bundled brain doesn't match the tagged Edition source.
+
+
 
 **Minor [behaviour] — remove bundled Plugin Mall catalog.** Mall evolves faster than Extension release cadence, so any snapshot bundled in the VSIX is stale by definition. Removed `catalog/CATALOG.json` (234 KB, 297 plugins) along with the `alex-act.mall-search` command, the QuickPick UI, and the status-bar menu entry. Mall discovery now goes exclusively through Copilot Chat (`/mall search <keyword>`, `/mall install <skill>`) which queries the live Mall via the brain's `mall-installation` instruction — always fresh, no staleness ceiling.
 
