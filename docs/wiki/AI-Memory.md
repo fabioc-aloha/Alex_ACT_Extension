@@ -46,7 +46,7 @@ The mirror is **optional** and **stripped**. See the privacy section below.
 
 ### 2. Announcements from the framework maintainers
 
-When a new edition of ACT ships, when a Mall skill is deprecated, or when a critical fix lands, the maintainers drop a markdown file in `announcements/alex-act/`. Alex reads them on session start (via the [check-in](Privacy-Troubleshooting-Help) routine) and surfaces anything new.
+When a new edition of ACT ships, when a Mall skill is deprecated, or when a critical fix lands, the maintainers drop a markdown file in `announcements/alex-act/`. Alex reads them on session start and surfaces anything new.
 
 You can also run **`/checkin`** in chat at any time to scan announcements explicitly.
 

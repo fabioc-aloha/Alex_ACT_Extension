@@ -46,7 +46,7 @@ Domain knowledge bodies that Alex pulls in *on demand*. A `skills/code-review/SK
 
 ### `prompts/`
 
-Ready-made prompts you can invoke with a slash command in chat. `/release-preflight`, `/triage-feedback`, `/meditate`. They are reusable workflows you (or Alex) author once and run repeatedly.
+Ready-made prompts you can invoke with a slash command in chat. `/checkin`, `/meditate`, `/feedback`, `/note`. They are reusable workflows you (or Alex) author once and run repeatedly.
 
 ### `agents/`, `muscles/`, `scripts/`
 

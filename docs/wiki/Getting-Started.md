@@ -8,7 +8,7 @@ If you arrived here from a fresh VS Code install:
 
 1. Open VS Code.
 2. Open the Extensions view (`Ctrl+Shift+X`, Mac: `Cmd+Shift+X`).
-3. Search for **Alex: Cognitive Architecture**.
+3. Search for **Alex — ACT Edition** (publisher: `fabioc-aloha`).
 4. Click **Install**.
 
 When the extension loads it opens a welcome walkthrough. You can re-open it any time with `Ctrl+Shift+P` then *Alex: Open Welcome Guide*.

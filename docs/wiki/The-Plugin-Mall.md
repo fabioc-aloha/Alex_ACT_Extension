@@ -58,7 +58,7 @@ Press `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`) and run **ACT: Search Plugin Mall**. Y
 If Alex recommends installing a skill persistently, it will give you a slash command to run in the chat:
 
 ```
-/mall install <skill-name>
+/mall-install <skill-name>
 ```
 
 That copies the skill files into your project's `.github/skills/` folder so they survive across sessions. To uninstall, ask Alex:
@@ -97,7 +97,6 @@ A small sample, to make the catalog concrete:
 - **security-threat-modeler**: structured threat modeling with OWASP-style scoring.
 - **kql**: Kusto Query Language for Azure Data Explorer and Log Analytics.
 - **status-reporting**: stakeholder-friendly project status updates and progress reports.
-- **meditation**: consolidate session learning into permanent architecture.
 
 The Mall's depth is real where it claims to be: MCP server-building, RAG architecture, Azure infrastructure, threat modeling, KQL analytics, academic writing in APA, technical writing in Markdown and Mermaid. It does not pretend to cover frameworks it does not actually carry. The full list grows; the curation gate does not change.
 
