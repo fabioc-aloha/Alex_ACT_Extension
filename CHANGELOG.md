@@ -6,6 +6,10 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.9.11] - 2026-05-25
+
+**Patch [docs] — walkthrough refinement + wiki audit fixes.** Walkthrough pages (`media/walkthrough/01..06.md`) trimmed from ~3850 to ~1487 words (~61% reduction) by hoisting depth out to the GitHub wiki and keeping the in-extension pages at a high-level orientation. Wiki source (`docs/wiki/*.md`) audited and corrected: `Getting-Started` now matches the actual marketplace displayName ("Alex — ACT Edition"); `The-Plugin-Mall` fixes the `/mall install` → `/mall-install` slash-command syntax and drops `meditation` from the example list (not in the Mall catalog); `Project-Memory` replaces non-existent `/release-preflight` and `/triage-feedback` prompt examples with shipping ones (`/checkin`, `/meditate`, `/feedback`, `/note`); `AI-Memory` removes a misleading cross-page link. New `scripts/publish-wiki.ps1` mirrors `docs/wiki/` to the GitHub wiki repo (idempotent, supports `-DryRun`). No code changes — docs and scripts only.
+
 ## [8.9.10] - 2026-05-25
 
 **Patch [behaviour] — icon anti-aliasing fix.** Marketplace icon (`assets/icon.png`) was a PaletteAlpha (indexed) PNG with binary 1-bit transparency, causing visible stair-step jaggies on the rounded corners and diagonal chevron strokes. Rebuilt as RGBA truecolor at 256×256 using a 4× supersampled soft mask (Lanczos downscale) for the rounded rect plus alpha-channel blur (sigma 0.6) on the chevron art. Borders and chevron edges now render with proper anti-aliased gradients. No code changes — asset-only.
