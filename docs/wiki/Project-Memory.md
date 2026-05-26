@@ -25,8 +25,7 @@ Alex creates a `.github/` folder with the following structure:
 ├── skills/                    ← domain knowledge pulled in on demand
 ├── prompts/                   ← ready-made slash-command workflows
 ├── agents/                    ← specialized sub-agents for delegated work
-├── muscles/                   ← local tools (linters, converters, scaffolders)
-├── scripts/                   ← helper scripts for project maintenance
+├── scripts/                   ← local helpers (linters, converters, project maintenance)
 └── config/                    ← settings (optional)
 ```
 
@@ -48,9 +47,9 @@ Domain knowledge bodies that Alex pulls in *on demand*. A `skills/code-review/SK
 
 Ready-made prompts you can invoke with a slash command in chat. `/checkin`, `/meditate`, `/feedback`, `/note`. They are reusable workflows you (or Alex) author once and run repeatedly.
 
-### `agents/`, `muscles/`, `scripts/`
+### `agents/`, `scripts/`
 
-The operational layer. `agents/` defines specialized sub-agents Alex can delegate to. `muscles/` holds local executables for converters, linters, and scaffolders that run on your machine without an AI call. `scripts/` is project-maintenance helpers. You usually do not edit these by hand; Bootstrap and Plugin Mall installs populate them.
+The operational layer. `agents/` defines specialized sub-agents Alex can delegate to. `scripts/` holds local executables — converters, linters, scaffolders, and project-maintenance helpers that run on your machine without an AI call. You usually do not edit these by hand; Bootstrap and Plugin Mall installs populate them.
 
 ## How Alex uses the memory
 
