@@ -6,6 +6,10 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.1.0] - 2026-05-25
+
+**Minor [behaviour] — status-bar menu, dynamic bootstrap modal, action-button success toast, and Edition v2.3.0 brain.** Pairs with [Edition v2.3.0](https://github.com/fabioc-aloha/Alex_ACT_Edition/releases/tag/v2.3.0) which renamed `/welcome` to a read-only orientation tour and introduced `/configure-vscode` for the old settings behaviour. No breaking changes for existing users; the Marketplace listing auto-updates from v9.0.0 to v9.1.0.
+
 ### Added
 
 - **Status-bar menu**: clicking the `$(brain) ACT vX.Y.Z` status-bar item now opens a QuickPick of common actions (Show Status, Upgrade Brain when available, Run /welcome, Run /configure-vscode, Search Plugin Mall, Open Brain README, Open Walkthrough, Open Extension README). Previously the click ran `cmdStatus` directly — discoverable but a dead-end. The new menu surfaces every chat-command and converter command behind a single click. An `$(arrow-up)` glyph is appended to the status-bar text when an upgrade is available, so users see the cue without hovering for the tooltip. New command `alex-act.statusBarMenu` registered in `package.json` so it also shows in the command palette.
@@ -18,10 +22,11 @@ All notable changes to Alex — ACT Edition.
   - Offers three one-click buttons: **Run /welcome** (orientation tour, opens Copilot Chat with the slash-command pre-filled), **Run /configure-vscode** (applies user-scope VS Code settings), **Open README** (markdown preview)
   - Reminds the user to fill in `## Project Context` in `.github/copilot-instructions.local.md` before the first real chat
 - **README**: updated install section to describe the new three-button toast and the pre-chat checklist.
+- **Bundled brain refreshed to Edition v2.3.0**: `brain/VERSION` is now `2.3.0`; new `brain/prompts/welcome.prompt.md` (read-only orientation tour); new `brain/prompts/configure-vscode.prompt.md` and `configure-vscode-verify.prompt.md` (renamed from the old settings `/welcome`); `brain/prompts/welcome-verify.prompt.md` removed; `brain/config/edition-manifest.json` regenerated; `brain/muscles/heir-doctor.cjs` warning text updated.
 
 ### Notes
 
-This release pairs with Edition v2.3.0 ([behaviour] release on the Edition side), which renames `/welcome` from a settings command to a read-only orientation tour and introduces `/configure-vscode` for the old settings behavior. The extension's bundled brain is rebuilt from Edition `main` at VSIX-pack time; the rebuild lands in the next packaged version.
+The `/welcome` and `/configure-vscode` buttons in the new toast trigger Copilot chat with the slash-command pre-filled. The prompts they invoke ship in the bundled brain at v2.3.0 — the toast and the brain are coherent in this VSIX.
 
 ---
 
