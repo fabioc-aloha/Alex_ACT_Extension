@@ -90,7 +90,11 @@ function isHeirOwned(relPath, policy) {
 // ── File operations ────────────────────────────────────────────────
 // Symlink cycle / depth guard: tracks resolved real paths and caps recursion depth.
 // Without this, a workspace with `a -> b` and `b -> a` symlinks would infinite-loop on Unix.
+// A real Edition brain is ≤4 levels deep; depths past WARN are almost certainly a
+// misconfigured symlink/junction. We log once per cycle so it's loud, not silent.
 const MAX_RECURSION_DEPTH = 50;
+const WARN_RECURSION_DEPTH = 20;
+let _warnedDeep = false;
 function listFilesRecursive(dir, base, _seen, _depth) {
     base = base || dir;
     _seen = _seen || new Set();
@@ -98,6 +102,10 @@ function listFilesRecursive(dir, base, _seen, _depth) {
     let results = [];
     if (!fs.existsSync(dir)) return results;
     if (_depth > MAX_RECURSION_DEPTH) return results;
+    if (_depth === WARN_RECURSION_DEPTH && !_warnedDeep) {
+        _warnedDeep = true;
+        console.warn(`ACT: directory walk reached depth ${WARN_RECURSION_DEPTH} at ${dir} — possible symlink loop or unexpectedly deep tree.`);
+    }
     let real;
     try { real = fs.realpathSync(dir); } catch { return results; }
     if (_seen.has(real)) return results;
@@ -719,12 +727,41 @@ async function runConverter(converterId, fileUri) {
     const inputBase = path.basename(inputPath, path.extname(inputPath));
     const outputPath = path.join(inputDir, inputBase + converter.ext);
 
-    // Run the converter in a terminal so the user can see streaming output.
-    const terminal = vscode.window.createTerminal({ name: `ACT: ${converter.label}`, cwd: inputDir });
-    terminal.show();
-    terminal.sendText(`node "${scriptPath}" "${inputPath}" --out "${outputPath}"`);
-
+    // Run the converter via spawn() with array args so paths containing spaces,
+    // quotes, or shell metacharacters can't be reinterpreted. Stream output into
+    // a dedicated OutputChannel so the user sees progress without a shell window.
+    const channel = getConverterOutputChannel();
+    channel.show(true);
+    channel.appendLine(`> ${path.basename(scriptPath)} "${inputPath}" --out "${outputPath}"`);
     vscode.window.showInformationMessage(`ACT: Converting to ${converter.label}...`);
+
+    const child = spawn(process.execPath, [scriptPath, inputPath, '--out', outputPath], {
+        cwd: inputDir,
+        windowsHide: true,
+    });
+    child.stdout.on('data', d => channel.append(d.toString()));
+    child.stderr.on('data', d => channel.append(d.toString()));
+    child.on('error', err => {
+        channel.appendLine(`\n[ACT Convert] spawn error: ${err.message}`);
+        vscode.window.showErrorMessage(`ACT Convert (${converter.label}) failed to start: ${err.message}`);
+    });
+    child.on('close', code => {
+        channel.appendLine(`\n[ACT Convert] ${converter.label} exited with code ${code}`);
+        if (code === 0) {
+            vscode.window.showInformationMessage(`ACT: Wrote ${path.basename(outputPath)}`);
+        } else {
+            vscode.window.showErrorMessage(`ACT Convert (${converter.label}) exited with code ${code}. See "ACT Convert" output channel.`);
+        }
+    });
+}
+
+// Single OutputChannel for all converters; created lazily on first use.
+let _converterChannel = null;
+function getConverterOutputChannel() {
+    if (!_converterChannel) {
+        _converterChannel = vscode.window.createOutputChannel('ACT Convert');
+    }
+    return _converterChannel;
 }
 
 // ── heir-doctor runner ────────────────────────────────────────────

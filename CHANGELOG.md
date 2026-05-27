@@ -6,6 +6,29 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.11.3] - 2026-05-27
+
+**Patch [clarification] — code review cosmetics on top of v8.11.2.** Fixes deferred from the v8.11.2 review: hardens converter execution against shell metacharacters, adds a depth-warning to the symlink guard, sidecars the full migration classification next to the truncated markdown, and stops tracking the build-generated `.vscodeignore`. No functional changes for already-working code paths.
+
+### Changed
+
+- **Converter execution** (`extension.js#runConverter`) — replaced `terminal.sendText()` (which interpolated paths into a shell command line) with `child_process.spawn()` taking array args, streaming stdout/stderr into a dedicated `ACT Convert` OutputChannel. Paths with spaces, quotes, or shell metacharacters can no longer be reinterpreted by the host shell. Users now see exit code + a written-file notification on success and a clear error notification on non-zero exit.
+- **Symlink/depth guard** (`extension.js#listFilesRecursive`) — added `WARN_RECURSION_DEPTH=20` console warning. A real Edition brain is ≤4 levels deep; depths past 20 are almost certainly a misconfigured symlink/junction. Logs once per process to make the cause loud rather than silent.
+- **`.vscodeignore`** — no longer tracked in git. `build-extension.cjs` regenerates it on every build, so the committed copy was dead weight and a drift hazard. Added to `.gitignore`.
+
+### Added
+
+- **`MIGRATION-REVIEW.json` sidecar** (`migration.js#writeMigrationReview`) — written alongside `MIGRATION-REVIEW.md` with the complete classification (no truncation). The markdown summary still truncates each section at 50 entries for human readability; the JSON is the authoritative artifact for tooling and audit on installs with >50 customised or custom files.
+- **`loadV840Index` defensive-filter rationale** (`migration.js`) — docblock now explains why the `brain-files/` prefix filter is safe (v8.4.0 manifest is a frozen historical artifact; no forward-compatibility risk).
+
+### Brain version
+
+Brain pinned to Edition v2.4.0 (unchanged from v8.11.1/.2). No brain content changes; pure surface cleanup.
+
+### Migration notes
+
+- **For users**: no action required. Auto-updates from v8.11.2.
+
 ## [8.11.2] - 2026-05-27
 
 **Patch [behaviour] — fix converter + heir-doctor paths after Edition v2.4.0 layout shift.** Edition v2.4.0 collapsed `.github/muscles/` into per-skill `scripts/` folders (each converter now lives at `skills/<id>/scripts/<id>.cjs`; heir-doctor at `skills/greeting-checkin/scripts/heir-doctor.cjs`). The extension still resolved those scripts at the old `muscles/` path, so on v8.11.1 all six **ACT Convert** context-menu commands silently no-op'd and bootstrap's post-install health check never actually ran. This release rewires both code paths to the new locations and adds the same health check to upgrade. Also tightens marker reads (corrupted `.act-heir.json` now produces a clear error instead of a stack trace) and surfaces per-file copy failures during bootstrap so a partially-installed `.github/` is visible to the user.

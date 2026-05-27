@@ -244,6 +244,11 @@ function snapshotWorkspace(workspaceRoot) {
  * Build a path→sha256 map from the v8.4.0 manifest. Manifest paths are
  * prefixed `brain-files/`; AlexMaster's bootstrap copied that subtree into
  * the user's `.github/`, so we strip the prefix when comparing.
+ *
+ * Note: entries outside the `brain-files/` subtree (none in v8.4.0, but kept
+ * as a defensive filter) are skipped. AlexMaster v8.4.0 is a frozen historical
+ * artifact — the manifest shape is fixed and won't grow new roots, so this
+ * filter cannot mis-classify a forward-compatibility case.
  */
 function loadV840Index() {
     const manifest = readJsonSafe(MANIFEST_PATH);
@@ -489,6 +494,29 @@ function writeMigrationReview(workspaceRoot, classification, backupDir, preserve
     summary.push('');
     summary.push(`Run command **Alex ACT: Rollback Migration** to restore from \`${backupRel}/\`.`);
     summary.push('');
+
+    // Sidecar JSON with the complete classification (no truncation). The markdown
+    // summary above truncates each section at 50 entries to keep MIGRATION-REVIEW.md
+    // readable; this JSON is the authoritative artifact for tooling and audit.
+    const fullPath = path.join(workspaceRoot, 'MIGRATION-REVIEW.json');
+    const full = {
+        $schema: 'migration-review/1.0',
+        generated_at: new Date().toISOString(),
+        source: 'AlexMaster v8.4.0',
+        backup_dir: backupRel,
+        counts: {
+            baseline: classification.baseline.length,
+            customisedBaseline: classification.customisedBaseline.length,
+            custom: classification.custom.length,
+        },
+        files: {
+            customisedBaseline: classification.customisedBaseline,
+            custom: classification.custom,
+        },
+        settings: settingsResult || {},
+        preserved: preserved || {},
+    };
+    try { fs.writeFileSync(fullPath, JSON.stringify(full, null, 2) + '\n'); } catch { /* best-effort */ }
 
     fs.writeFileSync(reviewPath, body + summary.join('\n'));
     return reviewPath;
