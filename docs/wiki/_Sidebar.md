@@ -16,6 +16,7 @@
 - [The Plugin Mall](The-Plugin-Mall)
 - [Project Memory](Project-Memory)
 - [AI-Memory](AI-Memory)
+- [Migrating to v9](Migrating-to-v9)
 - [Document Conversion](Document-Conversion)
 - [Working in Other Languages](Working-in-Other-Languages)
 

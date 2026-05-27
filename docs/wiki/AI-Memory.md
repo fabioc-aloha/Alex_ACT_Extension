@@ -4,61 +4,78 @@
 
 If Project Memory is what Alex remembers about *this* project, AI-Memory is what Alex remembers about *you across projects*, plus what the framework wants to tell you.
 
-## Where it lives
+## Where it lives (v9.0.0+)
 
-AI-Memory lives on a cloud-synced folder in your home directory. When you run **ACT: Bootstrap This Workspace** for the first time, the extension scans for cloud drives and offers you a pick:
+AI-Memory lives in a **git repository** as a sibling clone next to your project workspaces:
 
-- OneDrive, iCloud, Dropbox, Google Drive, Box, MEGA, pCloud, Nextcloud (whichever it finds).
-- `~/AI-Memory` (local only, no cloud sync) as a fallback.
+```
+C:\Development\
+├── Your-Project/           ← your workspace
+├── Alex_ACT_Edition/       ← the brain template
+└── Alex_ACT_Memory/        ← shared memory (this)
+```
 
-Pick a cloud drive if you want AI-Memory available on every machine you sign in to. Pick local if you would rather keep everything on this one machine. The choice is stored per workspace in `.github/config/cognitive-config.json` (key: `ai_memory_root`). You can move it later by editing that file.
+The path is always `../Alex_ACT_Memory` relative to your workspace. No configuration needed — Alex finds it by convention.
 
-If you bootstrap a second project, the extension finds the existing AI-Memory automatically and joins it. No re-pick.
+### How it gets there
+
+When you start a session, Alex resolves the memory bus automatically:
+
+1. **Already cloned?** → pulls latest changes (silent, non-blocking)
+2. **Not cloned but remote configured?** → clones from GitHub and informs you
+3. **No remote, never set up?** → creates a local scaffold and informs you
+
+You don't need to do anything. If the clone fails (no network, no SSH key), Alex continues without shared memory — no crash, no block.
+
+### Previous versions (before v9.0.0)
+
+Before v9.0.0, AI-Memory lived on a cloud-synced folder (OneDrive, iCloud, Dropbox, etc.) discovered during bootstrap. That approach had reliability issues with path resolution, silent sync failures, and OneDrive-specific quirks. The git-based approach is simpler, faster, and works the same way as Edition and the Plugin Mall.
+
+If you're upgrading from an older version, see [Migrating to v9](Migrating-to-v9).
 
 ## Layout
 
-The first bootstrap creates this structure inside the drive you picked:
-
 ```
-AI-Memory/
-├── README.md
-├── heirs/
-│   └── registry.json          ← fleet registry of your ACT projects
-├── announcements/
-│   └── alex-act/              ← release notes and guidance (read-only)
-├── feedback/
-│   └── alex-act/              ← your outbound feedback to the maintainers
-├── knowledge/                  ← cross-project notes you mark for reuse
-└── insights/                   ← patterns Alex thinks are worth keeping
+Alex_ACT_Memory/
+├── announcements/     ← release notes and guidance from the framework
+├── feedback/          ← your friction reports and suggestions
+├── insights/          ← cross-project patterns worth keeping
+├── knowledge/         ← curated knowledge packages
+│   ├── index.json     ← package registry
+│   └── <name>/        ← one folder per package
+├── profile/
+│   └── <username>/    ← your preferences and identity
+└── docs/
+    └── MIGRATION.md   ← one-time migration guide from OneDrive
 ```
 
-Every workspace you bootstrap registers itself in `heirs/registry.json` with its display name, edition version, and timestamps. That registry is how Alex (and you) can see *all* the projects on this machine that use ACT.
+There is no `heirs/registry.json` — fleet tracking is a separate concern that doesn't live in the memory bus.
 
 ## What it is used for
 
-Three things, in plain language:
-
 ### 1. Cross-project continuity
 
-If you mirror a session handoff to AI-Memory (the `/save-session-note` prompt does this), the note is searchable from any other ACT project. Useful when a pattern from one project (say, a debugging recipe or an architectural decision) is worth surfacing when you start work on another.
+Your user profile (`profile/<username>/user-profile.json`) stores preferences that apply everywhere: communication style, learning preferences, tool choices. Alex reads it on session start and adapts. When you state a new preference in any project, Alex writes it back to your profile.
 
-The mirror is **optional** and **stripped**. See the privacy section below.
+Knowledge packages in `knowledge/` are also cross-project — curated reference material Alex can consult regardless of which workspace you're in.
 
-### 2. Announcements from the framework maintainers
+### 2. Announcements from the framework
 
-When a new edition of ACT ships, when a Mall skill is deprecated, or when a critical fix lands, the maintainers drop a markdown file in `announcements/alex-act/`. Alex reads them on session start and surfaces anything new.
+When a new edition ships, when a Mall skill is deprecated, or when a critical fix lands, the announcement appears in `announcements/`. Alex reads them on session start and surfaces anything new.
 
-You can also run **`/checkin`** in chat at any time to scan announcements explicitly.
+You can also run **`/checkin`** in chat at any time to check for announcements.
 
-### 3. Feedback back to the framework
+### 3. Feedback to the framework
 
-If you hit a bug, a friction point, a missing skill, or want to propose a new Mall plugin, run **`/feedback`** in chat. Alex captures the session context, strips it for cross-project safety, and writes a structured markdown file to `feedback/alex-act/`. The framework maintainers pick it up from there.
+If you hit a bug, a friction point, or want to propose something, run **`/feedback`** in chat. Alex writes a structured report to `feedback/`. The framework maintainers pick it up from there.
 
-There is also **`/mall-contribute`** for proposing a new Mall plugin specifically.
+### 4. Insights and patterns
+
+When Alex spots a pattern worth keeping across projects (a debugging recipe, an architectural decision), it can write to `insights/`. These are readable from any workspace.
 
 ## Privacy and isolation
 
-AI-Memory is the most privacy-sensitive surface in the extension because notes written here can be read by Alex in *other* projects. Two rules govern what goes into it:
+AI-Memory is the most privacy-sensitive surface because notes written here can be read by Alex in *other* projects.
 
 ### Cross-project isolation (stripped before write)
 
@@ -67,51 +84,45 @@ When Alex writes to AI-Memory, it strips:
 - **File paths with project structure** (`src/payments/checkout/` becomes "a checkout module")
 - **Project, repo, and client names** ("ACME Bank" becomes "a fintech project")
 - **Domain-specific identifiers** (account IDs, ticket numbers, internal codenames)
-- **Niche stack details** that would pin a project (the bespoke internal service name)
+- **Niche stack details** that would pin a project
 
-What stays: the *pattern*. Skill names, ACT vocabulary, severity, category. The test is *"could someone working on a completely different project act on this?"* If yes, the strip worked.
-
-If you ask Alex to skip stripping (*"just write it raw"*), it will refuse. You can write a raw note to your project's local memory instead.
+What stays: the *pattern*. The test is *"could someone working on a completely different project act on this?"*
 
 ### PII filter
 
-Contact info, dates of birth, health data, financial data, credentials are **never written to AI-Memory**, even after stripping. Those belong in VS Code SecretStorage, environment variables, or nowhere at all.
+Contact info, dates of birth, health data, financial data, credentials are **never written to AI-Memory**. Those belong in VS Code SecretStorage, environment variables, or nowhere at all.
 
 ### Where the data actually goes
 
-- **The folder is on your cloud provider's drive** (OneDrive, iCloud, etc.) or fully local if you picked `~/AI-Memory`.
+- **The repo is local on your machine** (plus GitHub if you configured a remote).
 - **Nothing is sent to a separate Alex backend.** There is no Alex backend.
-- **When you sign in to the same cloud account on another machine, AI-Memory is there.** That is the feature; it is also the surface you should think about before you write anything sensitive.
-- **The framework maintainers do not have access to your AI-Memory directly.** Feedback you choose to send via `/feedback` is written to *your* `feedback/alex-act/` folder; the maintainers see it only if you separately upload or share it.
+- **If you push to GitHub (private repo), it syncs across machines.** That is the feature.
+- **The framework maintainers do not have access to your memory.** Feedback you send via `/feedback` is in *your* repo; they see it only if you push and share access.
 
 ## Useful commands
 
 | You want to... | Run in chat |
 | --- | --- |
 | See if there are new announcements | `/checkin` |
-| Send feedback or a bug report | `/feedback` |
+| Send feedback or a friction report | `/feedback` |
 | Propose a new Mall plugin | `/mall-contribute` |
 | Capture a cross-project note | `/note` |
-| Mirror a session handoff to AI-Memory | `/save-session-note` |
-| See AI-Memory health and fleet status | `/status` |
-| Re-set up AI-Memory if something is off | `/initialize` |
+| Mirror a session handoff | `/save-session-note` |
+| See memory bus status | `/status` |
 
 ## Opting out
 
-You have three escape hatches:
-
-1. **Local-only:** pick `~/AI-Memory` at bootstrap. Nothing leaves the machine.
-2. **No mirror:** skip the `/save-session-note` mirror step. HANDOFF.md stays in your repo only.
-3. **No feedback:** never run `/feedback`. The folder stays empty.
-
-The fleet registry is the one piece that gets written automatically on every bootstrap. If you do not want that, delete `heirs/registry.json` (Alex will not recreate it without another bootstrap).
+- **Local-only:** don't configure a remote. Memory stays on this machine only.
+- **No feedback:** never run `/feedback`. The folder stays empty.
+- **No profile sharing:** delete `profile/<username>/user-profile.json`. Alex uses defaults.
 
 ## Related reading
 
 - [Project Memory](Project-Memory): the per-workspace layer that AI-Memory sits above.
-- [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help): broader data-flow story including Copilot traffic.
+- [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help): broader data-flow story.
+- [Migrating to v9](Migrating-to-v9): upgrading from OneDrive-based AI-Memory.
 - [The Plugin Mall](The-Plugin-Mall): where `/mall-contribute` proposals land.
 
 ---
 
-*Last reviewed: 2026-05-25*
+*Last reviewed: 2026-05-27*
