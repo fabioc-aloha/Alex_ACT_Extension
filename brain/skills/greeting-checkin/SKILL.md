@@ -1,7 +1,7 @@
 ---
 name: greeting-checkin
 description: "Greeting-triggered self-check — recognise greetings, check Edition version against the upstream tag, scan AI-Memory announcements, and report inside the greeting reply"
-lastReviewed: 2026-05-27
+lastReviewed: 2026-04-30
 ---
 
 # Greeting Check-in
