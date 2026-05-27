@@ -14,6 +14,7 @@
 **Tools and depth**
 
 - [The Plugin Mall](The-Plugin-Mall)
+- [The Edition Template](The-Edition-Template)
 - [Project Memory](Project-Memory)
 - [AI-Memory](AI-Memory)
 - [Migrating to v9](Migrating-to-v9)

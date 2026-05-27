@@ -23,6 +23,7 @@ Read these in order:
 ### I want depth on a specific project
 
 - **[The Plugin Mall](The-Plugin-Mall)**: 300+ curated skills you can pull in on demand.
+- **[The Edition Template](The-Edition-Template)**: how brain versioning works, using Edition directly without the Extension.
 - **[Project Memory](Project-Memory)**: how Alex remembers your project across sessions.
 - **[AI-Memory](AI-Memory)**: the cross-project channel that links all your ACT workspaces.
 - **[Document Conversion](Document-Conversion)**: right-click between Markdown, Word, HTML, plain text, and email messages.
