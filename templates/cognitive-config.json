@@ -1,8 +1,6 @@
 {
     "$schema": "https://github.com/fabioc-aloha/Alex_ACT_Edition/blob/main/.github/config/cognitive-config.schema.json",
-    "version": "1.0",
+    "version": "2.0",
     "showConfidenceBadge": false,
-    "ai_memory_root": "",
-    "ai_memory_exclude": [],
-    "notes": "Heir-owned. On first run the brain auto-discovers your AI-Memory cloud drive (OneDrive / Dropbox / iCloud etc). To pin a specific drive, set ai_memory_root to the folder name relative to your HOME directory (e.g. 'OneDrive - YourCompany'). To skip a known work drive during auto-discovery, add its folder name to ai_memory_exclude. Edition upgrades will never overwrite this file."
+    "notes": "Heir-owned. Edition upgrades never overwrite this file. The shared memory bus is resolved automatically via _registry.cjs (sibling ../Alex_ACT_Memory repo)."
 }

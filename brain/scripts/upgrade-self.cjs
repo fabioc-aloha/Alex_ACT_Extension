@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
-const { upsertHeir, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
+const { resolveMemoryBus, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
 const { mergeWorkspaceSettings, writeMerged, formatChangeSummary } = require('./shared/workspace-settings-merger.cjs');
 
 // ─── CLI & Config ────────────────────────────────────────────────────────────
@@ -378,9 +378,9 @@ if (fs.existsSync(wsBaselinePath)) {
 // Cleanup temp holding area
 try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
 
-// Best-effort: refresh fleet registry
-const registryResult = upsertHeir(marker, HEIR_ROOT);
-if (registryResult.ok) console.log(`Refreshed fleet registry: ${registryResult.path}`);
+// Best-effort: ensure memory bus is up to date
+const memoryBus = resolveMemoryBus(HEIR_ROOT);
+if (memoryBus && memoryBus.message) console.log(memoryBus.message);
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 

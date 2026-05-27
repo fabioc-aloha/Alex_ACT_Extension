@@ -4,7 +4,6 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 
@@ -187,91 +186,9 @@ function mergeHeirWorkspaceSettings(root) {
     }
 }
 
-// ── AI-Memory (from _registry.cjs, adapted) ────────────────────────
-const KNOWN_CLOUD_PATTERNS = [
-    { pattern: /^OneDrive/i, provider: 'OneDrive' },
-    { pattern: /^iCloud/i, provider: 'iCloud' },
-    { pattern: /^Dropbox/i, provider: 'Dropbox' },
-    { pattern: /^Google Drive/i, provider: 'Google Drive' },
-    { pattern: /^My Drive/i, provider: 'Google Drive' },
-    { pattern: /^Box( Sync)?$/i, provider: 'Box' },
-    { pattern: /^MEGA/i, provider: 'MEGA' },
-    { pattern: /^pCloud/i, provider: 'pCloud' },
-    { pattern: /^Nextcloud/i, provider: 'Nextcloud' },
-];
-
-function discoverCloudDrives(excludeSet) {
-    const home = os.homedir();
-    const drives = [];
-    let entries;
-    try { entries = fs.readdirSync(home, { withFileTypes: true }); } catch { return drives; }
-
-    for (const entry of entries) {
-        let isDir = false;
-        try { isDir = entry.isDirectory() || fs.statSync(path.join(home, entry.name)).isDirectory(); } catch { continue; }
-        if (!isDir) continue;
-        if (excludeSet && excludeSet.has(entry.name.toLowerCase())) continue;
-
-        let provider = null;
-        for (const kp of KNOWN_CLOUD_PATTERNS) {
-            if (kp.pattern.test(entry.name)) { provider = kp.provider; break; }
-        }
-        if (!provider) continue;
-
-        const driveDir = path.join(home, entry.name);
-        const aiMemDir = path.join(driveDir, 'AI-Memory');
-        drives.push({
-            name: entry.name,
-            path: driveDir,
-            provider,
-            hasAiMemory: fs.existsSync(aiMemDir),
-        });
-    }
-
-    // macOS iCloud Library path
-    if (!drives.some(d => d.provider === 'iCloud')) {
-        const macICloud = path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs');
-        try {
-            if (fs.existsSync(macICloud) && fs.statSync(macICloud).isDirectory()) {
-                drives.push({
-                    name: 'Library/Mobile Documents/com~apple~CloudDocs',
-                    path: macICloud,
-                    provider: 'iCloud',
-                    hasAiMemory: fs.existsSync(path.join(macICloud, 'AI-Memory')),
-                });
-            }
-        } catch { /* not macOS */ }
-    }
-
-    drives.sort((a, b) => {
-        if (a.hasAiMemory !== b.hasAiMemory) return a.hasAiMemory ? -1 : 1;
-        return 0;
-    });
-    return drives;
-}
-
-function initAiMemory(drivePath) {
-    const root = path.join(drivePath, 'AI-Memory');
-    const dirs = ['', 'feedback', path.join('feedback', 'alex-act'), 'announcements', path.join('announcements', 'alex-act'), 'heirs', 'knowledge', 'insights'];
-    for (const d of dirs) {
-        const full = path.join(root, d);
-        if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
-    }
-    // READMEs
-    const readme = path.join(root, 'README.md');
-    if (!fs.existsSync(readme)) {
-        fs.writeFileSync(readme, '# AI-Memory\n\nShared fleet communication channel for ACT-Edition heirs.\n');
-    }
-    const fbReadme = path.join(root, 'feedback', 'alex-act', 'README.md');
-    if (!fs.existsSync(fbReadme)) {
-        fs.writeFileSync(fbReadme, '# ACT Heir Feedback Inbox\n\nDrop feedback here. One markdown file per item.\n');
-    }
-    const annReadme = path.join(root, 'announcements', 'alex-act', 'README.md');
-    if (!fs.existsSync(annReadme)) {
-        fs.writeFileSync(annReadme, '# ACT Fleet Announcements\n\nRelease notes and fleet-wide guidance. Heirs read on session start.\n');
-    }
-    return root;
-}
+// ── Shared Memory Bus ──────────────────────────────────────────────
+// Resolution delegated to brain/scripts/_registry.cjs (resolveMemoryBus).
+// Extension only needs to invoke it during bootstrap.
 
 // ── Commands ───────────────────────────────────────────────────────
 
@@ -447,72 +364,15 @@ async function cmdBootstrap() {
             ].join('\n'));
         }
 
-        // 4. AI-Memory setup
-        progress.report({ message: 'Setting up AI-Memory...' });
-        let aiMemRoot = null;
-        // Check cognitive-config for pinned root
-        const cogConfig = path.join(ghDir, 'config', 'cognitive-config.json');
-        let cogCfg = {};
-        if (fs.existsSync(cogConfig)) {
-            try { cogCfg = JSON.parse(fs.readFileSync(cogConfig, 'utf8')); } catch { /* */ }
-        }
-
-        const excludeSet = new Set((cogCfg.ai_memory_exclude || []).map(s => s.toLowerCase()));
-        if (cogCfg.ai_memory_root) {
-            const pinned = path.join(os.homedir(), cogCfg.ai_memory_root, 'AI-Memory');
-            if (fs.existsSync(pinned)) aiMemRoot = pinned;
-        }
-
-        if (!aiMemRoot) {
-            const drives = discoverCloudDrives(excludeSet);
-            const withMem = drives.find(d => d.hasAiMemory);
-            if (withMem) {
-                aiMemRoot = path.join(withMem.path, 'AI-Memory');
-            } else if (drives.length > 0) {
-                // Ask user which drive
-                const picks = drives.map(d => ({ label: d.name, description: d.provider }));
-                picks.push({ label: '~/AI-Memory', description: 'Local (no cloud sync)' });
-                const pick = await vscode.window.showQuickPick(picks, {
-                    placeHolder: 'Choose a cloud drive for AI-Memory (fleet communication)',
-                });
-                if (pick) {
-                    const driveName = pick.label;
-                    const drivePath = driveName === '~/AI-Memory'
-                        ? os.homedir()
-                        : drives.find(d => d.name === driveName).path;
-                    aiMemRoot = initAiMemory(drivePath);
-                    // Persist choice
-                    cogCfg.ai_memory_root = driveName === '~/AI-Memory' ? undefined : driveName;
-                    fs.writeFileSync(cogConfig, JSON.stringify(cogCfg, null, 4) + '\n');
-                }
+        // 4. Shared memory bus resolution (git-based)
+        progress.report({ message: 'Resolving shared memory bus...' });
+        try {
+            const registry = require(path.join(BRAIN_DIR, 'scripts', '_registry.cjs'));
+            const memResult = registry.resolveMemoryBus(root);
+            if (memResult && memResult.message) {
+                vscode.window.showInformationMessage(`ACT: ${memResult.message}`);
             }
-        }
-
-        // 5. Register in AI-Memory fleet
-        if (aiMemRoot) {
-            try {
-                const heirsDir = path.join(aiMemRoot, 'heirs');
-                fs.mkdirSync(heirsDir, { recursive: true });
-                const regPath = path.join(heirsDir, 'registry.json');
-                let registry = { schema: '1.0', heirs: {} };
-                if (fs.existsSync(regPath)) {
-                    try { registry = JSON.parse(fs.readFileSync(regPath, 'utf8')); } catch { /* */ }
-                    if (!registry.heirs) registry.heirs = {};
-                }
-                registry.heirs[heirId] = {
-                    heir_id: heirId,
-                    heir_name: heirName,
-                    edition: 'Alex',
-                    edition_version: editionVersion,
-                    repo_url: marker.repo_url,
-                    deployed_at: marker.deployed_at,
-                    last_sync_at: marker.last_sync_at,
-                    owner: marker.contact.owner,
-                };
-                registry.last_updated = new Date().toISOString();
-                fs.writeFileSync(regPath, JSON.stringify(registry, null, 2) + '\n');
-            } catch { /* best-effort */ }
-        }
+        } catch { /* best-effort; memory bus is optional */ }
 
         // Run heir-doctor and surface exit code; non-fatal if it fails.
         // 30s timeout so a wedged subprocess can't hang the bootstrap UI indefinitely.
@@ -757,7 +617,7 @@ async function cmdStatusBarMenu() {
 }
 
 /**
- * Status: show brain version, heir info, AI-Memory health
+ * Status: show brain version, heir info, memory bus health
  */
 async function cmdStatus() {
     const root = getWorkspaceRoot();
