@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { listFilesRecursive } = require('./lib/fs-utils');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 const BRAIN_DIR = path.join(__dirname, 'brain');
@@ -14,8 +15,15 @@ const BRAIN_DIR = path.join(__dirname, 'brain');
 function getBundledEditionVersion() {
     try {
         const v = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
-        return v || 'unknown';
-    } catch { return 'unknown'; }
+        if (!v || v === 'unknown') {
+            console.warn('ACT: brain/VERSION is missing or empty — bundled brain may be incomplete.');
+            return 'unknown';
+        }
+        return v;
+    } catch (e) {
+        console.warn('ACT: brain/VERSION unreadable:', e && e.message ? e.message : e);
+        return 'unknown';
+    }
 }
 
 /**
@@ -68,24 +76,6 @@ function getMarkerPath(root) {
     return path.join(root, '.github', '.act-heir.json');
 }
 
-// ── Sync Policy ────────────────────────────────────────────────────
-function loadSyncPolicy() {
-    const p = path.join(BRAIN_DIR, 'config', 'sync-policy.json');
-    try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
-}
-
-function isHeirOwned(relPath, policy) {
-    if (!policy || !policy.heir_owned) return false;
-    const normalized = relPath.replace(/\\/g, '/');
-    return policy.heir_owned.some(glob => {
-        const pattern = glob.replace(/\\/g, '/');
-        if (pattern.endsWith('/**')) {
-            return normalized.startsWith(pattern.slice(0, -3));
-        }
-        return normalized === pattern;
-    });
-}
-
 // ── Edition manifest (authoritative bill-of-materials) ─────────────
 // The manifest at brain/config/edition-manifest.json declares which files
 // are heir-owned "bootstrap_templates" (copy on first install, never
@@ -118,38 +108,6 @@ function resolveBrainDest(rel, workspaceRoot, ghDir) {
 }
 
 // ── File operations ────────────────────────────────────────────────
-// Symlink cycle / depth guard: tracks resolved real paths and caps recursion depth.
-// Without this, a workspace with `a -> b` and `b -> a` symlinks would infinite-loop on Unix.
-// A real Edition brain is ≤4 levels deep; depths past WARN are almost certainly a
-// misconfigured symlink/junction. We log once per cycle so it's loud, not silent.
-const MAX_RECURSION_DEPTH = 50;
-const WARN_RECURSION_DEPTH = 20;
-let _warnedDeep = false;
-function listFilesRecursive(dir, base, _seen, _depth) {
-    base = base || dir;
-    _seen = _seen || new Set();
-    _depth = _depth || 0;
-    let results = [];
-    if (!fs.existsSync(dir)) return results;
-    if (_depth > MAX_RECURSION_DEPTH) return results;
-    if (_depth === WARN_RECURSION_DEPTH && !_warnedDeep) {
-        _warnedDeep = true;
-        console.warn(`ACT: directory walk reached depth ${WARN_RECURSION_DEPTH} at ${dir} — possible symlink loop or unexpectedly deep tree.`);
-    }
-    let real;
-    try { real = fs.realpathSync(dir); } catch { return results; }
-    if (_seen.has(real)) return results;
-    _seen.add(real);
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-            results = results.concat(listFilesRecursive(full, base, _seen, _depth + 1));
-        } else {
-            results.push(path.relative(base, full));
-        }
-    }
-    return results;
-}
 
 function copyFileSync(src, dst) {
     fs.mkdirSync(path.dirname(dst), { recursive: true });
@@ -246,7 +204,6 @@ async function cmdBootstrap() {
         cancellable: false,
     }, async (progress) => {
         const ghDir = getGitHubDir(root);
-        const policy = loadSyncPolicy();
         const manifest = loadEditionManifest();
         const bootstrapTemplates = getBootstrapTemplateSet(manifest);
 
@@ -257,7 +214,7 @@ async function cmdBootstrap() {
         const copyFailures = [];
         for (const rel of brainFiles) {
             const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
-            const isTemplate = bootstrapTemplates.has(wsRel) || isHeirOwned(wsRel, policy);
+            const isTemplate = bootstrapTemplates.has(wsRel);
             try {
                 if (isTemplate) {
                     // Heir-owned template: only copy if absent
@@ -445,7 +402,6 @@ async function cmdUpgrade() {
         if (proceed !== 'Upgrade') return;
     }
 
-    const policy = loadSyncPolicy();
     const manifest = loadEditionManifest();
     const bootstrapTemplates = getBootstrapTemplateSet(manifest);
     const ghDir = getGitHubDir(root);
@@ -483,13 +439,13 @@ async function cmdUpgrade() {
     let updated = 0, skipped = 0;
     for (const rel of brainFiles) {
         const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
-        if (bootstrapTemplates.has(wsRel) || isHeirOwned(wsRel, policy)) { skipped++; continue; }
+        if (bootstrapTemplates.has(wsRel)) { skipped++; continue; }
 
         const src = path.join(BRAIN_DIR, rel);
-        // Only write if content changed
+        // Only write if content changed (SHA-256 for consistency with migration.js)
         if (fs.existsSync(dst)) {
-            const srcHash = crypto.createHash('md5').update(fs.readFileSync(src)).digest('hex');
-            const dstHash = crypto.createHash('md5').update(fs.readFileSync(dst)).digest('hex');
+            const srcHash = crypto.createHash('sha256').update(fs.readFileSync(src)).digest('hex');
+            const dstHash = crypto.createHash('sha256').update(fs.readFileSync(dst)).digest('hex');
             if (srcHash === dstHash) continue;
         }
         copyFileSync(src, dst);
@@ -743,8 +699,11 @@ async function runConverter(converterId, fileUri) {
     child.stdout.on('data', d => channel.append(d.toString()));
     child.stderr.on('data', d => channel.append(d.toString()));
     child.on('error', err => {
-        channel.appendLine(`\n[ACT Convert] spawn error: ${err.message}`);
-        vscode.window.showErrorMessage(`ACT Convert (${converter.label}) failed to start: ${err.message}`);
+        const hint = err.code === 'ENOENT'
+            ? ` Node.js executable not found at "${process.execPath}". Reinstall VS Code or check your PATH.`
+            : '';
+        channel.appendLine(`\n[ACT Convert] spawn error: ${err.message}${hint}`);
+        vscode.window.showErrorMessage(`ACT Convert (${converter.label}) failed to start: ${err.message}${hint}`);
     });
     child.on('close', code => {
         channel.appendLine(`\n[ACT Convert] ${converter.label} exited with code ${code}`);
@@ -796,80 +755,169 @@ async function runHeirDoctor(root) {
 }
 
 // ── Migration (AlexMaster v8.4.0 → ACT Edition) ────────────
-const migration = require('./migration');
+// Defensive load: if migration.js is missing or broken, core commands must still work.
+let migration;
+try {
+    migration = require('./migration');
+} catch (e) {
+    console.error('ACT: migration module failed to load:', e && e.message ? e.message : e);
+    migration = null;
+}
+
+let _activationChannel = null;
+function getActivationOutputChannel() {
+    if (!_activationChannel) {
+        _activationChannel = vscode.window.createOutputChannel('ACT Extension');
+    }
+    return _activationChannel;
+}
+
+function logActivationError(channel, phase, err) {
+    const message = err && err.message ? err.message : String(err);
+    const stack = err && err.stack ? err.stack : '(no stack)';
+    channel.appendLine(`[${phase}] ${message}`);
+    channel.appendLine(stack);
+}
+
+function registerCriticalCommands(context, channel) {
+    let registered = 0;
+    const register = (id, handler) => {
+        try {
+            context.subscriptions.push(vscode.commands.registerCommand(id, handler));
+            registered++;
+        } catch (err) {
+            logActivationError(channel, `register:${id}`, err);
+        }
+    };
+
+    register('alex-act.bootstrap', cmdBootstrap);
+    register('alex-act.upgrade', cmdUpgrade);
+    register('alex-act.status', cmdStatus);
+    register('alex-act.statusBarMenu', cmdStatusBarMenu);
+    register('alex-act.openWalkthrough', () => {
+        vscode.commands.executeCommand(
+            'workbench.action.openWalkthrough',
+            'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
+            false
+        );
+    });
+
+    return registered;
+}
 
 // ── Activation ─────────────────────────────────────────────────────
 
 function activate(context) {
-    context.subscriptions.push(
-        vscode.commands.registerCommand('alex-act.bootstrap', cmdBootstrap),
-        vscode.commands.registerCommand('alex-act.upgrade', cmdUpgrade),
-        vscode.commands.registerCommand('alex-act.status', cmdStatus),
-        vscode.commands.registerCommand('alex-act.statusBarMenu', cmdStatusBarMenu),
-        vscode.commands.registerCommand('alex-act.openWalkthrough', () => {
-            vscode.commands.executeCommand(
-                'workbench.action.openWalkthrough',
-                'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
-                false
-            );
-        }),
-        vscode.commands.registerCommand('alex-act.migrate-from-alex-master', migration.migrateFromAlexMaster),
-        vscode.commands.registerCommand('alex-act.rollback-migration', migration.rollbackMigration),
-        vscode.commands.registerCommand('alex-act.clean-migration-backup', migration.cleanMigrationBackup),
-    );
+    const channel = getActivationOutputChannel();
+    channel.appendLine('[activate] Starting activation.');
 
-    // Register converter commands
-    for (const [id, _] of Object.entries(CONVERTERS)) {
-        context.subscriptions.push(
-            vscode.commands.registerCommand(`alex-act.convert.${id}`, (fileUri) => runConverter(id, fileUri))
-        );
-    }
-
-    // Register no-op stubs for AlexMaster's 30 deprecated commands
-    migration.registerDeprecatedStubs(context);
-
-    // Fire AlexMaster detection modal (respects "remind later" / "don't ask again")
-    migration.checkActivationTrigger(context).catch(() => { /* silent */ });
-
-    // Auto-open the Welcome walkthrough on first install or after version bump.
-    // Non-devs won't know to run a command, so surface it on startup, once per version.
+    let criticalReady = false;
     try {
-        const pkg = require('./package.json');
-        const currentVersion = pkg.version;
-        const SHOWN_KEY = 'alex-act.walkthroughShownVersion';
-        const shownVersion = context.globalState.get(SHOWN_KEY);
-        if (shownVersion !== currentVersion) {
-            // Defer briefly so VS Code finishes restoring editors before we open the walkthrough.
-            setTimeout(() => {
-                vscode.commands.executeCommand(
+        const criticalCount = registerCriticalCommands(context, channel);
+        criticalReady = criticalCount > 0;
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand('alex-act.migrate-from-alex-master', (...args) => {
+                if (!migration) { vscode.window.showErrorMessage('ACT: Migration module unavailable.'); return; }
+                return migration.migrateFromAlexMaster(...args);
+            }),
+            vscode.commands.registerCommand('alex-act.rollback-migration', (...args) => {
+                if (!migration) { vscode.window.showErrorMessage('ACT: Migration module unavailable.'); return; }
+                return migration.rollbackMigration(...args);
+            }),
+            vscode.commands.registerCommand('alex-act.clean-migration-backup', (...args) => {
+                if (!migration) { vscode.window.showErrorMessage('ACT: Migration module unavailable.'); return; }
+                return migration.cleanMigrationBackup(...args);
+            }),
+        );
+
+        // Register converter commands
+        for (const [id, _] of Object.entries(CONVERTERS)) {
+            context.subscriptions.push(
+                vscode.commands.registerCommand(`alex-act.convert.${id}`, (fileUri) => runConverter(id, fileUri))
+            );
+        }
+
+        // Register no-op stubs for AlexMaster's 30 deprecated commands
+        if (migration) migration.registerDeprecatedStubs(context);
+
+        // Fire AlexMaster detection modal (respects "remind later" / "don't ask again")
+        if (migration) migration.checkActivationTrigger(context).catch(() => { /* silent */ });
+
+        // Auto-open the Welcome walkthrough on first install or after version bump.
+        // Non-devs won't know to run a command, so surface it on startup, once per version.
+        try {
+            const pkg = require('./package.json');
+            const currentVersion = pkg.version;
+            const SHOWN_KEY = 'alex-act.walkthroughShownVersion';
+            const shownVersion = context.globalState.get(SHOWN_KEY);
+            if (shownVersion !== currentVersion) {
+                // Defer until VS Code finishes restoring editors.
+                // Use onDidChangeActiveTextEditor as a readiness signal with a timeout fallback.
+                const openWalkthrough = () => vscode.commands.executeCommand(
                     'workbench.action.openWalkthrough',
                     'fabioc-aloha.alex-cognitive-architecture#alex-getting-started',
                     false
                 );
-            }, 1500);
-            context.globalState.update(SHOWN_KEY, currentVersion);
-        }
-    } catch { /* silent */ }
-
-    // Silent startup check: if workspace is a heir, show status bar item
-    const root = getWorkspaceRoot();
-    if (root && fs.existsSync(getMarkerPath(root))) {
-        const marker = readMarkerSafe(getMarkerPath(root));
-        if (marker) try {
-            const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
-            const upgradeAvailable = bundledVersion !== marker.edition_version;
-            const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
-            statusBar.text = upgradeAvailable
-                ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
-                : `$(brain) ACT v${marker.edition_version}`;
-            statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
-            statusBar.command = 'alex-act.statusBarMenu';
-            statusBar.show();
-            context.subscriptions.push(statusBar);
+                const readyDisposable = vscode.window.onDidChangeActiveTextEditor(() => {
+                    readyDisposable.dispose();
+                    clearTimeout(readyTimeout);
+                    openWalkthrough();
+                });
+                const readyTimeout = setTimeout(() => {
+                    readyDisposable.dispose();
+                    openWalkthrough();
+                }, 3000);
+                context.globalState.update(SHOWN_KEY, currentVersion);
+            }
         } catch { /* silent */ }
+
+        // Silent startup check: if workspace is a heir, show status bar item
+        const root = getWorkspaceRoot();
+        if (root && fs.existsSync(getMarkerPath(root))) {
+            const marker = readMarkerSafe(getMarkerPath(root));
+            if (marker) try {
+                const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+                const upgradeAvailable = bundledVersion !== marker.edition_version;
+                const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+                statusBar.text = upgradeAvailable
+                    ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
+                    : `$(brain) ACT v${marker.edition_version}`;
+                statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
+                statusBar.command = 'alex-act.statusBarMenu';
+                statusBar.show();
+                context.subscriptions.push(statusBar);
+            } catch { /* silent */ }
+        }
+
+        channel.appendLine('[activate] Activation completed.');
+    } catch (err) {
+        logActivationError(channel, 'activate', err);
+
+        if (!criticalReady) {
+            const recovered = registerCriticalCommands(context, channel);
+            criticalReady = recovered > 0;
+            channel.appendLine(`[activate] Recovery registration attempted (${recovered} critical command(s)).`);
+        }
+
+        const state = criticalReady
+            ? 'Core ACT commands are still available.'
+            : 'Core command registration also failed.';
+        vscode.window.showWarningMessage(
+            `ACT: Extension activated with limited functionality due to a startup error. ${state} See the "ACT Extension" output channel for details.`
+        );
     }
 }
 
-function deactivate() { }
+function deactivate() {
+    if (_converterChannel) {
+        _converterChannel.dispose();
+        _converterChannel = null;
+    }
+    if (_activationChannel) {
+        _activationChannel.dispose();
+        _activationChannel = null;
+    }
+}
 
 module.exports = { activate, deactivate };

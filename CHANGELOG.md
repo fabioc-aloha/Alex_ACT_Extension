@@ -6,6 +6,30 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.1.0] - 2026-05-28
+
+**Minor [behaviour] — architecture hardening + AlexMaster migration pipeline.**
+
+### Added
+
+- **AlexMaster → ACT Edition migration pipeline** (`migration.js` + `migration/`). One-click migration for users still on AlexMaster v8.4.0: detects signature files, backs up the old brain, installs Edition brain, and produces a `MIGRATION-REVIEW.md` summary. Includes rollback and backup-cleanup commands.
+- **`lib/fs-utils.js`** — shared recursive file listing with symlink-loop protection (MAX_DEPTH=50). Eliminates code duplication between `extension.js` and `migration.js`.
+
+### Fixed
+
+- **Activation error boundary** (HIGH): top-level try/catch in `activate()` with recovery guidance and degraded-mode status bar indicator.
+- **VSIX excludes test files** (HIGH): `.vscodeignore` now excludes `migration/dry-run.cjs` and `migration/vscode-stub.cjs`.
+- **MD5 → SHA-256** in `cmdUpgrade` integrity check — removes use of broken hash algorithm.
+- **Transactional brain install**: `installEditionBrain` now copies to a temp directory then renames atomically, preventing half-written states on crash.
+- **`getBundledEditionVersion`** logs warnings instead of silently returning `unknown` when VERSION file is missing or empty.
+- **OutputChannel disposal** in `deactivate()` — prevents resource leaks on extension host restart.
+- **Walkthrough race condition**: `openWalkthrough` waits for `onDidChangeActiveTextEditor` with a 3-second timeout fallback instead of a blind 500ms delay.
+- **Spawn ENOENT handling**: Git/child_process failures now provide actionable guidance ("Is git installed and on PATH?").
+
+### Brain version
+
+Unchanged from v9.0.0 — Edition v3.0.0 (145 files, byte-identical).
+
 ## [9.0.0] - 2026-05-27
 
 **Major [behaviour] — bundles Edition v3.0.0 brain. Breaking: AI-Memory moves from cloud drives to git repo.**
