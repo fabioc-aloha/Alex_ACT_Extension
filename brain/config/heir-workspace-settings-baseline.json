@@ -1,0 +1,44 @@
+{
+    "$schema": "https://github.com/fabioc-aloha/Alex_ACT_Edition/blob/main/.github/config/heir-workspace-settings-baseline.schema.json",
+    "$comment": [
+        "Baseline VS Code WORKSPACE-scope settings merged into each heir's .vscode/settings.json",
+        "by bootstrap-heir.cjs (on init) and upgrade-self.cjs (on upgrade). Distinct from",
+        "welcome-baseline.json which is USER-scope and applied via /configure-vscode.",
+        "",
+        "Edition's `_registry.cjs` lists `.vscode/settings.json` as HEIR_OWNED — Edition never",
+        "overwrites the file wholesale. The merger reads this baseline, then deep-merges only the",
+        "listed keys into the heir's existing settings.json, preserving all unrelated keys.",
+        "",
+        "Why these keys (verified 2026-05-27 against official VS Code Copilot docs):",
+        "  VS Code skill / prompt / agent discovery walks each registered root ONE LEVEL only,",
+        "  looking for `<root>/<name>/SKILL.md` (and equivalents). Instruction discovery recurses;",
+        "  the others do not. To make `.github/skills/local/<name>/SKILL.md` (and the symmetric",
+        "  prompts + agents `local/` folders) discoverable, the `local/` directory must be",
+        "  registered as a SECOND root via the matching `chat.*FilesLocations` setting.",
+        "",
+        "  Without this, every heir that installs Mall plugins under `.github/skills/local/`",
+        "  (the path declared in mall-installation.instructions.md) silently fails to load them.",
+        "",
+        "  Empirically verified on the `job` heir 2026-05-27 — adding `chat.agentSkillsLocations`",
+        "  surfaced 18 previously-invisible local skills.",
+        "",
+        "Falsifier: if VS Code removes, renames, or changes `chat.*FilesLocations` semantics, this",
+        "baseline goes stale. Re-evaluate by 2026-11-27 or sooner on any VS Code release that",
+        "changes the settings contract."
+    ],
+    "spec_version": "1.0",
+    "settings": {
+        "chat.agentSkillsLocations": {
+            ".github/skills": true,
+            ".github/skills/local": true
+        },
+        "chat.promptFilesLocations": {
+            ".github/prompts": true,
+            ".github/prompts/local": true
+        },
+        "chat.agentFilesLocations": {
+            ".github/agents": true,
+            ".github/agents/local": true
+        }
+    }
+}

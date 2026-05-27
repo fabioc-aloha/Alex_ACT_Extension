@@ -267,6 +267,7 @@ const EDITION_OWNED = [
     '.github/agents/**',
     '.github/config/edition-manifest.json',
     '.github/config/welcome-baseline.json',
+    '.github/config/heir-workspace-settings-baseline.json',
     '.github/config/README.md',
     '.github/scripts/shared/**',
     '.github/scripts/converter-qa.cjs',

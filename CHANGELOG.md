@@ -6,7 +6,35 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-## [8.12.1] - 2026-05-27
+## [8.13.0] - 2026-05-27
+
+**Minor [behaviour] — bundles Edition v2.6.0 brain.** Edition refresh release: brain payload moves from v2.5.0 to v2.6.0, adding the heir workspace-settings baseline that fixes the silent `.github/skills/local/<name>/SKILL.md` discovery bug. No Extension surface changes. Marketplace v8.13.0 bundles brain v2.6.0 per ADR-004 dual-track.
+
+### Brain version
+
+Brain pinned to **Edition v2.6.0** (was v2.5.0). Manifest spec_version 1.3, edition_version 2.6.0. 145 brain files on disk, byte-identical to the tagged Edition manifest (audit clean: 145/145 byte-identical, 0 mismatched, 0 missing, 1 HEIR_OWNED skipped).
+
+### Brain-side highlights (v2.6.0)
+
+- **NEW `.github/config/heir-workspace-settings-baseline.json`** — declarative baseline of the three `chat.{agentSkills,promptFiles,agentFiles}FilesLocations` keys with two-root maps (`.github/X` and `.github/X/local`). Closes the VS Code Copilot 1.118+ skill-discovery bug where files placed in `.github/skills/local/<name>/SKILL.md` were silently invisible (skills/prompts/agents do a one-level walk; only instructions recurse). Carries verification context and a falsifier date in `$comment`.
+- **NEW `.github/scripts/shared/workspace-settings-merger.cjs`** — idempotent per-key deep-merge module called from both lifecycle scripts. Strips JSONC comments, preserves heir ownership of `.vscode/settings.json` (HEIR_OWNED-file mutation done by per-key upsert; never overwrites unrelated heir keys).
+- **`bootstrap-heir.cjs` and `upgrade-self.cjs`** invoke the merger after their marker-write steps. New heirs get the keys on first bootstrap; existing heirs get backfilled on next `ACT: Upgrade Brain`.
+- **`mall-installation.instructions.md`** — new `### Discovery setup` section documents the one-level walk, the three keys, automatic merge behaviour, and a manual fallback for heirs on Edition < 2.6.0.
+
+### Heir-visible behaviour delta
+
+After upgrading, the heir's `.vscode/settings.json` will gain three new keys if absent. Existing values for those specific keys are **replaced** with Edition's two-root maps (per-key replacement semantics, not deep object merge inside the key). All other keys in the heir's settings are untouched.
+
+### Compatibility
+
+- VS Code < 1.118 silently ignores the new settings keys (no error).
+- Heirs that already had custom values for the three keys: see `mall-installation.instructions.md` § Discovery setup for the manual override path.
+
+### Surface
+
+No Extension surface code changes. Same commands, same activation, same walkthrough.
+
+
 
 **Patch [behaviour] — replicate Edition's `.github/` and `.vscode/` layout correctly on bootstrap and upgrade.** Prior versions had two related defects: (1) bundled `brain/.vscode/markdown-light.css` and `brain/.vscode/settings.json` were copied into `.github/.vscode/` inside the heir's brain instead of the workspace-root `.vscode/` folder where VS Code expects them; (2) Edition's heir-owned `.github/config/cognitive-config.json` template was never seeded because it is intentionally absent from `brain/` per the faithfulness audit contract, leaving heirs without the schema-correct config for AI-Memory routing and confidence-badge toggles. This patch fixes both: `.vscode/*` now lands at the workspace root, and `.github/` bootstrap templates are staged in the Extension's `templates/` directory at build time and seeded on first install only.
 

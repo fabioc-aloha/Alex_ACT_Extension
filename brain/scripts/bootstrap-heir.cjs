@@ -24,6 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { upsertHeir, resolveAiMemoryRoot, discoverCloudDrives, initAiMemory, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
+const { mergeWorkspaceSettings, writeMerged, formatChangeSummary } = require('./shared/workspace-settings-merger.cjs');
 
 const IDENTITY_TEMPLATE = `# Identity (heir-owned)
 
@@ -326,6 +327,22 @@ for (const pattern of HEIR_OWNED) {
 
 fs.mkdirSync(path.dirname(markerPath), { recursive: true });
 fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+
+// Merge discovery-roots into heir's .vscode/settings.json (HEIR_OWNED file,
+// per-key merge). Without these, `.github/skills/local/<name>/SKILL.md` etc.
+// are invisible to chat. Baseline at .github/config/heir-workspace-settings-baseline.json.
+const wsBaselinePath = path.join(EDITION_ROOT, '.github', 'config', 'heir-workspace-settings-baseline.json');
+if (fs.existsSync(wsBaselinePath)) {
+    const mergeResult = mergeWorkspaceSettings(targetAbs, wsBaselinePath);
+    if (!mergeResult.ok) {
+        console.warn(`Workspace settings merge skipped: ${mergeResult.error}`);
+    } else if (mergeResult.changes.length === 0) {
+        console.log(`Workspace settings: already current (${path.relative(targetAbs, mergeResult.settingsFile)})`);
+    } else {
+        writeMerged(mergeResult);
+        console.log(formatChangeSummary(mergeResult, 'Applied'));
+    }
+}
 
 // Render copilot-instructions.local.md template if it doesn't already exist.
 // Heir-owned — only created on first bootstrap, never overwritten.

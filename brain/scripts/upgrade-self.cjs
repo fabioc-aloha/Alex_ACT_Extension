@@ -24,6 +24,7 @@ const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
 const { upsertHeir, EDITION_OWNED, HEIR_OWNED } = require('./_registry.cjs');
+const { mergeWorkspaceSettings, writeMerged, formatChangeSummary } = require('./shared/workspace-settings-merger.cjs');
 
 // ─── CLI & Config ────────────────────────────────────────────────────────────
 
@@ -358,6 +359,21 @@ const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 marker.edition_version = newVersion;
 marker.last_sync_at = now;
 fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+
+// Step 5b: Merge discovery-roots into heir's .vscode/settings.json (HEIR_OWNED
+// file, per-key merge). Idempotent — no-op when the heir is already current.
+const wsBaselinePath = path.join(HEIR_ROOT, '.github', 'config', 'heir-workspace-settings-baseline.json');
+if (fs.existsSync(wsBaselinePath)) {
+    const mergeResult = mergeWorkspaceSettings(HEIR_ROOT, wsBaselinePath);
+    if (!mergeResult.ok) {
+        console.warn(`Workspace settings merge skipped: ${mergeResult.error}`);
+    } else if (mergeResult.changes.length === 0) {
+        console.log(`Workspace settings: already current`);
+    } else {
+        writeMerged(mergeResult);
+        console.log(formatChangeSummary(mergeResult, 'Applied'));
+    }
+}
 
 // Cleanup temp holding area
 try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }

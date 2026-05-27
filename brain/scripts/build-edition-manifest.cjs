@@ -63,6 +63,7 @@ const { HEIR_OWNED } = require('./_registry.cjs');
 const EDITION_CONFIG_FILES = new Set([
   'edition-manifest.json',
   'welcome-baseline.json',
+  'heir-workspace-settings-baseline.json',
   'README.md',
 ]);
 
