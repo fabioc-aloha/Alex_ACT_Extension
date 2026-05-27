@@ -30,15 +30,11 @@ The brain copies into `.github/` and the bootstrap toast offers three one-click 
 
 Before your first real chat, open `.github/copilot-instructions.local.md` and fill in the `## Project Context` paragraph. Identity grounding from session 1 beats identity grounding at session 10.
 
-## Coming from Alex Cognitive Architecture (AlexMaster)?
+## Coming from an older version?
 
-If you previously had AlexMaster installed (Marketplace ID `fabioc-aloha.alex-cognitive-architecture`), this extension is the **direct successor** — same Marketplace ID, auto-updates in place. On first activation in any workspace that AlexMaster bootstrapped, ACT Edition offers a non-destructive migration:
+If you previously had **Alex Cognitive Architecture (AlexMaster)** installed, this extension is the direct successor — same Marketplace ID, auto-updates in place. No manual migration needed; the brain overwrites cleanly on upgrade.
 
-- Your existing `.github/` is backed up verbatim to `.github-backup-<ISO>/` (never auto-deleted; opt-in cleanup via the `Alex ACT: Clean Migration Backup` command)
-- AlexMaster-specific files you authored (NORTH-STAR.md, episodic/, quality/) are preserved under `.github/local/`
-- A guided semantic pass invites you to review what survived
-
-If the modal feels intrusive, "Don't ask again" downgrades it to a persistent status-bar item — the path stays discoverable.
+If you are upgrading from **v8.x** (Edition v2.x) to **v9.x** (Edition v3.x), see [Migrating to v9](https://github.com/fabioc-aloha/Alex_ACT_Extension/wiki/Migrating-to-v9) for the one breaking change (AI-Memory moved from cloud drives to a git repo).
 
 ## Documentation
 
@@ -50,7 +46,7 @@ Full documentation lives in the **[GitHub wiki](https://github.com/fabioc-aloha/
 - Plugin Mall catalog and how to contribute
 - Model compatibility and the open `MAN.8.3` capability-floor question
 - Brain upgrade lifecycle
-- Migration guide from AlexMaster
+- Migrating to v9 (AI-Memory breaking change)
 
 ## Source and feedback
 

@@ -6,6 +6,31 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.0.0] - 2026-05-27
+
+**Major [behaviour] — bundles Edition v3.0.0 brain. Breaking: AI-Memory moves from cloud drives to git repo.**
+
+### Breaking changes
+
+- **AI-Memory discovery removed.** OneDrive / iCloud / Dropbox scanning code deleted. AI-Memory now lives in a sibling `../Alex_ACT_Memory` git repo by convention. See [Migrating to v9](https://github.com/fabioc-aloha/Alex_ACT_Extension/wiki/Migrating-to-v9) for the one-time migration (2 minutes).
+- **`heirs/registry.json` fleet self-registration removed.** Fleet tracking is a separate concern handled by the Supervisor.
+
+### Removed
+
+- **`migration/` folder** (2,720 lines) — legacy AlexMaster-to-ACT migration wizard. No longer needed; all active users have migrated.
+- **`migration.js`** (803 lines) — orchestrator for the above.
+- README section referencing the migration modal updated to point at the wiki migration guide.
+
+### Brain version
+
+Brain pinned to **Edition v3.0.0** (was v2.6.0). Manifest spec_version 1.3, edition_version 3.0.0. 145 brain files on disk, byte-identical to the tagged Edition manifest (audit clean: 145/145 byte-identical, 0 mismatched, 0 missing, 1 HEIR_OWNED skipped).
+
+### Brain-side highlights (v3.0.0 vs v2.6.0)
+
+- VERSION file consolidated to `.github/VERSION` (single source of truth for brain version).
+- AI-Memory cloud-drive discovery replaced with git-sibling convention.
+- Fleet self-registration hooks removed from lifecycle scripts.
+
 ## [8.13.1] - 2026-05-27
 
 **Patch [behaviour] — hotfix: wire heir workspace-settings merger into the Extension surface.** Extension-only patch; brain payload unchanged (still v2.6.0). v8.13.0 shipped the brain payload (baseline JSON + merger module) but the Extension's `cmdBootstrap` and `cmdUpgrade` functions are independent JS implementations of the bootstrap/upgrade lifecycle that never invoked the merger. Heirs installing or upgrading via the GUI commands received the new brain files but their `.vscode/settings.json` was not updated, leaving the chat.*FilesLocations keys unwritten and the v8.13.0 / Edition v2.6.0 skill-discovery fix functionally non-operative for Marketplace heirs.
