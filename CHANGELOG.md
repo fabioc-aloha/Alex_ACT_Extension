@@ -6,7 +6,29 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-## [8.11.3] - 2026-05-27
+## [8.12.0] - 2026-05-27
+
+**Minor [behaviour] — bundles Edition v2.5.0 brain.** Edition refresh release: brain payload moves from v2.4.0 to v2.5.0, adding two baseline skills (`systematic-debugging`, `security-and-hardening`), VS Code 1.122 awareness in the always-on instruction set, and three shared-core mirrors from Supervisor (`pii-memory-filter`, `falsifiability-deadlines`, `severity-tagged-commits`). No Extension surface changes — same commands, same activation, same walkthrough. Marketplace v8.12.0 bundles brain v2.5.0 per ADR-004 dual-track.
+
+### Brain version
+
+Brain pinned to **Edition v2.5.0** (was v2.4.0). Manifest spec_version 1.3, edition_version 2.5.0. 143 brain files on disk, byte-identical to the tagged Edition manifest (audit clean).
+
+### Brain-side highlights (v2.5.0)
+
+- **`systematic-debugging` skill** (adopted from `MALL/obra-superpowers`) — four-phase root-cause-first method with iron law "NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST". Closes a baseline gap; heirs no longer default to symptom-fixing.
+- **`security-and-hardening` skill** (adopted from `MALL/addyosmani-agent-skills`) — OWASP-aware security-first practices with a three-tier boundary system (Always Do / Ask First / Never Do), input validation patterns, secrets management, dependency-audit triage.
+- **VS Code 1.122 conveniences surfaced** in `tool-awareness` (`/models` slash, BYOK air-gapped, local agent host watchpoint) and `lint-discipline` ("Search only in changed files" toggle for lint scope). No rule changes, additive shortcuts only.
+- **Shared-core mirrors from Supervisor**: `pii-memory-filter` cross-link to `memory-triggers`; `falsifiability-deadlines` description cleaned; `severity-tagged-commits` intentional-divergence marker.
+
+Full Edition release notes: see `Alex_ACT_Edition` v2.5.0 tag.
+
+### Migration notes
+
+- **For users**: no action required. Auto-updates from v8.11.3.
+- **For heirs**: new skills are auto-available after VSIX update; no `/upgrade` needed for the Extension's bundled brain (Extension ships the brain inert at `brain/`). Heirs that synced from Edition pre-v2.5.0 can still pull via their existing `/upgrade` flow.
+
+
 
 **Patch [clarification] — code review cosmetics on top of v8.11.2.** Fixes deferred from the v8.11.2 review: hardens converter execution against shell metacharacters, adds a depth-warning to the symlink guard, sidecars the full migration classification next to the truncated markdown, and stops tracking the build-generated `.vscodeignore`. No functional changes for already-working code paths.
 
