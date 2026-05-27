@@ -32,7 +32,7 @@ Before your first real chat, open `.github/copilot-instructions.local.md` and fi
 
 ## Coming from Alex Cognitive Architecture (AlexMaster)?
 
-If you previously had AlexMaster installed (Marketplace ID `fabioc-aloha.alex-cognitive-architecture`), this extension is the **direct successor**. Your installation auto-updates from v8.4.0 → v9.0.0. On first activation in any workspace that AlexMaster bootstrapped, ACT Edition offers a non-destructive migration:
+If you previously had AlexMaster installed (Marketplace ID `fabioc-aloha.alex-cognitive-architecture`), this extension is the **direct successor** — same Marketplace ID, auto-updates in place. On first activation in any workspace that AlexMaster bootstrapped, ACT Edition offers a non-destructive migration:
 
 - Your existing `.github/` is backed up verbatim to `.github-backup-<ISO>/` (never auto-deleted; opt-in cleanup via the `Alex ACT: Clean Migration Backup` command)
 - AlexMaster-specific files you authored (NORTH-STAR.md, episodic/, quality/) are preserved under `.github/local/`
