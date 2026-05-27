@@ -137,13 +137,15 @@ console.log(`   Copied ${brainCount} brain files (manifest-declared, no drift)`)
 // .vscode/markdown-light.css (vscode_assets). Both live at Edition repo root,
 // not under .github/. Mirror them under brain/.vscode/ so they land at the
 // workspace root when the Extension installs the brain into a heir.
+//
+// `.github/` entries in bootstrap_templates (e.g. cognitive-config.json) are
+// intentionally absent from brain/ per the audit contract — they are seeded
+// from templates/ instead (see Step 3c).
 console.log('3b. Copying .vscode/ assets...');
 const vscodeAssets = [];
-// bootstrap_templates entries that start with .vscode/
 for (const tpl of (manifest.bootstrap_templates || [])) {
-    if (tpl.startsWith('.vscode/')) vscodeAssets.push(tpl);
+    if (typeof tpl === 'string' && tpl.startsWith('.vscode/')) vscodeAssets.push(tpl);
 }
-// vscode_assets entries (manifest lists basenames; they live under .vscode/)
 for (const name of (manifest.vscode_assets || [])) {
     const rel = `.vscode/${name}`;
     if (!vscodeAssets.includes(rel)) vscodeAssets.push(rel);
@@ -170,6 +172,35 @@ if (vscodeMissing.length > 0) {
 }
 
 console.log(`   Copied ${vscodeCount} .vscode/ asset(s)`);
+
+// ── Step 3c: Stage .github/ bootstrap templates outside brain/ ────
+// HEIR_OWNED files declared in bootstrap_templates that target .github/
+// must NOT live under brain/ (audit-brain-faithfulness.cjs enforces their
+// absence). Stage them under templates/ so extension.js can seed them at
+// first install without polluting brain/.
+console.log('3c. Staging .github/ bootstrap templates...');
+const TEMPLATES_DST = path.join(EXT_DIR, 'templates');
+fs.mkdirSync(TEMPLATES_DST, { recursive: true });
+let templateCount = 0;
+const templateMissing = [];
+for (const tpl of (manifest.bootstrap_templates || [])) {
+    if (typeof tpl !== 'string' || !tpl.startsWith('.github/')) continue;
+    const srcPath = path.join(editionDir, tpl);
+    if (!fs.existsSync(srcPath)) {
+        templateMissing.push(tpl);
+        continue;
+    }
+    // Flatten path to basename under templates/ — extension.js maps by basename.
+    const basename = path.basename(tpl);
+    fs.copyFileSync(srcPath, path.join(TEMPLATES_DST, basename));
+    templateCount++;
+}
+if (templateMissing.length > 0) {
+    console.error(`FATAL: ${templateMissing.length} manifested .github/ bootstrap template(s) missing from Edition clone:`);
+    for (const m of templateMissing) console.error(`   - ${m}`);
+    process.exit(1);
+}
+console.log(`   Staged ${templateCount} .github/ bootstrap template(s)`);
 
 // ── Step 4: Ensure icon exists ───────────────────────────────────
 console.log('4. Checking icon...');

@@ -6,6 +6,24 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.12.1] - 2026-05-27
+
+**Patch [behaviour] — replicate Edition's `.github/` and `.vscode/` layout correctly on bootstrap and upgrade.** Prior versions had two related defects: (1) bundled `brain/.vscode/markdown-light.css` and `brain/.vscode/settings.json` were copied into `.github/.vscode/` inside the heir's brain instead of the workspace-root `.vscode/` folder where VS Code expects them; (2) Edition's heir-owned `.github/config/cognitive-config.json` template was never seeded because it is intentionally absent from `brain/` per the faithfulness audit contract, leaving heirs without the schema-correct config for AI-Memory routing and confidence-badge toggles. This patch fixes both: `.vscode/*` now lands at the workspace root, and `.github/` bootstrap templates are staged in the Extension's `templates/` directory at build time and seeded on first install only.
+
+### What changed
+
+- **`cmdBootstrap`** routes each bundled brain file to its correct workspace destination via the new `resolveBrainDest()` helper: `.vscode/*` → workspace root, everything else → `.github/`. Files declared in the Edition manifest's `bootstrap_templates` list are copy-if-absent (heir-owned), not overwritten.
+- **`cmdBootstrap`** also seeds `.github/` bootstrap templates from the Extension's `templates/` directory (currently `cognitive-config.json`). These files are intentionally absent from `brain/` per `audit-brain-faithfulness.cjs`, so the build pipeline now stages them separately.
+- **`cmdUpgrade`** uses the same routing and skips `bootstrap_templates` entirely (preserves user edits). One-time migration: any file under `.github/.vscode/` is moved to `<workspace>/.vscode/`.
+- **`build-extension.cjs`** Step 3b cleaned up to handle only `.vscode/` entries; new Step 3c stages `.github/` bootstrap templates under `templates/` so they ship with the VSIX without polluting `brain/`. Faithfulness audit passes (143/143 byte-identical to Edition v2.5.0).
+- **New helpers in `extension.js`**: `loadEditionManifest()`, `getBootstrapTemplateSet()`, `resolveBrainDest()`.
+
+### Migration notes
+
+- **For users on v8.12.0 or earlier**: run `ACT: Upgrade Brain` once after installing v8.12.1. The upgrade reports how many legacy `.vscode/` files it relocated. No data loss — files are copied first, then the legacy copy is removed. The relocated `settings.json` is preserved as-is; if you want Edition's current defaults, delete it and re-bootstrap a fresh workspace (or merge by hand).
+- **For users with no `.github/config/cognitive-config.json`**: this patch does NOT retroactively seed the file on upgrade (heir-owned files are never written on upgrade by contract). To get Edition's current template, delete the file (if a partial one exists) and re-bootstrap a fresh workspace, or copy it manually from `<extension-install>/templates/cognitive-config.json`.
+- **For heirs**: no action required. The fix is in the Extension surface code, not the brain payload. Brain remains v2.5.0.
+
 ## [8.12.0] - 2026-05-27
 
 **Minor [behaviour] — bundles Edition v2.5.0 brain.** Edition refresh release: brain payload moves from v2.4.0 to v2.5.0, adding two baseline skills (`systematic-debugging`, `security-and-hardening`), VS Code 1.122 awareness in the always-on instruction set, and three shared-core mirrors from Supervisor (`pii-memory-filter`, `falsifiability-deadlines`, `severity-tagged-commits`). No Extension surface changes — same commands, same activation, same walkthrough. Marketplace v8.12.0 bundles brain v2.5.0 per ADR-004 dual-track.

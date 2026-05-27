@@ -87,6 +87,37 @@ function isHeirOwned(relPath, policy) {
     });
 }
 
+// ── Edition manifest (authoritative bill-of-materials) ─────────────
+// The manifest at brain/config/edition-manifest.json declares which files
+// are heir-owned "bootstrap_templates" (copy on first install, never
+// overwrite on upgrade). Anything not in that list is edition-owned and
+// overwritten on upgrade. Returns null if the manifest is missing/invalid.
+function loadEditionManifest() {
+    const p = path.join(BRAIN_DIR, 'config', 'edition-manifest.json');
+    try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
+}
+
+function getBootstrapTemplateSet(manifest) {
+    const s = new Set();
+    if (manifest && Array.isArray(manifest.bootstrap_templates)) {
+        for (const t of manifest.bootstrap_templates) {
+            s.add(String(t).replace(/\\/g, '/'));
+        }
+    }
+    return s;
+}
+
+// Map a brain-relative path (e.g. `instructions/foo.md` or `.vscode/settings.json`)
+// to its workspace-relative key and absolute destination. Files under `.vscode/`
+// land at the workspace root; everything else lands under `.github/`.
+function resolveBrainDest(rel, workspaceRoot, ghDir) {
+    const norm = rel.replace(/\\/g, '/');
+    if (norm === '.vscode' || norm.startsWith('.vscode/')) {
+        return { wsRel: norm, dst: path.join(workspaceRoot, norm) };
+    }
+    return { wsRel: '.github/' + norm, dst: path.join(ghDir, norm) };
+}
+
 // ── File operations ────────────────────────────────────────────────
 // Symlink cycle / depth guard: tracks resolved real paths and caps recursion depth.
 // Without this, a workspace with `a -> b` and `b -> a` symlinks would infinite-loop on Unix.
@@ -269,6 +300,8 @@ async function cmdBootstrap() {
     }, async (progress) => {
         const ghDir = getGitHubDir(root);
         const policy = loadSyncPolicy();
+        const manifest = loadEditionManifest();
+        const bootstrapTemplates = getBootstrapTemplateSet(manifest);
 
         // 1. Copy edition-owned brain files
         progress.report({ message: 'Copying brain files...' });
@@ -276,21 +309,21 @@ async function cmdBootstrap() {
         let copied = 0;
         const copyFailures = [];
         for (const rel of brainFiles) {
-            const ghRel = '.github/' + rel.replace(/\\/g, '/');
+            const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
+            const isTemplate = bootstrapTemplates.has(wsRel) || isHeirOwned(wsRel, policy);
             try {
-                if (isHeirOwned(ghRel, policy)) {
+                if (isTemplate) {
                     // Heir-owned template: only copy if absent
-                    const dst = path.join(ghDir, rel);
                     if (!fs.existsSync(dst)) {
                         copyFileSync(path.join(BRAIN_DIR, rel), dst);
                         copied++;
                     }
                 } else {
-                    copyFileSync(path.join(BRAIN_DIR, rel), path.join(ghDir, rel));
+                    copyFileSync(path.join(BRAIN_DIR, rel), dst);
                     copied++;
                 }
             } catch (err) {
-                copyFailures.push({ rel, err: err && err.message ? err.message : String(err) });
+                copyFailures.push({ rel: wsRel, err: err && err.message ? err.message : String(err) });
             }
         }
         if (copyFailures.length > 0) {
@@ -298,6 +331,34 @@ async function cmdBootstrap() {
             const more = copyFailures.length > 5 ? `\n... and ${copyFailures.length - 5} more` : '';
             vscode.window.showWarningMessage(
                 `ACT bootstrap: ${copyFailures.length} file(s) failed to copy. Workspace may be in a partial state — consider removing .github/ and retrying.\n\n${sample}${more}`
+            );
+        }
+
+        // 1b. Seed .github/ bootstrap templates from staged templates/ dir.
+        // These (e.g. cognitive-config.json) are intentionally absent from
+        // brain/ per the audit contract, so they don't appear in brainFiles
+        // above. We copy them once on first install; upgrades never touch them.
+        const templatesDir = path.join(__dirname, 'templates');
+        const templateSeedFailures = [];
+        for (const tpl of (manifest && Array.isArray(manifest.bootstrap_templates) ? manifest.bootstrap_templates : [])) {
+            const norm = String(tpl).replace(/\\/g, '/');
+            if (!norm.startsWith('.github/')) continue;
+            const dst = path.join(root, norm);
+            if (fs.existsSync(dst)) continue;
+            const src = path.join(templatesDir, path.basename(norm));
+            if (!fs.existsSync(src)) continue;
+            try {
+                fs.mkdirSync(path.dirname(dst), { recursive: true });
+                fs.copyFileSync(src, dst);
+                copied++;
+            } catch (err) {
+                templateSeedFailures.push({ rel: norm, err: err && err.message ? err.message : String(err) });
+            }
+        }
+        if (templateSeedFailures.length > 0) {
+            const sample = templateSeedFailures.map(f => `${f.rel}: ${f.err}`).join('\n');
+            vscode.window.showWarningMessage(
+                `ACT bootstrap: ${templateSeedFailures.length} bootstrap template(s) failed to seed.\n\n${sample}`
             );
         }
 
@@ -486,16 +547,46 @@ async function cmdUpgrade() {
     }
 
     const policy = loadSyncPolicy();
+    const manifest = loadEditionManifest();
+    const bootstrapTemplates = getBootstrapTemplateSet(manifest);
     const ghDir = getGitHubDir(root);
+
+    // Migrate legacy misplacement: prior Extension versions (<= 8.12.0) copied
+    // brain/.vscode/* into .github/.vscode/ instead of the workspace .vscode/.
+    // Move any survivors back to the right place before the regular sync runs.
+    let migrated = 0;
+    const legacyVscodeDir = path.join(ghDir, '.vscode');
+    if (fs.existsSync(legacyVscodeDir)) {
+        try {
+            for (const name of fs.readdirSync(legacyVscodeDir)) {
+                const legacy = path.join(legacyVscodeDir, name);
+                const target = path.join(root, '.vscode', name);
+                try {
+                    if (!fs.existsSync(target)) {
+                        fs.mkdirSync(path.dirname(target), { recursive: true });
+                        fs.copyFileSync(legacy, target);
+                        migrated++;
+                    }
+                    fs.unlinkSync(legacy);
+                } catch { /* best-effort per file */ }
+            }
+            // Remove the legacy dir if it ended up empty
+            try {
+                if (fs.readdirSync(legacyVscodeDir).length === 0) {
+                    fs.rmdirSync(legacyVscodeDir);
+                }
+            } catch { /* leave it alone if not empty */ }
+        } catch { /* best-effort */ }
+    }
+
     const brainFiles = listFilesRecursive(BRAIN_DIR);
 
     let updated = 0, skipped = 0;
     for (const rel of brainFiles) {
-        const ghRel = '.github/' + rel.replace(/\\/g, '/');
-        if (isHeirOwned(ghRel, policy)) { skipped++; continue; }
+        const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
+        if (bootstrapTemplates.has(wsRel) || isHeirOwned(wsRel, policy)) { skipped++; continue; }
 
         const src = path.join(BRAIN_DIR, rel);
-        const dst = path.join(ghDir, rel);
         // Only write if content changed
         if (fs.existsSync(dst)) {
             const srcHash = crypto.createHash('md5').update(fs.readFileSync(src)).digest('hex');
@@ -517,8 +608,9 @@ async function cmdUpgrade() {
         ? ''
         : doctorOk ? ' ✓ heir-doctor passed.' : ' ⚠ heir-doctor reported issues (run /status for details).';
 
+    const migratedLine = migrated > 0 ? ` ${migrated} legacy .vscode file(s) relocated.` : '';
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${doctorLine}`
+        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${migratedLine}${doctorLine}`
     );
 }
 
