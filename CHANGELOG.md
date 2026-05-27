@@ -6,6 +6,29 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.13.1] - 2026-05-27
+
+**Patch [behaviour] — hotfix: wire heir workspace-settings merger into the Extension surface.** Extension-only patch; brain payload unchanged (still v2.6.0). v8.13.0 shipped the brain payload (baseline JSON + merger module) but the Extension's `cmdBootstrap` and `cmdUpgrade` functions are independent JS implementations of the bootstrap/upgrade lifecycle that never invoked the merger. Heirs installing or upgrading via the GUI commands received the new brain files but their `.vscode/settings.json` was not updated, leaving the chat.*FilesLocations keys unwritten and the v8.13.0 / Edition v2.6.0 skill-discovery fix functionally non-operative for Marketplace heirs.
+
+### Extension surface changes
+
+- **NEW `mergeHeirWorkspaceSettings(root)` helper in `extension.js`** — lazy-loads `brain/scripts/shared/workspace-settings-merger.cjs` from the bundled brain, reads `brain/config/heir-workspace-settings-baseline.json`, and invokes the canonical merger. Best-effort: surface as a warning on failure, never abort the surrounding command. Both files are guarded with `fs.existsSync` so older brain payloads (without the merger) degrade silently to no-op.
+- **`cmdBootstrap`** invokes the helper after the marker write (Step 2b), mirroring `bootstrap-heir.cjs` order. New heirs bootstrapped via the Extension now receive the three discovery keys on first install.
+- **`cmdUpgrade`** invokes the helper after the marker update, before `runHeirDoctor`, mirroring `upgrade-self.cjs` Step 5b order. The upgrade success message now appends `" <N> workspace-settings key(s) merged"` when keys are upserted.
+
+### Heir-visible behaviour delta
+
+| Before v8.13.1 | After v8.13.1 |
+| --- | --- |
+| `ACT: Bootstrap This Workspace` left `.vscode/settings.json` untouched; heirs had to run `node .github/scripts/bootstrap-heir.cjs` manually to backfill the keys | Bootstrap merges the three `chat.*FilesLocations` keys into `.vscode/settings.json` automatically |
+| `ACT: Upgrade Brain` from v8.12.x to v8.13.0 wrote the new brain files but left workspace settings stale | Upgrade detects the baseline and merges any missing keys idempotently; upgrades on heirs already current report no-op |
+
+### Notes
+
+- **No Edition bump.** Brain payload byte-identical to v8.13.0 / Edition v2.6.0; only `extension.js` and `CHANGELOG.md` changed.
+- **Affected users.** Heirs who installed v8.13.0 before v8.13.1 ships will need to either reinstall v8.13.1 and run `ACT: Upgrade Brain` (idempotent — safe), or run `node .github/scripts/upgrade-self.cjs --apply` once to invoke the canonical script-side merger.
+- **Backup behaviour unchanged.** `cmdUpgrade` is still per-file MD5-compare in-place overwrite (HEIR_OWNED files skipped); rollback via `git`. The atomic-backup divergence between Extension `cmdUpgrade` and Edition `upgrade-self.cjs` is tracked separately for a future ADR.
+
 ## [8.13.0] - 2026-05-27
 
 **Minor [behaviour] — bundles Edition v2.6.0 brain.** Edition refresh release: brain payload moves from v2.5.0 to v2.6.0, adding the heir workspace-settings baseline that fixes the silent `.github/skills/local/<name>/SKILL.md` discovery bug. No Extension surface changes. Marketplace v8.13.0 bundles brain v2.6.0 per ADR-004 dual-track.

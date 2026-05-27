@@ -157,6 +157,36 @@ function copyFileSync(src, dst) {
     fs.copyFileSync(src, dst);
 }
 
+/**
+ * Merge the heir workspace-settings baseline into the heir's
+ * `.vscode/settings.json`. Mirrors the invocation pattern used by
+ * `brain/scripts/bootstrap-heir.cjs` and `brain/scripts/upgrade-self.cjs`
+ * (Edition v2.6.0+); needed here because the Extension's cmdBootstrap and
+ * cmdUpgrade are independent JS implementations that do not invoke the
+ * Edition shell scripts. Returns `{ ok, changes, error }` where `changes`
+ * is the count of upserted keys (0 = no-op). Best-effort: any failure is
+ * reported but does not abort the surrounding command.
+ *
+ * @param {string} root - heir workspace root
+ * @returns {{ ok: boolean, changes: number, error?: string }}
+ */
+function mergeHeirWorkspaceSettings(root) {
+    try {
+        const baselinePath = path.join(BRAIN_DIR, 'config', 'heir-workspace-settings-baseline.json');
+        if (!fs.existsSync(baselinePath)) return { ok: true, changes: 0 };
+        const mergerPath = path.join(BRAIN_DIR, 'scripts', 'shared', 'workspace-settings-merger.cjs');
+        if (!fs.existsSync(mergerPath)) return { ok: true, changes: 0 };
+        const { mergeWorkspaceSettings, writeMerged } = require(mergerPath);
+        const result = mergeWorkspaceSettings(root, baselinePath);
+        if (!result.ok) return { ok: false, changes: 0, error: result.error };
+        if (result.changes.length === 0) return { ok: true, changes: 0 };
+        writeMerged(result);
+        return { ok: true, changes: result.changes.length };
+    } catch (e) {
+        return { ok: false, changes: 0, error: e && e.message ? e.message : String(e) };
+    }
+}
+
 // ── AI-Memory (from _registry.cjs, adapted) ────────────────────────
 const KNOWN_CLOUD_PATTERNS = [
     { pattern: /^OneDrive/i, provider: 'OneDrive' },
@@ -389,6 +419,15 @@ async function cmdBootstrap() {
         fs.mkdirSync(path.dirname(markerPath), { recursive: true });
         fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
 
+        // 2b. Merge heir workspace-settings baseline into .vscode/settings.json.
+        // HEIR_OWNED file, per-key merge. Without this, .github/skills/local/<name>/SKILL.md
+        // and the matching prompts/agents local/ folders are invisible to chat.
+        // Mirrors brain/scripts/bootstrap-heir.cjs (Edition v2.6.0+).
+        const wsMerge = mergeHeirWorkspaceSettings(root);
+        if (!wsMerge.ok) {
+            vscode.window.showWarningMessage(`ACT bootstrap: workspace-settings merge skipped (${wsMerge.error}). Run "ACT: Upgrade Brain" to retry.`);
+        }
+
         // 3. Render copilot-instructions.local.md if absent
         const localCI = path.join(ghDir, 'copilot-instructions.local.md');
         if (!fs.existsSync(localCI)) {
@@ -602,6 +641,16 @@ async function cmdUpgrade() {
     marker.last_sync_at = new Date().toISOString();
     fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
 
+    // Step 5b: Merge heir workspace-settings baseline into .vscode/settings.json.
+    // HEIR_OWNED file, per-key merge. Idempotent — no-op when already current.
+    // Mirrors brain/scripts/upgrade-self.cjs Step 5b (Edition v2.6.0+). Without this,
+    // heirs upgrading via "ACT: Upgrade Brain" do not receive the chat.*FilesLocations
+    // keys needed to discover .github/skills/local/<name>/SKILL.md and equivalents.
+    const wsMerge = mergeHeirWorkspaceSettings(root);
+    const mergeLine = wsMerge.ok
+        ? (wsMerge.changes > 0 ? ` ${wsMerge.changes} workspace-settings key(s) merged.` : '')
+        : ` ⚠ workspace-settings merge skipped (${wsMerge.error}).`;
+
     // Validate the upgraded brain before declaring success.
     const doctorOk = await runHeirDoctor(root);
     const doctorLine = doctorOk === null
@@ -610,7 +659,7 @@ async function cmdUpgrade() {
 
     const migratedLine = migrated > 0 ? ` ${migrated} legacy .vscode file(s) relocated.` : '';
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${migratedLine}${doctorLine}`
+        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${migratedLine}${mergeLine}${doctorLine}`
     );
 }
 
