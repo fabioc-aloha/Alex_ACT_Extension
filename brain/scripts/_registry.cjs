@@ -12,7 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 
 const MEMORY_REPO_NAME = 'Alex_ACT_Memory';
 const MEMORY_REMOTE = 'https://github.com/fabioc-aloha/Alex_ACT_Memory.git';
@@ -41,7 +41,7 @@ function resolveMemoryBus(repoRoot) {
     // Level 2: not present but remote configured — clone
     if (MEMORY_REMOTE) {
         try {
-            execSync(`git clone "${MEMORY_REMOTE}" "${memoryPath}" --quiet`, {
+            execFileSync('git', ['clone', MEMORY_REMOTE, memoryPath, '--quiet'], {
                 stdio: ['ignore', 'ignore', 'ignore'],
                 timeout: 30000,
             });
@@ -69,7 +69,7 @@ function scaffoldMemoryRepo(memoryPath) {
         'README.md': '# Alex_ACT_Memory\\n\\nShared memory bus for ACT-Edition heirs.\\nSee docs/MIGRATION.md if upgrading from OneDrive-based AI-Memory.\\n',
         'announcements/README.md': '# Announcements\\n\\nRelease notes and guidance. Any heir writes here on release; all read on greeting.\\n',
         'feedback/README.md': '# Feedback\\n\\nHeir friction reports. Any heir writes here when encountering issues.\\n',
-        'knowledge/index.json': '[]',
+        'knowledge/index.json': '{"schema":"1.0","packages":[],"package_count":0,"generated":"' + new Date().toISOString().slice(0, 10) + '"}',
         'knowledge/README.md': '# Knowledge\\n\\nCurated knowledge packages. See index.json for registry.\\n',
         'profile/default/README.md': '# Default Profile\\n\\nFallback when no user-specific profile exists.\\n',
         '.gitignore': '# OS\\nThumbs.db\\n.DS_Store\\n\\n# Editor\\n.vscode/\\n*.swp\\n',
