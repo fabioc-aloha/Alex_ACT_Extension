@@ -2,12 +2,15 @@
 'use strict';
 
 /**
- * Phase A — Deterministic migration: AlexMaster v8.4.0 → ACT Edition v9.0.0
+ * Phase A — Deterministic migration: AlexMaster v8.4.0 → ACT Edition (current bundled version).
  *
- * Lifecycle: ships in v9.0.0 (2026-05-24). Falsification deadline 2026-08-24
- * (ADR-004 retrospective). Module retires when retrospective concludes
- * adoption is complete (~zero remaining AlexMaster installs detected in
- * activation telemetry).
+ * Lifecycle: shipped first in the v9.0.x line, retained on the v8.11.x line bundling
+ * Edition v2.4.0. Falsification deadline 2026-08-24 (ADR-004 retrospective).
+ * Module retires when retrospective concludes adoption is complete (~zero remaining
+ * AlexMaster installs detected in activation telemetry).
+ *
+ * The Edition version this module migrates *to* is whatever `brain/VERSION` reports
+ * at runtime; do not hardcode an Edition version here.
  *
  * Plan reference: Alex_ACT_Supervisor/docs/proposals/alexmaster-migration-2026-05-24.md §Phase 1
  * Decisions: Alex_ACT_Supervisor/docs/adrs/ADR-004-alexmaster-migration.md
@@ -374,7 +377,7 @@ function writeMigrationMarker(workspaceRoot, backupDir, classification) {
     const editionVersionPath = path.join(BRAIN_DIR, 'VERSION');
     const editionVersion = fs.existsSync(editionVersionPath)
         ? fs.readFileSync(editionVersionPath, 'utf8').trim()
-        : '9.0.0';
+        : 'unknown';
 
     const marker = {
         $schema: 'https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/fleet/schema/act-heir.schema.json',

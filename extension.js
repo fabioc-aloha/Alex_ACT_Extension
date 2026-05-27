@@ -40,20 +40,20 @@ function getBundledCounts() {
             return fs.readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory()).length;
         } catch { return 0; }
     };
-    const countMuscles = () => {
-        const dir = path.join(BRAIN_DIR, 'muscles');
-        if (!fs.existsSync(dir)) return 0;
-        try {
-            return fs.readdirSync(dir).filter(n => /\.(cjs|js|mjs|ts)$/.test(n)).length;
-        } catch { return 0; }
-    };
     return {
         instructions: count('instructions', '.instructions.md'),
         skills: countSkills(),
         prompts: count('prompts', '.prompt.md'),
         agents: count('agents', '.agent.md'),
-        muscles: countMuscles(),
     };
+}
+
+// Defensive marker reader. Returns null if the file is missing or malformed.
+function readMarkerSafe(markerPath) {
+    try {
+        if (!fs.existsSync(markerPath)) return null;
+        return JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    } catch { return null; }
 }
 
 function getWorkspaceRoot() {
@@ -218,7 +218,13 @@ async function cmdBootstrap() {
 
     const markerPath = getMarkerPath(root);
     if (fs.existsSync(markerPath)) {
-        const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+        const marker = readMarkerSafe(markerPath);
+        if (!marker) {
+            vscode.window.showErrorMessage(
+                `ACT: heir marker at ${path.relative(root, markerPath)} is corrupted. Restore from .github-backup-* or re-bootstrap after removing it.`
+            );
+            return;
+        }
         vscode.window.showWarningMessage(
             `This workspace is already an ACT heir (${marker.heir_id}, v${marker.edition_version}). Use "ACT: Upgrade Brain" instead.`
         );
@@ -242,7 +248,7 @@ async function cmdBootstrap() {
 
     const confirm = await vscode.window.showWarningMessage(
         `Bootstrap ACT Edition v${getBundledEditionVersion()} into this workspace?\n\n` +
-        `This will create .github/ with ${(() => { const c = getBundledCounts(); return `${c.instructions} instructions, ${c.skills} skills, ${c.prompts} prompts, ${c.agents} agents, and ${c.muscles} muscles`; })()}.`,
+        `This will create .github/ with ${(() => { const c = getBundledCounts(); return `${c.instructions} instructions, ${c.skills} skills, ${c.prompts} prompts, and ${c.agents} agents`; })()}.`,
         { modal: true },
         'Bootstrap'
     );
@@ -260,19 +266,31 @@ async function cmdBootstrap() {
         progress.report({ message: 'Copying brain files...' });
         const brainFiles = listFilesRecursive(BRAIN_DIR);
         let copied = 0;
+        const copyFailures = [];
         for (const rel of brainFiles) {
             const ghRel = '.github/' + rel.replace(/\\/g, '/');
-            if (isHeirOwned(ghRel, policy)) {
-                // Heir-owned template: only copy if absent
-                const dst = path.join(ghDir, rel);
-                if (!fs.existsSync(dst)) {
-                    copyFileSync(path.join(BRAIN_DIR, rel), dst);
+            try {
+                if (isHeirOwned(ghRel, policy)) {
+                    // Heir-owned template: only copy if absent
+                    const dst = path.join(ghDir, rel);
+                    if (!fs.existsSync(dst)) {
+                        copyFileSync(path.join(BRAIN_DIR, rel), dst);
+                        copied++;
+                    }
+                } else {
+                    copyFileSync(path.join(BRAIN_DIR, rel), path.join(ghDir, rel));
                     copied++;
                 }
-            } else {
-                copyFileSync(path.join(BRAIN_DIR, rel), path.join(ghDir, rel));
-                copied++;
+            } catch (err) {
+                copyFailures.push({ rel, err: err && err.message ? err.message : String(err) });
             }
+        }
+        if (copyFailures.length > 0) {
+            const sample = copyFailures.slice(0, 5).map(f => `${f.rel}: ${f.err}`).join('\n');
+            const more = copyFailures.length > 5 ? `\n... and ${copyFailures.length - 5} more` : '';
+            vscode.window.showWarningMessage(
+                `ACT bootstrap: ${copyFailures.length} file(s) failed to copy. Workspace may be in a partial state — consider removing .github/ and retrying.\n\n${sample}${more}`
+            );
         }
 
         // 2. Render marker
@@ -390,23 +408,7 @@ async function cmdBootstrap() {
 
         // Run heir-doctor and surface exit code; non-fatal if it fails.
         // 30s timeout so a wedged subprocess can't hang the bootstrap UI indefinitely.
-        let doctorOk = null;
-        const doctorPath = path.join(getGitHubDir(root), 'muscles', 'heir-doctor.cjs');
-        if (fs.existsSync(doctorPath)) {
-            try {
-                doctorOk = await new Promise((resolve) => {
-                    const child = spawn(process.execPath, [doctorPath], { cwd: root, windowsHide: true });
-                    let out = '';
-                    let settled = false;
-                    const finish = (result) => { if (settled) return; settled = true; clearTimeout(timer); resolve(result); };
-                    const timer = setTimeout(() => { try { child.kill(); } catch { /* */ } finish(false); }, 30000);
-                    child.stdout.on('data', d => { out += d.toString(); });
-                    child.stderr.on('data', d => { out += d.toString(); });
-                    child.on('close', code => finish(code === 0));
-                    child.on('error', () => finish(false));
-                });
-            } catch { doctorOk = false; }
-        }
+        const doctorOk = await runHeirDoctor(root);
 
         const doctorLine = doctorOk === null
             ? ''
@@ -448,7 +450,13 @@ async function cmdUpgrade() {
         return;
     }
 
-    const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    const marker = readMarkerSafe(markerPath);
+    if (!marker) {
+        vscode.window.showErrorMessage(
+            `ACT: heir marker at ${path.relative(root, markerPath)} is corrupted. Restore from .github-backup-* or re-bootstrap after removing it.`
+        );
+        return;
+    }
     const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
     const currentVersion = marker.edition_version || '0.0.0';
 
@@ -495,8 +503,14 @@ async function cmdUpgrade() {
     marker.last_sync_at = new Date().toISOString();
     fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
 
+    // Validate the upgraded brain before declaring success.
+    const doctorOk = await runHeirDoctor(root);
+    const doctorLine = doctorOk === null
+        ? ''
+        : doctorOk ? ' ✓ heir-doctor passed.' : ' ⚠ heir-doctor reported issues (run /status for details).';
+
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.`
+        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${doctorLine}`
     );
 }
 
@@ -513,12 +527,14 @@ async function cmdStatusBarMenu() {
     let editionVersion = '';
     let bundledVersion = '';
     if (isHeir) {
-        try {
-            const marker = JSON.parse(fs.readFileSync(getMarkerPath(root), 'utf8'));
-            editionVersion = marker.edition_version;
-            bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
-            upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
-        } catch { /* fall through */ }
+        const marker = readMarkerSafe(getMarkerPath(root));
+        if (marker) {
+            try {
+                editionVersion = marker.edition_version;
+                bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+                upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
+            } catch { /* fall through */ }
+        }
     }
 
     const items = [];
@@ -604,7 +620,13 @@ async function cmdStatus() {
         return;
     }
 
-    const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    const marker = readMarkerSafe(markerPath);
+    if (!marker) {
+        vscode.window.showErrorMessage(
+            `ACT: heir marker at ${path.relative(root, markerPath)} is corrupted. Restore from .github-backup-* or re-bootstrap after removing it.`
+        );
+        return;
+    }
     const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
     const ghDir = getGitHubDir(root);
     const instrCount = fs.existsSync(path.join(ghDir, 'instructions'))
@@ -635,15 +657,34 @@ async function cmdStatus() {
 }
 
 // ── Converter Commands ─────────────────────────────────────────────
+//
+// Each converter ships as a skill: brain/skills/<id>/scripts/<id>.cjs
+// (Edition v2.4.0 collapsed the former .github/muscles/ tree into
+// per-skill scripts/ folders. The runConverter resolver below honors
+// both the bundled brain layout and the workspace `.github/skills/`
+// layout written by bootstrap.)
 
 const CONVERTERS = {
-    'md-to-word': { muscle: 'md-to-word.cjs', ext: '.docx', label: 'Word' },
-    'md-to-html': { muscle: 'md-to-html.cjs', ext: '.html', label: 'HTML' },
-    'md-to-eml': { muscle: 'md-to-eml.cjs', ext: '.eml', label: 'Email' },
-    'md-to-txt': { muscle: 'md-to-txt.cjs', ext: '.txt', label: 'Plain Text' },
-    'docx-to-md': { muscle: 'docx-to-md.cjs', ext: '.md', label: 'Markdown' },
-    'html-to-md': { muscle: 'html-to-md.cjs', ext: '.md', label: 'Markdown' },
+    'md-to-word': { skill: 'md-to-word', script: 'md-to-word.cjs', ext: '.docx', label: 'Word' },
+    'md-to-html': { skill: 'md-to-html', script: 'md-to-html.cjs', ext: '.html', label: 'HTML' },
+    'md-to-eml':  { skill: 'md-to-eml',  script: 'md-to-eml.cjs',  ext: '.eml',  label: 'Email' },
+    'md-to-txt':  { skill: 'md-to-txt',  script: 'md-to-txt.cjs',  ext: '.txt',  label: 'Plain Text' },
+    'docx-to-md': { skill: 'docx-to-md', script: 'docx-to-md.cjs', ext: '.md',   label: 'Markdown' },
+    'html-to-md': { skill: 'html-to-md', script: 'html-to-md.cjs', ext: '.md',   label: 'Markdown' },
 };
+
+// Resolve converter script path. Prefer workspace-installed brain so
+// heir-local edits to converters take precedence over the bundled copy.
+function resolveConverterScript(converter, root) {
+    const rel = path.join('skills', converter.skill, 'scripts', converter.script);
+    const candidates = [];
+    if (root) candidates.push(path.join(root, '.github', rel));
+    candidates.push(path.join(BRAIN_DIR, rel));
+    for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
+    }
+    return null;
+}
 
 async function runConverter(converterId, fileUri) {
     const converter = CONVERTERS[converterId];
@@ -663,14 +704,13 @@ async function runConverter(converterId, fileUri) {
         }
     }
 
-    // Find the muscle script (check workspace .github/muscles first, then bundled brain)
+    // Find the converter script (workspace .github/skills/ first, then bundled brain)
     const root = getWorkspaceRoot();
-    let musclePath = root ? path.join(root, '.github', 'muscles', converter.muscle) : null;
-    if (!musclePath || !fs.existsSync(musclePath)) {
-        musclePath = path.join(BRAIN_DIR, 'muscles', converter.muscle);
-    }
-    if (!fs.existsSync(musclePath)) {
-        vscode.window.showErrorMessage(`ACT Convert: Muscle not found: ${converter.muscle}`);
+    const scriptPath = resolveConverterScript(converter, root);
+    if (!scriptPath) {
+        vscode.window.showErrorMessage(
+            `ACT Convert: ${converter.skill} script not found in workspace or bundled brain.`
+        );
         return;
     }
 
@@ -679,15 +719,45 @@ async function runConverter(converterId, fileUri) {
     const inputBase = path.basename(inputPath, path.extname(inputPath));
     const outputPath = path.join(inputDir, inputBase + converter.ext);
 
-    // Run the converter
+    // Run the converter in a terminal so the user can see streaming output.
     const terminal = vscode.window.createTerminal({ name: `ACT: ${converter.label}`, cwd: inputDir });
     terminal.show();
-    terminal.sendText(`node "${musclePath}" "${inputPath}" --out "${outputPath}"`);
+    terminal.sendText(`node "${scriptPath}" "${inputPath}" --out "${outputPath}"`);
 
     vscode.window.showInformationMessage(`ACT: Converting to ${converter.label}...`);
 }
 
-// ── Migration (AlexMaster v8.4.0 → ACT Edition v9.0.0) ────────────
+// ── heir-doctor runner ────────────────────────────────────────────
+//
+// Resolves the heir-doctor script from the workspace's installed brain
+// (Edition v2.4.0 layout: skills/greeting-checkin/scripts/heir-doctor.cjs)
+// or falls back to the bundled brain. Returns true / false / null where
+// null means "no doctor found, nothing was run".
+async function runHeirDoctor(root) {
+    if (!root) return null;
+    const rel = path.join('skills', 'greeting-checkin', 'scripts', 'heir-doctor.cjs');
+    const candidates = [
+        path.join(getGitHubDir(root), rel),
+        path.join(BRAIN_DIR, rel),
+    ];
+    const doctorPath = candidates.find(p => fs.existsSync(p));
+    if (!doctorPath) return null;
+    try {
+        return await new Promise((resolve) => {
+            const child = spawn(process.execPath, [doctorPath], { cwd: root, windowsHide: true });
+            let settled = false;
+            const finish = (result) => { if (settled) return; settled = true; clearTimeout(timer); resolve(result); };
+            const timer = setTimeout(() => { try { child.kill(); } catch { /* */ } finish(false); }, 30000);
+            // Drain pipes so the child doesn't block on a full stdout buffer.
+            child.stdout.on('data', () => {});
+            child.stderr.on('data', () => {});
+            child.on('close', code => finish(code === 0));
+            child.on('error', () => finish(false));
+        });
+    } catch { return false; }
+}
+
+// ── Migration (AlexMaster v8.4.0 → ACT Edition) ────────────
 const migration = require('./migration');
 
 // ── Activation ─────────────────────────────────────────────────────
@@ -746,8 +816,8 @@ function activate(context) {
     // Silent startup check: if workspace is a heir, show status bar item
     const root = getWorkspaceRoot();
     if (root && fs.existsSync(getMarkerPath(root))) {
-        try {
-            const marker = JSON.parse(fs.readFileSync(getMarkerPath(root), 'utf8'));
+        const marker = readMarkerSafe(getMarkerPath(root));
+        if (marker) try {
             const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
             const upgradeAvailable = bundledVersion !== marker.edition_version;
             const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);

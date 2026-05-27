@@ -6,6 +6,37 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [8.11.2] - 2026-05-27
+
+**Patch [behaviour] — fix converter + heir-doctor paths after Edition v2.4.0 layout shift.** Edition v2.4.0 collapsed `.github/muscles/` into per-skill `scripts/` folders (each converter now lives at `skills/<id>/scripts/<id>.cjs`; heir-doctor at `skills/greeting-checkin/scripts/heir-doctor.cjs`). The extension still resolved those scripts at the old `muscles/` path, so on v8.11.1 all six **ACT Convert** context-menu commands silently no-op'd and bootstrap's post-install health check never actually ran. This release rewires both code paths to the new locations and adds the same health check to upgrade. Also tightens marker reads (corrupted `.act-heir.json` now produces a clear error instead of a stack trace) and surfaces per-file copy failures during bootstrap so a partially-installed `.github/` is visible to the user.
+
+### Fixed
+
+- **Converters** (`extension.js#CONVERTERS` and `runConverter`) — six commands (`alex-act.convert.md-to-word`, `.md-to-html`, `.md-to-eml`, `.md-to-txt`, `.docx-to-md`, `.html-to-md`) now resolve their scripts under `skills/<id>/scripts/<id>.cjs`, checking the workspace `.github/skills/` first and falling back to the bundled brain. Previously they pointed at the obsolete `.github/muscles/` directory which no longer ships in Edition v2.4.0; every conversion silently failed.
+- **Bootstrap post-install health check** (`extension.js#cmdBootstrap`) — `heir-doctor.cjs` is now found at `skills/greeting-checkin/scripts/heir-doctor.cjs` instead of the old `muscles/heir-doctor.cjs`. On v8.11.1 the `fs.existsSync` guard skipped the check entirely, so users got `null` instead of a pass/fail line.
+- **Bootstrap confirm modal** — no longer reports "and 0 muscles" alongside the real counts. The `muscles` row was a leftover from the pre-v2.4.0 brain layout and always rendered as `0`.
+- **Corrupted `.act-heir.json`** — `cmdBootstrap`, `cmdUpgrade`, `cmdStatusBarMenu`, and the startup status-bar registration all now read the marker through a single defensive helper (`readMarkerSafe`). A malformed marker produces a one-line user-facing error pointing at the backup directory; previously it threw an unhelpful red modal mid-command.
+- **Migration marker fallback** (`migration.js#writeMigrationMarker`) — when `brain/VERSION` is somehow missing (build error, partial install), the marker now records `edition_version: 'unknown'` instead of a hardcoded `'9.0.0'`. The v9.0.0 line was claimed-then-abandoned per the v8.11.0 semver note; recording it as the migration target was misleading.
+
+### Added
+
+- **Health check after upgrade** (`extension.js#cmdUpgrade`) — `heir-doctor` now runs after the file copy completes and surfaces a `✓` / `⚠` line in the success notification. Upgrade was previously the one command that *didn't* validate its own output.
+- **Per-file copy failure reporting** (`extension.js#cmdBootstrap`) — the bootstrap copy loop now catches per-file errors and reports the first five with counts at the end. A partial `.github/` install caused by antivirus locking or a permission issue is now visible to the user instead of failing the whole `withProgress` with one cryptic message.
+- **`resolveConverterScript` / `runHeirDoctor` helpers** (`extension.js`) — shared resolution logic that honors workspace-installed brain over the bundled copy. Heir-local edits to a converter or to heir-doctor now take precedence.
+
+### Changed
+
+- **Stale comments** — refreshed the migration module's header docblock and the in-line section banner in `extension.js` to drop the "ships in v9.0.0" references. The migration code itself is unchanged; only the comments. v9.0.x was tagged and superseded per the v8.11.0 semver note; the surviving v8.11.x line bundles Edition v2.4.0.
+
+### Brain version
+
+Brain pinned to Edition v2.4.0 (unchanged from v8.11.1). No brain content changes; this is a surface-layer fix in the extension's path resolution.
+
+### Migration notes
+
+- **For users**: no action required. Auto-updates from v8.11.1. After update, the six ACT Convert context-menu commands will work for the first time on this Edition; previously-installed heirs do not need to re-bootstrap.
+- **Manual workaround for v8.11.1 users** (until update lands): convert from the chat side via `/<keyword>` (e.g. `/md-to-word`) or run the script directly via `node .github/skills/<id>/scripts/<id>.cjs <input>`.
+
 ## [8.11.1] - 2026-05-26
 
 **Patch [behaviour] — manifest-driven brain payload + bundled `.vscode/`.** Build script now reads Edition's `.github/config/edition-manifest.json` as the authoritative bill of materials and copies only the files it declares (instructions, prompts, agents, skills, scripts, configs, plus `copilot-instructions.md` and `VERSION`). The previous recursive sweep of `.github/` shipped whatever happened to live in Edition's tree; the manifest-driven copy makes Edition the single source of truth and fails the build loudly if a declared file is missing. Also added a new Step 3b that copies `.vscode/settings.json` (per `bootstrap_templates`) and `.vscode/markdown-light.css` (per `vscode_assets`) into `brain/.vscode/` so heir workspaces get the markdown rendering and welcome settings on install. Faithfulness now verified at the git-blob level: 138/138 byte-identical against Edition v2.4.0 tag (one intentional exclusion: `config/cognitive-config.json`, which is `HEIR_OWNED` per manifest spec).
