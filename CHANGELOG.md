@@ -6,6 +6,43 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.1.1] - 2026-05-29
+
+**Patch [behaviour] — protected-repo marker + backup-parity upgrade.**
+
+Closes ADR-XXX-extension-upgrade-strategy (deferred from v9.0.0). Two additive features; brain v3.0.0 stays pinned (no Edition refresh).
+
+### Added
+
+- **`.act-protected.json` constellation marker.** Constellation source repos (Supervisor / Edition / Mall / Extension / Memory) ship this marker so the Extension can refuse Bootstrap on curator-managed repos. Schema: `{ spec_version, kind, name, role, bootstrap_allowed: false, note }`. The Extension reads it via new helpers `getProtectedMarkerPath` and `readProtectedMarker`. Schema doc lives in the constellation repos.
+- **Status-bar four-state model.** Status-bar item now adapts to: (1) protected constellation repo — `$(lock) ACT — <Name>` with curator-managed tooltip; (2) workspace not initialized — `ACT — Bootstrap` discovery CTA; (3) heir current — `$(brain) ACT v<edition>`; (4) heir upgrade-ready — `$(brain) ACT v<edition> $(arrow-up)`. Single status-bar item, single click target (`alex-act.statusBarMenu`), four states.
+- **Status-bar menu “About This Repo” action** on protected repos. Surfaces the marker's `name` / `kind` / `role` / `note` in a modal so the user knows what curator-managed repo they're in.
+
+### Changed
+
+- **`cmdBootstrap` refuses on protected repos.** Reads `.act-protected.json` before any work; if present and `bootstrap_allowed !== true`, surfaces a modal warning and exits. Strict default: missing-field is treated as protected (opt-in via explicit `bootstrap_allowed: true`).
+- **`cmdUpgrade` rewritten for backup-parity with `upgrade-self.cjs`.** Prior behaviour overwrote edition-owned files in place. New flow mirrors the canonical heir upgrade script:
+  1. Load EDITION_OWNED / HEIR_OWNED policy from bundled brain `scripts/_registry.cjs` (refuse to proceed if missing)
+  2. Snapshot every heir-owned file (`.github/` + `.vscode/`) to a temp hold dir
+  3. Collect relocations: heir-added artefacts in edition-owned paths get queued for move into matching `local/` namespace
+  4. Detect collisions: if a relocation target already exists in the heir snapshot, route the relocated copy to a `-collision-<timestamp>` sibling so neither side is lost
+  5. Rename `.github/` to `.github-backup-YYYYMMDD-HHMMSS/` (timestamped, never overwrites)
+  6. Install fresh bundled brain to `.github/`; rollback by reverse-rename on any install failure
+  7. Mirror snapshotted `.vscode/` files into the backup dir (for diff-review convenience)
+  8. Seed any missing `bootstrap_templates` from staged `templates/` dir (mirrors `cmdBootstrap` Step 1b)
+  9. Restore heir-owned files from hold dir (with relocations applied)
+  10. Update `.act-heir.json` marker
+  11. Run `mergeHeirWorkspaceSettings` (Step 5b, unchanged from v9.0.0)
+  12. Cleanup hold dir; run `runHeirDoctor`
+  - On install failure: full rollback (remove half-installed `.github/`, reverse-rename backup, surface error).
+  - On recovery failure: heir-owned files preserved in both backup dir AND hold dir until next session.
+  - Success message reports recovered count, relocated count, collision count (if any), template seed count, doctor result, and backup dir name.
+  - Backup dir name now includes seconds (`YYYYMMDD-HHMMSS`) so multiple upgrades per day don't collide with the script's date-only naming.
+
+### Brain version
+
+Unchanged from v9.1.0 — Edition v3.0.0 (145 files, byte-identical to tagged manifest).
+
 ## [9.1.0] - 2026-05-28
 
 **Minor [behaviour] — architecture hardening + AlexMaster migration pipeline.**

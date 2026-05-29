@@ -3,6 +3,7 @@
 
 const vscode = require('vscode');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
@@ -74,6 +75,29 @@ function getGitHubDir(root) {
 
 function getMarkerPath(root) {
     return path.join(root, '.github', '.act-heir.json');
+}
+
+// ── Protected-repo marker ─────────────────────────────────────────
+// Constellation source repos (Supervisor, Edition, Mall, Extension,
+// Memory, Visual_Storytelling) ship `.act-protected.json` at their
+// repo root. The marker tells the Extension "do not offer bootstrap
+// here; show a padlock so the user knows this is a curator-managed
+// repo, not a heir workspace." Schema: { kind, name, role, note,
+// bootstrap_allowed }. Returns null if the file is missing or
+// unreadable — a missing marker is the normal case for everything
+// except the constellation's own repos.
+function getProtectedMarkerPath(root) {
+    return path.join(root, '.act-protected.json');
+}
+
+function readProtectedMarker(root) {
+    try {
+        const p = getProtectedMarkerPath(root);
+        if (!fs.existsSync(p)) return null;
+        const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (!parsed || typeof parsed !== 'object') return null;
+        return parsed;
+    } catch { return null; }
 }
 
 // ── Edition manifest (authoritative bill-of-materials) ─────────────
@@ -157,6 +181,24 @@ async function cmdBootstrap() {
     const root = getWorkspaceRoot();
     if (!root) {
         vscode.window.showErrorMessage('ACT: Open a workspace folder first.');
+        return;
+    }
+
+    // Refuse on constellation source repos. The padlock in the status bar
+    // already telegraphs this; the modal-blocking refusal is the safety net
+    // for when a user runs the command from the palette without first
+    // noticing the status-bar state.
+    //
+    // Strict default: presence of any `.act-protected.json` blocks bootstrap
+    // unless `bootstrap_allowed: true` is set explicitly. A marker that omits
+    // the field is treated as protected. Adding a permissive marker is a
+    // deliberate opt-in, not a default.
+    const protectedMarker = readProtectedMarker(root);
+    if (protectedMarker && protectedMarker.bootstrap_allowed !== true) {
+        vscode.window.showWarningMessage(
+            `Refusing to bootstrap: ${protectedMarker.name || 'this repo'} is a protected constellation repo (kind: ${protectedMarker.kind || 'unknown'}).\n\n${protectedMarker.note || 'Open a separate workspace and bootstrap there instead.'}`,
+            { modal: true }
+        );
         return;
     }
 
@@ -363,7 +405,195 @@ async function cmdBootstrap() {
 }
 
 /**
- * Upgrade: overwrite edition-owned files from bundled brain
+ * Load the canonical EDITION_OWNED / HEIR_OWNED policy lists from the bundled
+ * brain. These mirror what `brain/scripts/upgrade-self.cjs` uses, so the
+ * Extension's JS upgrade path and the Edition shell script see the same
+ * ownership boundaries. Returns null if the registry is missing or unreadable
+ * (in which case callers should refuse to proceed rather than risk
+ * misclassification).
+ *
+ * BRAIN_DIR is immutable from within an extension-host session (it's inside
+ * the extension install dir), so no require.cache invalidation is needed.
+ *
+ * @returns {{ EDITION_OWNED: string[], HEIR_OWNED: string[] } | null}
+ */
+function loadOwnershipPolicy() {
+    try {
+        const regPath = path.join(BRAIN_DIR, 'scripts', '_registry.cjs');
+        if (!fs.existsSync(regPath)) return null;
+        const reg = require(regPath);
+        if (!Array.isArray(reg.EDITION_OWNED) || !Array.isArray(reg.HEIR_OWNED)) return null;
+        return { EDITION_OWNED: reg.EDITION_OWNED, HEIR_OWNED: reg.HEIR_OWNED };
+    } catch { return null; }
+}
+
+/**
+ * Test whether a workspace-relative path matches any of the supplied glob
+ * patterns. Supports `**` (recursive) and `*` (single-segment) wildcards.
+ * Patterns and input are normalised to forward slashes. Mirrors the pattern
+ * matcher in `brain/scripts/upgrade-self.cjs` so classification stays
+ * identical between the script and the Extension's JS upgrade.
+ *
+ * @param {string} wsRel - workspace-relative path (forward slashes)
+ * @param {string[]} patterns - glob patterns
+ * @returns {boolean}
+ */
+function pathMatchesAny(wsRel, patterns) {
+    const norm = String(wsRel).replace(/\\/g, '/');
+    for (const raw of patterns) {
+        const p = String(raw).replace(/\\/g, '/');
+        if (p.endsWith('/**')) {
+            const prefix = p.slice(0, -3);
+            if (norm === prefix || norm.startsWith(prefix + '/')) return true;
+        } else if (p.includes('*')) {
+            const escaped = p.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
+            if (new RegExp('^' + escaped + '$').test(norm)) return true;
+        } else if (norm === p) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Walk the heir's `.github/` and `.vscode/` and collect every file that is
+ * heir-owned. Classification rule: HEIR_OWNED wins over EDITION_OWNED when
+ * both match (the local/ pattern is more specific than the parent dir
+ * pattern; precedence keeps classification unambiguous). Files that match
+ * neither are also treated as heir-owned ("unmatched: preserve" from the
+ * script). Always includes the canonical merge-point files even when
+ * absent from the heir's tree.
+ *
+ * @param {string} root - workspace root
+ * @param {string[]} editionOwned - EDITION_OWNED glob list
+ * @param {string[]} heirOwned - HEIR_OWNED glob list (precedence)
+ * @returns {string[]} workspace-relative paths (forward slashes)
+ */
+function collectHeirOwnedSnapshot(root, editionOwned, heirOwned) {
+    const owned = new Set();
+
+    const consider = (absDir, prefix) => {
+        if (!fs.existsSync(absDir)) return;
+        for (const rel of listFilesRecursive(absDir)) {
+            const wsRel = prefix + rel;
+            // Heir wins over Edition on overlap; unmatched defaults to heir.
+            if (pathMatchesAny(wsRel, heirOwned)) { owned.add(wsRel); continue; }
+            if (!pathMatchesAny(wsRel, editionOwned)) owned.add(wsRel);
+        }
+    };
+    consider(path.join(root, '.github'), '.github/');
+    consider(path.join(root, '.vscode'), '.vscode/');
+
+    // Always-recover even if policy ever drifts. These are heir merge points.
+    for (const f of [
+        '.github/.act-heir.json',
+        '.github/copilot-instructions.local.md',
+        '.github/config/cognitive-config.json',
+    ]) {
+        if (fs.existsSync(path.join(root, f))) owned.add(f);
+    }
+    return [...owned];
+}
+
+/**
+ * Identify heir-added artifacts that live in edition-owned paths and queue
+ * them for relocation into the matching `local/` namespace. Surviving an
+ * upgrade in their current location would mean the next Edition release
+ * could clobber them (if Edition happens to add a same-named artifact);
+ * moving them under `local/` makes them upgrade-safe.
+ *
+ * @param {string} ghDir - absolute path to heir's `.github/`
+ * @param {object|null} manifest - parsed edition-manifest.json
+ * @returns {Array<{ from: string, to: string }>} relocation pairs (workspace-relative)
+ */
+function collectHeirRelocations(ghDir, manifest) {
+    if (!manifest) return [];
+    const relocations = [];
+    const editionSkills = new Set(manifest.skills || []);
+    const editionInstr = new Set(manifest.instructions || []);
+    const editionPrompts = new Set(manifest.prompts || []);
+    const editionAgents = new Set(manifest.agents || []);
+
+    // Skills are named subdirectories under .github/skills/. Anything that's
+    // not in editionSkills and not the literal `local` folder is heir-added.
+    const skillsDir = path.join(ghDir, 'skills');
+    if (fs.existsSync(skillsDir)) {
+        for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            if (entry.name === 'local' || editionSkills.has(entry.name)) continue;
+            const sub = path.join(skillsDir, entry.name);
+            for (const rel of listFilesRecursive(sub)) {
+                const from = `.github/skills/${entry.name}/${rel}`;
+                const to = `.github/skills/local/${entry.name}/${rel}`;
+                relocations.push({ from, to });
+            }
+        }
+    }
+
+    // Instructions, prompts, agents: top-level files (subdir `local/` is
+    // already heir-owned and not relocated). Filename must match the
+    // expected extension and NOT appear in the manifest.
+    for (const [subdir, set, ext] of [
+        ['instructions', editionInstr, '.instructions.md'],
+        ['prompts', editionPrompts, '.prompt.md'],
+        ['agents', editionAgents, '.agent.md'],
+    ]) {
+        const dir = path.join(ghDir, subdir);
+        if (!fs.existsSync(dir)) continue;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            if (!entry.isFile()) continue;
+            if (!entry.name.endsWith(ext)) continue;
+            if (set.has(entry.name)) continue;
+            const from = `.github/${subdir}/${entry.name}`;
+            const to = `.github/${subdir}/local/${entry.name}`;
+            relocations.push({ from, to });
+        }
+    }
+    return relocations;
+}
+
+/**
+ * Compute a backup directory path with a timestamp suffix. Uses HH:MM:SS
+ * (not just YYYYMMDD like the script) so the Extension can be re-run
+ * within the same day without the "wait until tomorrow" friction the
+ * script imposes for its CLI workflow.
+ *
+ * @param {string} root - workspace root
+ * @returns {string} absolute path to a non-existent backup directory
+ */
+function computeBackupDirPath(root) {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const stamp =
+        now.getFullYear().toString() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) + '-' +
+        pad(now.getHours()) +
+        pad(now.getMinutes()) +
+        pad(now.getSeconds());
+    let candidate = path.join(root, `.github-backup-${stamp}`);
+    let i = 1;
+    while (fs.existsSync(candidate)) {
+        candidate = path.join(root, `.github-backup-${stamp}-${i}`);
+        i++;
+    }
+    return candidate;
+}
+
+/**
+ * Upgrade: backup → install fresh bundled brain → recover heir-owned files.
+ *
+ * Mirrors the contract of `brain/scripts/upgrade-self.cjs` (atomic
+ * backup-install-recover) but installs from the bundled brain instead of
+ * cloning Edition from GitHub. This preserves the Extension's pin to a
+ * specific Edition version (dual-track semver: Extension v8.x can bundle
+ * Edition v2.X.0) while giving heirs the same rollback safety net the
+ * script provides.
+ *
+ * On install failure: the backup is renamed back to `.github/` and an
+ * error is surfaced. On success: the backup directory is preserved at
+ * `<root>/.github-backup-YYYYMMDD-HHMMSS/` for the heir to inspect and
+ * delete manually when satisfied.
  */
 async function cmdUpgrade() {
     const root = getWorkspaceRoot();
@@ -395,7 +625,7 @@ async function cmdUpgrade() {
     const currentMajor = parseInt(currentVersion.split('.')[0], 10);
     if (bundledMajor > currentMajor) {
         const proceed = await vscode.window.showWarningMessage(
-            `This is a MAJOR upgrade (v${currentVersion} to v${bundledVersion}). Your local/ content is preserved, but edition-owned files will be replaced.`,
+            `This is a MAJOR upgrade (v${currentVersion} to v${bundledVersion}). Edition-owned files will be replaced; your local/ content and customizations are preserved in a timestamped backup directory.`,
             { modal: true },
             'Upgrade'
         );
@@ -406,9 +636,21 @@ async function cmdUpgrade() {
     const bootstrapTemplates = getBootstrapTemplateSet(manifest);
     const ghDir = getGitHubDir(root);
 
+    // Load the ownership policy from the bundled brain. Required for the
+    // backup-install-recover pattern; without it we can't classify heir-owned
+    // files correctly and would risk silent data loss. Refuse to proceed.
+    const policy = loadOwnershipPolicy();
+    if (!policy) {
+        vscode.window.showErrorMessage(
+            'ACT: cannot load ownership policy from bundled brain (brain/scripts/_registry.cjs missing or invalid). Reinstall the extension and retry.'
+        );
+        return;
+    }
+
     // Migrate legacy misplacement: prior Extension versions (<= 8.12.0) copied
     // brain/.vscode/* into .github/.vscode/ instead of the workspace .vscode/.
-    // Move any survivors back to the right place before the regular sync runs.
+    // Move any survivors back to the right place BEFORE the backup snapshot
+    // so the legacy files end up in the right place in the fresh state.
     let migrated = 0;
     const legacyVscodeDir = path.join(ghDir, '.vscode');
     if (fs.existsSync(legacyVscodeDir)) {
@@ -425,7 +667,6 @@ async function cmdUpgrade() {
                     fs.unlinkSync(legacy);
                 } catch { /* best-effort per file */ }
             }
-            // Remove the legacy dir if it ended up empty
             try {
                 if (fs.readdirSync(legacyVscodeDir).length === 0) {
                     fs.rmdirSync(legacyVscodeDir);
@@ -434,48 +675,224 @@ async function cmdUpgrade() {
         } catch { /* best-effort */ }
     }
 
-    const brainFiles = listFilesRecursive(BRAIN_DIR);
+    // ── 1. Snapshot heir-owned files + collect relocations ────────────
+    const heirOwnedFiles = collectHeirOwnedSnapshot(root, policy.EDITION_OWNED, policy.HEIR_OWNED);
+    const relocations = collectHeirRelocations(ghDir, manifest);
 
-    let updated = 0, skipped = 0;
-    for (const rel of brainFiles) {
-        const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
-        if (bootstrapTemplates.has(wsRel)) { skipped++; continue; }
-
-        const src = path.join(BRAIN_DIR, rel);
-        // Only write if content changed (SHA-256 for consistency with migration.js)
-        if (fs.existsSync(dst)) {
-            const srcHash = crypto.createHash('sha256').update(fs.readFileSync(src)).digest('hex');
-            const dstHash = crypto.createHash('sha256').update(fs.readFileSync(dst)).digest('hex');
-            if (srcHash === dstHash) continue;
+    // Collision check: if a heir simultaneously has `.github/skills/foo/` AND
+    // `.github/skills/local/foo/`, both end up writing to the same destination
+    // in step 5 (the heir-owned snapshot + the relocation source). Detect and
+    // route the relocation to a timestamped sibling so neither side is lost.
+    const ownedSet = new Set(heirOwnedFiles);
+    const collisionStamp = (() => {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return d.getFullYear().toString() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+            '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    })();
+    const collisionWarnings = [];
+    for (const r of relocations) {
+        if (ownedSet.has(r.to)) {
+            // Insert a `-collision-<stamp>` segment after the first folder
+            // under local/ so the relocated copy lands in a sibling dir.
+            // Example: .github/skills/local/foo/SKILL.md
+            //          → .github/skills/local/foo-collision-YYYYMMDD-HHMMSS/SKILL.md
+            const parts = r.to.split('/');
+            const localIdx = parts.indexOf('local');
+            if (localIdx >= 0 && localIdx + 1 < parts.length) {
+                parts[localIdx + 1] = `${parts[localIdx + 1]}-collision-${collisionStamp}`;
+                const newTo = parts.join('/');
+                collisionWarnings.push(`${r.from} → ${newTo} (existing ${r.to} preserved)`);
+                r.to = newTo;
+            } else {
+                // Fallback: append stamp to filename. Should not be reachable
+                // because collectHeirRelocations always routes through local/.
+                collisionWarnings.push(`${r.from}: collision at ${r.to} but no local/ segment to rewrite (skipping relocation)`);
+            }
         }
-        copyFileSync(src, dst);
-        updated++;
     }
 
-    // Update marker
-    marker.edition_version = bundledVersion;
-    marker.last_sync_at = new Date().toISOString();
-    fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+    // Make sure relocation source files are in the snapshot so we can move them.
+    const heirOwnedSet = new Set(heirOwnedFiles);
+    for (const r of relocations) heirOwnedSet.add(r.from);
+    const allOwned = [...heirOwnedSet];
+    const relocationMap = new Map(relocations.map(r => [r.from, r.to]));
 
-    // Step 5b: Merge heir workspace-settings baseline into .vscode/settings.json.
-    // HEIR_OWNED file, per-key merge. Idempotent — no-op when already current.
-    // Mirrors brain/scripts/upgrade-self.cjs Step 5b (Edition v2.6.0+). Without this,
-    // heirs upgrading via "ACT: Upgrade Brain" do not receive the chat.*FilesLocations
-    // keys needed to discover .github/skills/local/<name>/SKILL.md and equivalents.
+    // ── 2. Copy heir-owned files to a temp holding area ──────────────
+    const holdDir = fs.mkdtempSync(path.join(os.tmpdir(), 'alex-act-heir-owned-'));
+    const snapshotFailures = [];
+    for (const rel of allOwned) {
+        const src = path.join(root, rel);
+        if (!fs.existsSync(src)) continue;
+        try {
+            const dst = path.join(holdDir, rel);
+            fs.mkdirSync(path.dirname(dst), { recursive: true });
+            fs.copyFileSync(src, dst);
+        } catch (err) {
+            snapshotFailures.push({ rel, err: err && err.message ? err.message : String(err) });
+        }
+    }
+    if (snapshotFailures.length > 0) {
+        // Refuse to proceed — if we can't snapshot, the recovery step will
+        // silently lose files. Better to bail before touching anything.
+        try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+        const sample = snapshotFailures.slice(0, 3).map(f => `${f.rel}: ${f.err}`).join('\n');
+        vscode.window.showErrorMessage(
+            `ACT upgrade: failed to snapshot ${snapshotFailures.length} heir-owned file(s). Upgrade aborted, nothing changed.\n\n${sample}`
+        );
+        return;
+    }
+
+    // ── 3. Rename .github/ to a timestamped backup ──────────────────
+    const backupDir = computeBackupDirPath(root);
+    try {
+        fs.renameSync(ghDir, backupDir);
+    } catch (err) {
+        try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+        vscode.window.showErrorMessage(
+            `ACT upgrade: failed to rename .github/ to backup (${err && err.message ? err.message : err}). Upgrade aborted, nothing changed.`
+        );
+        return;
+    }
+
+    // ── 3b. Mirror snapshotted .vscode/ files into the backup dir ──────
+    // Step 3 only renames .github/. Heir-owned .vscode/ files (settings.json,
+    // extensions.json) are correctly recovered via the hold dir in step 5,
+    // but a user diffing against `.github-backup-*` needs them visible too —
+    // otherwise the "review then delete when satisfied" guidance is incomplete
+    // for .vscode/ changes. Cheap (typically 1–2 small JSON files).
+    for (const rel of allOwned) {
+        if (!rel.startsWith('.vscode/')) continue;
+        const src = path.join(holdDir, rel);
+        if (!fs.existsSync(src)) continue;
+        try {
+            const dst = path.join(backupDir, rel);
+            fs.mkdirSync(path.dirname(dst), { recursive: true });
+            fs.copyFileSync(src, dst);
+        } catch { /* best-effort — .vscode/ backup is a convenience, not a guarantee */ }
+    }
+
+    // ── 4. Install fresh brain from bundled BRAIN_DIR (rollback on failure) ──
+    const brainFiles = listFilesRecursive(BRAIN_DIR);
+    const installFailures = [];
+    try {
+        for (const rel of brainFiles) {
+            const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
+            // bootstrap_templates are heir-owned merge points; only seed if
+            // absent. After we recover from backup in step 5 they will be
+            // restored anyway, so this is a belt-and-suspenders no-op.
+            if (bootstrapTemplates.has(wsRel) && fs.existsSync(dst)) continue;
+            try {
+                copyFileSync(path.join(BRAIN_DIR, rel), dst);
+            } catch (err) {
+                installFailures.push({ rel: wsRel, err: err && err.message ? err.message : String(err) });
+            }
+        }
+    } catch (err) {
+        installFailures.push({ rel: '(unknown)', err: err && err.message ? err.message : String(err) });
+    }
+
+    if (installFailures.length > 0) {
+        // Rollback: remove the partially-installed .github/, rename backup back.
+        try { fs.rmSync(ghDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+        try { fs.renameSync(backupDir, ghDir); } catch { /* best-effort — backup may now be orphaned */ }
+        try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+        const sample = installFailures.slice(0, 3).map(f => `${f.rel}: ${f.err}`).join('\n');
+        vscode.window.showErrorMessage(
+            `ACT upgrade: install failed (${installFailures.length} file(s)). Rolled back to previous state.\n\n${sample}`
+        );
+        return;
+    }
+
+    // ── 4b. Seed bootstrap_templates from staged templates/ dir if missing ──
+    // Mirrors cmdBootstrap step 1b. The bootstrap_templates entries (e.g.
+    // .github/config/cognitive-config.json) are intentionally absent from
+    // brain/ per the faithfulness audit contract, so step 4 never installs
+    // them. Step 5 will restore them from snapshot if the heir had them.
+    // If the heir is missing any (manual deletion, partial bootstrap, schema
+    // bump that added a new template), this step reseeds the missing ones
+    // so the upgraded heir is never worse off than a fresh bootstrap.
+    const templatesDir = path.join(__dirname, 'templates');
+    const templateSeedFailures = [];
+    const heirOwnedAlreadySnapshot = new Set(allOwned);
+    for (const tpl of (manifest && Array.isArray(manifest.bootstrap_templates) ? manifest.bootstrap_templates : [])) {
+        const norm = String(tpl).replace(/\\/g, '/');
+        if (!norm.startsWith('.github/')) continue;
+        // Skip if step 5 will restore it from snapshot (heir already had it).
+        if (heirOwnedAlreadySnapshot.has(norm)) continue;
+        const dst = path.join(root, norm);
+        if (fs.existsSync(dst)) continue;
+        const src = path.join(templatesDir, path.basename(norm));
+        if (!fs.existsSync(src)) continue;
+        try {
+            fs.mkdirSync(path.dirname(dst), { recursive: true });
+            fs.copyFileSync(src, dst);
+        } catch (err) {
+            templateSeedFailures.push({ rel: norm, err: err && err.message ? err.message : String(err) });
+        }
+    }
+
+    // ── 5. Restore heir-owned files from the holding area (apply relocations) ──
+    let recovered = 0;
+    let relocated = 0;
+    const recoverFailures = [];
+    for (const rel of allOwned) {
+        const src = path.join(holdDir, rel);
+        if (!fs.existsSync(src)) continue;
+        const targetRel = relocationMap.has(rel) ? relocationMap.get(rel) : rel;
+        const dst = path.join(root, targetRel);
+        try {
+            fs.mkdirSync(path.dirname(dst), { recursive: true });
+            fs.copyFileSync(src, dst);
+            recovered++;
+            if (relocationMap.has(rel)) relocated++;
+        } catch (err) {
+            recoverFailures.push({ rel: targetRel, err: err && err.message ? err.message : String(err) });
+        }
+    }
+
+    // ── 6. Update marker ────────────────────────────────────────────
+    // Re-read because step 5 may have restored a heir-customized marker.
+    const restoredMarker = readMarkerSafe(markerPath) || marker;
+    restoredMarker.edition_version = bundledVersion;
+    restoredMarker.last_sync_at = new Date().toISOString();
+    fs.writeFileSync(markerPath, JSON.stringify(restoredMarker, null, 2) + '\n');
+
+    // ── 7. Merge heir workspace-settings baseline into .vscode/settings.json ──
     const wsMerge = mergeHeirWorkspaceSettings(root);
     const mergeLine = wsMerge.ok
         ? (wsMerge.changes > 0 ? ` ${wsMerge.changes} workspace-settings key(s) merged.` : '')
         : ` ⚠ workspace-settings merge skipped (${wsMerge.error}).`;
 
-    // Validate the upgraded brain before declaring success.
+    // ── 8. Cleanup hold dir ─────────────────────────────────────────
+    try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+
+    // ── 9. Validate the upgraded brain ──────────────────────────────
     const doctorOk = await runHeirDoctor(root);
     const doctorLine = doctorOk === null
         ? ''
         : doctorOk ? ' ✓ heir-doctor passed.' : ' ⚠ heir-doctor reported issues (run /status for details).';
 
     const migratedLine = migrated > 0 ? ` ${migrated} legacy .vscode file(s) relocated.` : '';
+    const relocatedLine = relocated > 0 ? ` ${relocated} heir-added artifact(s) moved to local/.` : '';
+    const collisionLine = collisionWarnings.length > 0
+        ? ` ⚠ ${collisionWarnings.length} relocation collision(s) resolved by timestamp suffix — see Output channel.`
+        : '';
+    const templateSeedLine = templateSeedFailures.length > 0
+        ? ` ⚠ ${templateSeedFailures.length} bootstrap template(s) failed to seed.`
+        : '';
+    const recoverLine = recoverFailures.length > 0
+        ? ` ⚠ ${recoverFailures.length} heir-owned file(s) failed to recover — check backup at ${path.basename(backupDir)}/.`
+        : '';
+
+    if (collisionWarnings.length > 0) {
+        const ch = getActivationOutputChannel();
+        ch.appendLine(`[upgrade] ${collisionWarnings.length} relocation collision(s) at ${new Date().toISOString()}:`);
+        for (const w of collisionWarnings) ch.appendLine(`  ${w}`);
+    }
+
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${updated} files updated, ${skipped} heir-owned skipped.${migratedLine}${mergeLine}${doctorLine}`
+        `Upgraded to Edition v${bundledVersion}. ${recovered} heir-owned file(s) recovered.${relocatedLine}${collisionLine}${templateSeedLine}${migratedLine}${mergeLine}${doctorLine}${recoverLine}\n\nBackup: ${path.basename(backupDir)}/ — review then delete when satisfied.`
     );
 }
 
@@ -486,7 +903,12 @@ async function cmdUpgrade() {
  */
 async function cmdStatusBarMenu() {
     const root = getWorkspaceRoot();
-    const isHeir = root && fs.existsSync(getMarkerPath(root));
+    const protectedMarker = root ? readProtectedMarker(root) : null;
+    const isProtected = !!protectedMarker;
+    // Protected wins over heir — the constellation repos never host heirs,
+    // but a stale `.act-heir.json` left over from migration shouldn't open
+    // the bootstrap path on a curator repo.
+    const isHeir = !isProtected && root && fs.existsSync(getMarkerPath(root));
 
     let upgradeAvailable = false;
     let editionVersion = '';
@@ -504,7 +926,21 @@ async function cmdStatusBarMenu() {
 
     const items = [];
 
-    if (isHeir) {
+    if (isProtected) {
+        // Protected constellation repo: no Bootstrap, no Upgrade. Surface
+        // what this repo is and link to its README. Extension's own
+        // walkthrough/README remain available below for general orientation.
+        items.push({
+            label: '$(info) About This Repo',
+            description: `${protectedMarker.kind || 'protected'} — ${protectedMarker.role || 'constellation repo'}`,
+            action: 'protectedAbout',
+        });
+        items.push({
+            label: '$(book) Open Repo README',
+            description: 'README.md at the repo root',
+            action: 'repoReadme',
+        });
+    } else if (isHeir) {
         items.push({
             label: '$(info) Show Status',
             description: `Edition v${editionVersion}${upgradeAvailable ? ` → v${bundledVersion} available` : ''}`,
@@ -536,9 +972,11 @@ async function cmdStatusBarMenu() {
     );
 
     const pick = await vscode.window.showQuickPick(items, {
-        placeHolder: isHeir
-            ? `Alex ACT v${editionVersion} • pick an action`
-            : 'Alex ACT — not a heir yet • pick an action',
+        placeHolder: isProtected
+            ? `Alex ACT — ${protectedMarker.name || 'protected repo'} (curator-managed)`
+            : isHeir
+                ? `Alex ACT v${editionVersion} • pick an action`
+                : 'Alex ACT — not a heir yet • pick an action',
         matchOnDescription: true,
     });
     if (!pick) return;
@@ -547,6 +985,25 @@ async function cmdStatusBarMenu() {
         case 'status': return cmdStatus();
         case 'upgrade': return cmdUpgrade();
         case 'bootstrap': return cmdBootstrap();
+        case 'protectedAbout': {
+            const lines = [
+                `${protectedMarker.name || 'Protected repo'}`,
+                `Kind: ${protectedMarker.kind || 'unknown'}`,
+                '',
+                protectedMarker.role || '',
+            ];
+            if (protectedMarker.note) lines.push('', protectedMarker.note);
+            vscode.window.showInformationMessage(lines.filter(Boolean).join('\n'), { modal: true });
+            return;
+        }
+        case 'repoReadme': {
+            const readme = root ? path.join(root, 'README.md') : null;
+            if (readme && fs.existsSync(readme)) {
+                return vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(readme));
+            }
+            vscode.window.showWarningMessage('No README.md at the repo root.');
+            return;
+        }
         case 'welcome':
             return vscode.commands.executeCommand('workbench.action.chat.open', { query: '/welcome' });
         case 'configure':
@@ -872,18 +1329,48 @@ function activate(context) {
             }
         } catch { /* silent */ }
 
-        // Silent startup check: if workspace is a heir, show status bar item
+        // Startup: show the ACT status bar item whenever a workspace is open.
+        // Four states share one click target (cmdStatusBarMenu adapts to each):
+        //   1. Protected constellation repo       → "$(lock) ACT — <Name>"
+        //      (Supervisor / Edition / Mall / Extension / Memory / etc.)
+        //   2. Workspace not initialized          → "ACT — Bootstrap" (discovery CTA)
+        //   3. Workspace is a heir, current       → "ACT v<edition>"
+        //   4. Workspace is a heir, upgrade ready → "ACT v<edition> ↑"
+        // The protected branch wins over the heir branch when both markers
+        // exist (the constellation repos never legitimately host a heir).
         const root = getWorkspaceRoot();
-        if (root && fs.existsSync(getMarkerPath(root))) {
-            const marker = readMarkerSafe(getMarkerPath(root));
-            if (marker) try {
-                const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
-                const upgradeAvailable = bundledVersion !== marker.edition_version;
+        if (root) {
+            try {
                 const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
-                statusBar.text = upgradeAvailable
-                    ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
-                    : `$(brain) ACT v${marker.edition_version}`;
-                statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
+                const protectedMarker = readProtectedMarker(root);
+                const heirMarkerPath = getMarkerPath(root);
+                const marker = !protectedMarker && fs.existsSync(heirMarkerPath)
+                    ? readMarkerSafe(heirMarkerPath)
+                    : null;
+                let bundledVersion = '';
+                try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
+
+                if (protectedMarker) {
+                    const name = protectedMarker.name || 'Protected';
+                    statusBar.text = `$(lock) ACT — ${name}`;
+                    statusBar.tooltip =
+                        `Alex ACT — ${name} (protected constellation repo)\n` +
+                        (protectedMarker.role || '') +
+                        (protectedMarker.note ? `\n\n${protectedMarker.note}` : '') +
+                        '\n\nClick for actions';
+                } else if (marker && marker.edition_version) {
+                    const upgradeAvailable = bundledVersion && bundledVersion !== marker.edition_version;
+                    statusBar.text = upgradeAvailable
+                        ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
+                        : `$(brain) ACT v${marker.edition_version}`;
+                    statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
+                } else {
+                    // Workspace is not an ACT heir yet — surface the bootstrap entry point.
+                    statusBar.text = '$(brain) ACT — Bootstrap';
+                    statusBar.tooltip = bundledVersion
+                        ? `Alex ACT Edition v${bundledVersion} bundled\nWorkspace not initialized — click to bootstrap`
+                        : 'Alex ACT Edition\nWorkspace not initialized — click to bootstrap';
+                }
                 statusBar.command = 'alex-act.statusBarMenu';
                 statusBar.show();
                 context.subscriptions.push(statusBar);

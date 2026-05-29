@@ -1,0 +1,8 @@
+{
+  "spec_version": "1.0",
+  "kind": "extension",
+  "name": "Alex_ACT_Extension",
+  "role": "VS Code Marketplace delivery channel for the Edition brain.",
+  "bootstrap_allowed": false,
+  "note": "Do not bootstrap a heir into the Extension repo. Brain edits originate in Edition; Extension only packages them for the Marketplace."
+}
