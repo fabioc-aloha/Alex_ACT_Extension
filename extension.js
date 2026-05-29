@@ -853,10 +853,23 @@ async function cmdUpgrade() {
 
     // ── 6. Update marker ────────────────────────────────────────────
     // Re-read because step 5 may have restored a heir-customized marker.
-    const restoredMarker = readMarkerSafe(markerPath) || marker;
-    restoredMarker.edition_version = bundledVersion;
-    restoredMarker.last_sync_at = new Date().toISOString();
-    fs.writeFileSync(markerPath, JSON.stringify(restoredMarker, null, 2) + '\n');
+    // Wrapped in try/catch: install succeeded and heir files are recovered,
+    // so a marker write failure is not fatal — but it must not throw, or
+    // steps 7-9 don't run and the hold dir leaks. Surface as warning; next
+    // upgrade will retry the bump.
+    let markerWriteFailed = false;
+    try {
+        const restoredMarker = readMarkerSafe(markerPath) || marker;
+        restoredMarker.edition_version = bundledVersion;
+        restoredMarker.last_sync_at = new Date().toISOString();
+        fs.writeFileSync(markerPath, JSON.stringify(restoredMarker, null, 2) + '\n');
+    } catch (err) {
+        markerWriteFailed = true;
+        const msg = err && err.message ? err.message : String(err);
+        vscode.window.showWarningMessage(
+            `ACT upgrade: brain installed and ${recovered} heir-owned file(s) recovered, but the heir marker write failed (${msg}). Run /status to verify; the next upgrade will retry the version bump.`
+        );
+    }
 
     // ── 7. Merge heir workspace-settings baseline into .vscode/settings.json ──
     const wsMerge = mergeHeirWorkspaceSettings(root);
@@ -865,7 +878,13 @@ async function cmdUpgrade() {
         : ` ⚠ workspace-settings merge skipped (${wsMerge.error}).`;
 
     // ── 8. Cleanup hold dir ─────────────────────────────────────────
-    try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+    // Preserve the hold dir on any partial failure (marker write, recover,
+    // template seed) so the heir can manually recover the missing pieces
+    // alongside the backup dir. Cleanup only on a fully-clean upgrade.
+    const upgradePartial = markerWriteFailed || recoverFailures.length > 0 || templateSeedFailures.length > 0;
+    if (!upgradePartial) {
+        try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
 
     // ── 9. Validate the upgraded brain ──────────────────────────────
     const doctorOk = await runHeirDoctor(root);
@@ -882,7 +901,10 @@ async function cmdUpgrade() {
         ? ` ⚠ ${templateSeedFailures.length} bootstrap template(s) failed to seed.`
         : '';
     const recoverLine = recoverFailures.length > 0
-        ? ` ⚠ ${recoverFailures.length} heir-owned file(s) failed to recover — check backup at ${path.basename(backupDir)}/.`
+        ? ` ⚠ ${recoverFailures.length} heir-owned file(s) failed to recover — check backup at ${path.basename(backupDir)}/ and hold dir at ${path.basename(holdDir)}/.`
+        : '';
+    const holdPreservedLine = upgradePartial
+        ? ` Hold dir preserved at ${path.basename(holdDir)}/ for manual review.`
         : '';
 
     if (collisionWarnings.length > 0) {
@@ -892,7 +914,7 @@ async function cmdUpgrade() {
     }
 
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${recovered} heir-owned file(s) recovered.${relocatedLine}${collisionLine}${templateSeedLine}${migratedLine}${mergeLine}${doctorLine}${recoverLine}\n\nBackup: ${path.basename(backupDir)}/ — review then delete when satisfied.`
+        `Upgraded to Edition v${bundledVersion}. ${recovered} heir-owned file(s) recovered.${relocatedLine}${collisionLine}${templateSeedLine}${migratedLine}${mergeLine}${doctorLine}${recoverLine}${holdPreservedLine}\n\nBackup: ${path.basename(backupDir)}/ — review then delete when satisfied.`
     );
 }
 
@@ -1338,44 +1360,61 @@ function activate(context) {
         //   4. Workspace is a heir, upgrade ready → "ACT v<edition> ↑"
         // The protected branch wins over the heir branch when both markers
         // exist (the constellation repos never legitimately host a heir).
-        const root = getWorkspaceRoot();
-        if (root) {
-            try {
-                const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
-                const protectedMarker = readProtectedMarker(root);
-                const heirMarkerPath = getMarkerPath(root);
-                const marker = !protectedMarker && fs.existsSync(heirMarkerPath)
-                    ? readMarkerSafe(heirMarkerPath)
-                    : null;
-                let bundledVersion = '';
-                try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
+        //
+        // The item is created once and its text/tooltip are recomputed on
+        // workspace-folder changes (Add Folder, Remove Folder, Open Folder)
+        // so the 4-state model stays accurate without a window reload.
+        try {
+            const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+            statusBar.command = 'alex-act.statusBarMenu';
+            context.subscriptions.push(statusBar);
 
-                if (protectedMarker) {
-                    const name = protectedMarker.name || 'Protected';
-                    statusBar.text = `$(lock) ACT — ${name}`;
-                    statusBar.tooltip =
-                        `Alex ACT — ${name} (protected constellation repo)\n` +
-                        (protectedMarker.role || '') +
-                        (protectedMarker.note ? `\n\n${protectedMarker.note}` : '') +
-                        '\n\nClick for actions';
-                } else if (marker && marker.edition_version) {
-                    const upgradeAvailable = bundledVersion && bundledVersion !== marker.edition_version;
-                    statusBar.text = upgradeAvailable
-                        ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
-                        : `$(brain) ACT v${marker.edition_version}`;
-                    statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
-                } else {
-                    // Workspace is not an ACT heir yet — surface the bootstrap entry point.
-                    statusBar.text = '$(brain) ACT — Bootstrap';
-                    statusBar.tooltip = bundledVersion
-                        ? `Alex ACT Edition v${bundledVersion} bundled\nWorkspace not initialized — click to bootstrap`
-                        : 'Alex ACT Edition\nWorkspace not initialized — click to bootstrap';
-                }
-                statusBar.command = 'alex-act.statusBarMenu';
-                statusBar.show();
-                context.subscriptions.push(statusBar);
-            } catch { /* silent */ }
-        }
+            const applyStatusBarState = (currentRoot) => {
+                if (!currentRoot) { statusBar.hide(); return; }
+                try {
+                    const protectedMarker = readProtectedMarker(currentRoot);
+                    const heirMarkerPath = getMarkerPath(currentRoot);
+                    const marker = !protectedMarker && fs.existsSync(heirMarkerPath)
+                        ? readMarkerSafe(heirMarkerPath)
+                        : null;
+                    let bundledVersion = '';
+                    try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
+
+                    if (protectedMarker) {
+                        const name = protectedMarker.name || 'Protected';
+                        statusBar.text = `$(lock) ACT — ${name}`;
+                        statusBar.tooltip =
+                            `Alex ACT — ${name} (protected constellation repo)\n` +
+                            (protectedMarker.role || '') +
+                            (protectedMarker.note ? `\n\n${protectedMarker.note}` : '') +
+                            '\n\nClick for actions';
+                    } else if (marker && marker.edition_version) {
+                        const upgradeAvailable = bundledVersion && bundledVersion !== marker.edition_version;
+                        statusBar.text = upgradeAvailable
+                            ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
+                            : `$(brain) ACT v${marker.edition_version}`;
+                        statusBar.tooltip = `Alex ACT Edition v${marker.edition_version}${upgradeAvailable ? ` — v${bundledVersion} available` : ''}\nClick for actions`;
+                    } else {
+                        // Workspace is not an ACT heir yet — surface the bootstrap entry point.
+                        statusBar.text = '$(brain) ACT — Bootstrap';
+                        statusBar.tooltip = bundledVersion
+                            ? `Alex ACT Edition v${bundledVersion} bundled\nWorkspace not initialized — click to bootstrap`
+                            : 'Alex ACT Edition\nWorkspace not initialized — click to bootstrap';
+                    }
+                    statusBar.show();
+                } catch { statusBar.hide(); }
+            };
+
+            applyStatusBarState(getWorkspaceRoot());
+
+            // Refresh on workspace folder changes so multi-root swaps and
+            // Add/Remove Folder operations don't leave stale 4-state info.
+            context.subscriptions.push(
+                vscode.workspace.onDidChangeWorkspaceFolders(() => {
+                    applyStatusBarState(getWorkspaceRoot());
+                })
+            );
+        } catch { /* silent */ }
 
         channel.appendLine('[activate] Activation completed.');
     } catch (err) {

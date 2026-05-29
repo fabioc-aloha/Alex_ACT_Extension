@@ -229,6 +229,10 @@ const vscodeignore = [
     'node_modules',
     '.vscode-test',
     'build-extension.cjs',
+    // Constellation source-repo marker. Runtime reads the *workspace-root*
+    // marker (the user's open folder), not the bundled one, so shipping
+    // it adds dead weight and could mislead installed users.
+    '.act-protected.json',
 ].join('\n') + '\n';
 fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 

@@ -39,6 +39,12 @@ Closes ADR-XXX-extension-upgrade-strategy (deferred from v9.0.0). Two additive f
   - Success message reports recovered count, relocated count, collision count (if any), template seed count, doctor result, and backup dir name.
   - Backup dir name now includes seconds (`YYYYMMDD-HHMMSS`) so multiple upgrades per day don't collide with the script's date-only naming.
 
+### Fixed (audit follow-up, pre-publish)
+
+- **Status bar refreshes on workspace-folder changes** (Medium). The four-state model is now recomputed via `onDidChangeWorkspaceFolders` instead of only at activation, so Add Folder / Remove Folder / Open Folder swaps no longer leave a stale `$(lock)` / `$(brain)` state on screen. The status bar item is created once and mutated in place.
+- **Heir marker write is guarded** (Medium). The post-rename `fs.writeFileSync` on `.github/.act-heir.json` was unprotected — an exception there would skip steps 7-9 and leak the hold dir. Wrapped in try/catch; install + recovery still succeed, marker bump is surfaced as a warning, hold dir is preserved on any partial failure (marker / recover / template seed) so the heir can manually reconcile alongside the backup dir.
+- **`.act-protected.json` excluded from VSIX** (Low). Runtime reads the workspace-root marker (where the user opened the folder), not the bundled one, so shipping it added dead weight and could mislead installed users into thinking the extension itself is "protected." `build-extension.cjs` Step 5 now appends `.act-protected.json` to the generated `.vscodeignore`.
+
 ### Brain version
 
 Unchanged from v9.1.0 — Edition v3.0.0 (145 files, byte-identical to tagged manifest).
