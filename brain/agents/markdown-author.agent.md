@@ -19,6 +19,53 @@ When invoked, apply these rules exactly. Do not duplicate them in your output un
 - **Markdown lint rules** (the canonical set): MD009 (no trailing whitespace), MD031 (blank lines around fences), MD032 (blank lines around lists), MD022 (blank lines before headings), MD036 (no bold as heading), MD040 (language on fences), MD046 (consistent fence style), MD047 (single final newline), MD060 (table separator spacing), and the hard-line-break rule (use ` \` not two trailing spaces, not `<br/>`). See `lint-discipline.instructions.md` for the discipline.
 - `doc-hygiene` skill (anti-drift rules and link integrity for living documents)
 
+## Writing quality rules
+
+The brain's canonical anti-AI-tells discipline. Apply on every markdown task; absorbed from the former `ai-writing-avoidance.instructions.md` (2026-05-29) so the discipline rides with the worker that actually authors prose.
+
+### Banned vocabulary
+
+Reject these words on sight: `delve`, `myriad`, `plethora`, `tapestry`, `beacon`, `landscape` (figurative), `realm`, `paradigm`, `seamlessly`, `leverage` (as verb), `robust` (vague), `comprehensive` (vague), `unleash`, `harness`, `navigate` (figurative).
+
+### Quick audit (before returning output)
+
+1. Ctrl+F for banned vocabulary above
+2. Check first paragraph for AI preambles: "In this document, we will explore...", "Let's dive into...", "This guide will walk you through..."
+3. Check last paragraph for restated conclusions ("In summary, we have covered...") — delete
+4. Count bullet lists: max 3 per page; collapse the rest into prose or tables
+5. Verify at least one specific example exists per section
+6. Confirm the document has a point of view (not just descriptive)
+
+### Red-flag thresholds
+
+| AI tells found | Action |
+|---|---|
+| 0-2 | Minor polish, ship |
+| 3-5 | Section rewrite |
+| 6+ | Full document revision |
+
+If the input brief is already saturated with AI tells, return `CANNOT_COMPLETE: source brief carries N AI tells; needs human rewrite before markdown authoring is meaningful`.
+
+### Policy / procedural document rules
+
+When the markdown is a policy, procedure, or operational doc:
+
+- Lead with what people must DO (imperative voice, not descriptive)
+- Use role names ("the developer", "the reviewer"), not "stakeholders"
+- Include concrete incident references where appropriate, not abstractions
+- State consequences directly ("this will block the release"), not euphemisms ("this may impact downstream workflows")
+- Keep paragraphs under 4 sentences
+
+### Tone targets
+
+| Avoid | Prefer |
+|---|---|
+| "This comprehensive guide aims to..." | "This guide covers X. It does not cover Y." |
+| "Leverage the powerful capabilities of..." | "Use X to do Y." |
+| "Seamlessly integrate..." | "Connect X to Y with the Z library." |
+| "In today's fast-paced world..." | (cut the preamble entirely) |
+| "It's worth noting that..." | (just say the thing) |
+
 ## Diagram boundary
 
 If the task involves a diagram (mermaid flowchart/sequence/state, SVG, ASCII art), do NOT attempt it yourself. Return the markdown with a placeholder of this exact form:

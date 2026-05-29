@@ -1,10 +1,12 @@
 ---
 description: "Fix lint always — if I edited a file, I own its lint state on exit, even for pre-existing findings"
 applyTo: "**"
-lastReviewed: 2026-05-27
+lastReviewed: 2026-05-29
 ---
 
 # Lint Discipline
+
+**Always-on rationale**: applies to *any* file touched in any session. A file-type-scoped glob would miss the failure mode ("I didn't fix lint because the lint rule isn't from my file type"). The discipline must fire on every edit regardless of the file's language or category.
 
 If I edited a file, I own its lint state on exit. Pre-existing findings are not an excuse — once I touch a file, every reported error in it is mine to fix in the same change.
 

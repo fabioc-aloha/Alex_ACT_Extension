@@ -8,7 +8,7 @@ Brain-runtime configuration files. Read by always-on instructions and slash prom
 |------|-------|---------------------|---------|
 | `edition-manifest.json` | Edition | Overwritten | `.github/scripts/build-edition-manifest.cjs` (generator), `.github/scripts/upgrade-self.cjs`, `.github/skills/greeting-checkin/scripts/heir-doctor.cjs` |
 | `welcome-baseline.json` | Edition | Overwritten | `.github/prompts/configure-vscode.prompt.md`, `.github/prompts/configure-vscode-verify.prompt.md` |
-| `cognitive-config.json` | Heir | First-installed, then frozen | `knowledge-coverage.instructions.md` (e.g. `showConfidenceBadge`), `feedback.prompt.md`, `initialize.prompt.md`, `mall-contribute.prompt.md`, `.github/scripts/_registry.cjs` (AI-Memory bus resolution) |
+| `cognitive-config.json` | Heir | First-installed, then frozen | `knowledge-coverage.instructions.md` (e.g. `showConfidenceBadge`), `feedback.prompt.md`, `initialize.prompt.md`, `mall-contribute.prompt.md`, `.github/scripts/_registry.cjs` (shared memory bus resolution) |
 | `README.md` | Edition | Overwritten | This file |
 
 ## Sync policy lives in code, not config

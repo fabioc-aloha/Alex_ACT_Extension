@@ -6,6 +6,23 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.2.0] - 2026-05-29
+
+**Minor [behaviour] — Edition refresh v3.0.0 → v3.0.1, plus protected-repo migration guard.**
+
+Pairs with Edition v3.0.1. Bundles the refreshed brain (additive: new `.act-protected.json` contract at Edition root, new `doc-hygiene` routing instruction, `anti-hallucination` skill mirrored from brain-auditor, terminology rename "AI-Memory" → "shared memory bus" across 9 heir-facing instructions / prompts). Also closes a defect where `migration.js` offered AlexMaster migration on protected constellation repos.
+
+### Changed
+
+- **Brain refresh**: bundled Edition pinned from `v3.0.0` → `v3.0.1`. Manifest-driven copy + faithfulness audit clean (147 declared, 146 byte-identical, 1 HEIR_OWNED skipped). Heirs on Edition `v3.0.0` upgrading via `/upgrade` receive the new contract + instruction + skill + terminology rename.
+- **`migration.js` — protected-repo guard.** `checkActivationTrigger` now short-circuits when `.act-protected.json` exists at the workspace root, so the AlexMaster-detection modal never fires in constellation repos (Supervisor / Edition / Mall / Extension / Memory). `migrateFromAlexMaster` adds the same check as defense-in-depth for palette / keybinding invocation, with a user-visible warning naming the protected repo. Closes a defect where Edition matched AlexMaster strong-signal heuristics (legacy `.github/skills/` layout, chronicles) and was offered as a migration target.
+
+### Heir-visible behaviour delta
+
+- Constellation repos no longer surface the "This workspace looks like an AlexMaster install" modal on startup.
+- `alex-act.migrate-from-alex-master` palette command refuses to run in constellation repos with a clear modal.
+- Heirs on Edition `v3.0.0` receive Edition `v3.0.1` artifacts on next `/upgrade`.
+
 ## [9.1.1] - 2026-05-29
 
 **Patch [behaviour] — protected-repo marker + backup-parity upgrade.**

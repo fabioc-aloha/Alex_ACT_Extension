@@ -545,6 +545,20 @@ async function migrateFromAlexMaster() {
     }
     const workspaceRoot = folders[0].uri.fsPath;
 
+    // Refuse to migrate protected constellation repos (Edition, Supervisor,
+    // Mall, Extension, Memory). Defense-in-depth: checkActivationTrigger
+    // already gates the modal, but the command can also be invoked from the
+    // palette or a keybinding.
+    const protectedPath = path.join(workspaceRoot, '.act-protected.json');
+    if (fs.existsSync(protectedPath)) {
+        const meta = readJsonSafe(protectedPath) || {};
+        const label = meta.name || meta.kind || 'constellation repo';
+        vscode.window.showWarningMessage(
+            `This workspace is a protected ${label}. Migration is disabled here — open a separate workspace to migrate an AlexMaster install.`
+        );
+        return;
+    }
+
     // Idempotency: don't re-run if already migrated
     const markerPath = path.join(workspaceRoot, '.github', '.act-heir.json');
     if (fs.existsSync(markerPath)) {
@@ -754,6 +768,12 @@ async function checkActivationTrigger(context) {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders || folders.length === 0) return;
     const workspaceRoot = folders[0].uri.fsPath;
+
+    // Protected constellation repos (Edition, Supervisor, Mall, Extension, Memory)
+    // declare themselves via .act-protected.json. They must never be offered as
+    // migration targets — they're not AlexMaster installs, they're the upstream
+    // sources the migration writes to.
+    if (fs.existsSync(path.join(workspaceRoot, '.act-protected.json'))) return;
 
     // Don't fire if already migrated or already an ACT heir
     const markerPath = path.join(workspaceRoot, '.github', '.act-heir.json');

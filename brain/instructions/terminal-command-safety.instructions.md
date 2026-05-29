@@ -1,10 +1,12 @@
 ---
 description: "Prevent terminal command failures from shell metacharacter interpretation, output capture issues, and hanging commands"
 applyTo: "**"
-lastReviewed: 2026-05-26
+lastReviewed: 2026-05-29
 ---
 
 # Terminal Command Safety
+
+**Always-on rationale**: terminal commands fire from any task regardless of file context (build, test, git, deployment, exploration). Safety rules — especially the Backtick Hazard — must apply before every `run_in_terminal` call. A pattern-scoped glob would silence the protection in the cases most likely to ship destructive failures.
 
 ## Backtick Hazard (Critical)
 

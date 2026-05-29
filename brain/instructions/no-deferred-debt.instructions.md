@@ -1,10 +1,12 @@
 ---
 description: "When you spot tech debt, stale references, or outdated content — fix it in the same turn. Do not defer."
 applyTo: "**"
-lastReviewed: 2026-05-26
+lastReviewed: 2026-05-29
 ---
 
 # No Deferred Debt
+
+**Always-on rationale**: debt surfaces in any context (script run, doc audit, file edit, command output). The "fix in same turn" discipline must fire whenever debt is observed, not only when working on specific file types. A scoped glob would create the failure mode it's designed to prevent.
 
 If a turn surfaces tech debt — stale references, dead links, outdated content, dead-letter prompts, hardcoded names that no longer exist — fix it in the same turn. Do not log it as "non-blocking" or "follow-up workstream." The cheapest moment to fix the debt is the moment it surfaced.
 
