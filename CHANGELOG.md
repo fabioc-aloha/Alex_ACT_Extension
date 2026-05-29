@@ -6,6 +6,30 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.3.0] - 2026-05-29
+
+**Minor [behaviour] — Edition refresh v3.0.1 → v3.1.0 (Phase 5a Plugin Mall catalog prompts + shared-core audit fixes).**
+
+Pairs with Edition v3.1.0. Bundles the brain refresh shipped in Edition `3cc2977` earlier today. Two distinct workstreams in one Edition tag:
+
+1. **Plugin Mall v3 catalog integration (Phase 5a)** — `/mall-search` rewritten + `/mall-show` new; both read the trust-scored Mall catalog (`catalog/index.json` + `catalog/stores/*.json`) per ADR-008. Heirs see Mall-curated entries first with full trust-signal breakdown.
+2. **Shared-core audit fixes** — five findings from this morning's brain-auditor dispatch against Edition closed by Edition v3.1.0 and now bundled here: `worldview-integration` → `worldview` (F1 high severity, broken xref in always-on `system-prompt-skepticism.instructions.md`); `/reframe` → `/problem-framing-audit` (F2 mirror gap); brain-auditor + brain-audit Phase 7b stale-architecture row + Mall sibling-repo handling (F4); critical-thinking 3-leg → 2-leg triad (F5, awareness skill body never shipped); converter Related-skill cleanup in docx-to-md + md-to-word (F3, 6 dead refs).
+
+### Changed
+
+- **Brain refresh**: bundled Edition pinned from `v3.0.1` → `v3.1.0`. Manifest-driven copy + faithfulness audit clean (148 declared, 147 byte-identical, 1 HEIR_OWNED skipped). Heirs on Edition `v3.0.1` upgrading via `/upgrade` receive the new prompts + shared-core fixes.
+
+### Heir-visible behaviour delta
+
+- A heir running `/mall-search code-review` after `/upgrade` sees Mall-curated entries at the top with trust scores (vs legacy CATALOG.json keyword match).
+- New `/mall-show <name>` command surfaces full signal breakdown — heirs can audit *why* a plugin scored what it scored before installing.
+- Always-on `system-prompt-skepticism` no longer references nonexistent `worldview-integration.instructions.md`.
+- `critical-thinking` documentation no longer describes a 3-leg triad with an `awareness` leg that doesn't ship.
+
+### Release context
+
+Triggered by the extension-auditor severity calibration shipped in Supervisor `12638de` today. Calibration says: 2+ unbundled commits including a previously-rated HIGH severity audit fix (F1) → staleness severity HIGH → recommend release this week. Cut today against Edition v3.1.0 (released ~30 min earlier).
+
 ## [9.2.0] - 2026-05-29
 
 **Minor [behaviour] — Edition refresh v3.0.0 → v3.0.1, plus protected-repo migration guard.**
