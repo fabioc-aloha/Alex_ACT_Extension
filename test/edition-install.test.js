@@ -9,9 +9,10 @@ const path = require('node:path');
 const {
     readAndValidateManifest,
     acquireLock,
+    getLockPath,
     installFromTarball,
-    MANIFEST_REL_PATH,
-    LOCKFILE_NAME
+    applyStaticFetchMarkerFields,
+    MANIFEST_REL_PATH
 } = require('../lib/edition-install');
 
 // ── Test helpers ──────────────────────────────────────────────────────
@@ -187,8 +188,8 @@ test('lock: second concurrent acquire → CONCURRENT_UPGRADE', () => {
 test('lock: stale lock (>10min mtime) broken atomically', () => {
     const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
     try {
-        // Manually create a stale lock with old mtime.
-        const lockPath = path.join(heir, LOCKFILE_NAME);
+        // Manually create a stale lock at the heir's computed tmpdir path with old mtime.
+        const lockPath = getLockPath(heir);
         fs.writeFileSync(lockPath, '{"stale": true}');
         const oldTime = (Date.now() - 11 * 60 * 1000) / 1000;
         fs.utimesSync(lockPath, oldTime, oldTime);
@@ -197,6 +198,35 @@ test('lock: stale lock (>10min mtime) broken atomically', () => {
         const lock = acquireLock(heir);
         lock.release();
         assert.equal(fs.existsSync(lockPath), false);
+    } finally { cleanup(heir); }
+});
+
+test('lock: getLockPath lives under os.tmpdir, not under heirRoot (audit F9)', () => {
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const lockPath = getLockPath(heir);
+        // Lock must NOT be under the heir workspace (would pollute git status).
+        assert.equal(lockPath.startsWith(heir + path.sep), false, 'lockfile must not live under heir root');
+        // Lock must be under the system temp dir.
+        assert.equal(lockPath.startsWith(os.tmpdir() + path.sep), true, 'lockfile must live under os.tmpdir()');
+        // Lock filename pattern is stable: alex-act-upgrade-<hex>.lock
+        assert.match(path.basename(lockPath), /^alex-act-upgrade-[0-9a-f]{16}\.lock$/);
+    } finally { cleanup(heir); }
+});
+
+test('lock: getLockPath is deterministic and path-canonicalised', () => {
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        // Same input -> same hash -> same path
+        assert.equal(getLockPath(heir), getLockPath(heir));
+        // Resolved variants of the same path -> same hash
+        const trailing = heir.endsWith(path.sep) ? heir : heir + path.sep;
+        assert.equal(getLockPath(heir), getLockPath(trailing.slice(0, -1)));
+        // Different workspaces -> different locks
+        const heir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+        try {
+            assert.notEqual(getLockPath(heir), getLockPath(heir2));
+        } finally { cleanup(heir2); }
     } finally { cleanup(heir); }
 });
 
@@ -286,4 +316,76 @@ test('install: refuses to write when manifest is invalid (heir unchanged)', () =
             'do not touch'
         );
     } finally { cleanup(tarball); cleanup(heir); }
+});
+
+// ── applyStaticFetchMarkerFields ──────────────────────────────────────
+// Pure-function coverage of the marker merge that extension.js performs at
+// bootstrap and upgrade time (audit F10 — fills the integration gap so the
+// shipped marker write does not depend on smoke tests alone).
+
+test('applyStaticFetchMarkerFields: null provenance returns marker unchanged', () => {
+    const input = { spec_version: '1.0', heir_id: 'x' };
+    const out = applyStaticFetchMarkerFields(input, null, '9.4.0');
+    assert.equal(out, input, 'returns the same reference when no merge applies');
+});
+
+test('applyStaticFetchMarkerFields: bundled source returns marker unchanged', () => {
+    const input = { spec_version: '1.0', heir_id: 'x' };
+    const out = applyStaticFetchMarkerFields(input, { source: 'bundled' }, '9.4.0');
+    assert.equal(out, input);
+});
+
+test('applyStaticFetchMarkerFields: github-fetch adds all six v2 fields', () => {
+    const input = { spec_version: '1.0', heir_id: 'x' };
+    const out = applyStaticFetchMarkerFields(
+        input,
+        { source: 'github-fetch', commitSha: 'abc123', authMode: 'authenticated' },
+        '9.4.0'
+    );
+    assert.equal(out.spec_version, '1.0', 'v1 field preserved');
+    assert.equal(out.heir_id, 'x', 'v1 field preserved');
+    assert.equal(out.source, 'github-fetch');
+    assert.equal(out.commit_sha, 'abc123');
+    assert.equal(out.auth_mode, 'authenticated');
+    assert.equal(out.extension_version, '9.4.0');
+    assert.equal(out.marker_schema_version, 2);
+    assert.match(out.fetched_at, /^\d{4}-\d{2}-\d{2}T/);
+});
+
+test('applyStaticFetchMarkerFields: does not mutate the input marker', () => {
+    const input = { spec_version: '1.0', heir_id: 'x' };
+    applyStaticFetchMarkerFields(
+        input,
+        { source: 'github-fetch', commitSha: 'abc', authMode: 'anonymous' },
+        '9.4.0'
+    );
+    assert.equal(input.source, undefined, 'input must remain a v1-shape marker');
+    assert.equal(input.marker_schema_version, undefined);
+});
+
+test('applyStaticFetchMarkerFields: missing commitSha → null', () => {
+    const out = applyStaticFetchMarkerFields(
+        {},
+        { source: 'github-fetch', authMode: 'anonymous' },
+        '9.4.0'
+    );
+    assert.equal(out.commit_sha, null);
+});
+
+test('applyStaticFetchMarkerFields: missing authMode defaults to anonymous', () => {
+    const out = applyStaticFetchMarkerFields(
+        {},
+        { source: 'github-fetch', commitSha: 'abc' },
+        '9.4.0'
+    );
+    assert.equal(out.auth_mode, 'anonymous');
+});
+
+test('applyStaticFetchMarkerFields: missing extensionVersion defaults to unknown', () => {
+    const out = applyStaticFetchMarkerFields(
+        {},
+        { source: 'github-fetch', commitSha: 'abc', authMode: 'anonymous' },
+        ''
+    );
+    assert.equal(out.extension_version, 'unknown');
 });

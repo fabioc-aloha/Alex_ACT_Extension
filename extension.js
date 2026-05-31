@@ -10,7 +10,7 @@ const { spawn } = require('child_process');
 const { listFilesRecursive } = require('./lib/fs-utils');
 const { EDITION_REPO } = require('./lib/edition-source');
 const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
-const { readAndValidateManifest, acquireLock } = require('./lib/edition-install');
+const { readAndValidateManifest, acquireLock, getLockPath, applyStaticFetchMarkerFields } = require('./lib/edition-install');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 // BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
@@ -357,7 +357,7 @@ async function cmdBootstrap() {
         lock = acquireLock(root);
     } catch (err) {
         const code = err && /** @type {any} */ (err).code;
-        const lockHint = `\n\nIf you're certain no other instance is running, delete ${path.join(root, '.act-upgrade.lock')} and retry.`;
+        const lockHint = `\n\nIf you're certain no other instance is running, delete ${getLockPath(root)} and retry.`;
         const msg = code === 'CONCURRENT_UPGRADE'
             ? `ACT: brain bootstrap already in progress in another VS Code window. Wait for it to finish, then retry.${lockHint}`
             : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
@@ -542,9 +542,11 @@ async function _cmdBootstrapBody(root) {
             if (match) marker.contact.owner = match[1];
         } catch { /* no git remote */ }
 
-        // Static-fetch v2 marker fields (ADR-009). Only populated when the
-        // brain came from a GitHub fetch; bundled-brain bootstraps keep the
-        // v1 shape unchanged. Additive — does not break v1 readers.
+        // Static-fetch v2 marker fields (ADR-009). When the brain came from
+        // a GitHub fetch this cycle, additively merge the v2 fields; when
+        // bundled, the v1 shape is preserved unchanged. The merge logic
+        // lives in lib/edition-install.js so unit tests can cover it without
+        // VS Code APIs (audit F10).
         //
         // Note on dual schema versioning: `spec_version` (kept at '1.0')
         // describes the heir-marker DOCUMENT format owned by the Extension.
@@ -553,17 +555,11 @@ async function _cmdBootstrapBody(root) {
         // the same JSON because they belong to different schemas with
         // different owners; readers concerned with the static-fetch contract
         // should read marker_schema_version, not spec_version.
-        if (_fetchProvenance && _fetchProvenance.source === 'github-fetch') {
-            marker.source = 'github-fetch';
-            marker.commit_sha = _fetchProvenance.commitSha || null;
-            marker.fetched_at = new Date().toISOString();
-            marker.auth_mode = _fetchProvenance.authMode || 'anonymous';
-            marker.extension_version = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
-            marker.marker_schema_version = 2;
-        }
+        const extVersion = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
+        const finalMarker = applyStaticFetchMarkerFields(marker, _fetchProvenance, extVersion);
 
         fs.mkdirSync(path.dirname(markerPath), { recursive: true });
-        fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
+        fs.writeFileSync(markerPath, JSON.stringify(finalMarker, null, 2) + '\n');
 
         // 2b. Merge heir workspace-settings baseline into .vscode/settings.json.
         // HEIR_OWNED file, per-key merge. Without this, .github/skills/local/<name>/SKILL.md
@@ -853,7 +849,7 @@ async function cmdUpgrade() {
         lock = acquireLock(root);
     } catch (err) {
         const code = err && /** @type {any} */ (err).code;
-        const lockHint = `\n\nIf you're certain no other instance is running, delete ${path.join(root, '.act-upgrade.lock')} and retry.`;
+        const lockHint = `\n\nIf you're certain no other instance is running, delete ${getLockPath(root)} and retry.`;
         const msg = code === 'CONCURRENT_UPGRADE'
             ? `ACT: brain upgrade already in progress in another VS Code window. Wait for it to finish, then retry.${lockHint}`
             : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
@@ -1141,19 +1137,12 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
         const restoredMarker = readMarkerSafe(markerPath) || marker;
         restoredMarker.edition_version = bundledVersion;
         restoredMarker.last_sync_at = new Date().toISOString();
-        // Static-fetch v2 marker fields (ADR-009). Only populated when the
-        // brain came from a GitHub fetch this upgrade cycle; bundled-brain
-        // upgrades leave the v1 fields untouched. Additive — does not break
-        // v1 readers.
-        if (_fetchProvenance && _fetchProvenance.source === 'github-fetch') {
-            restoredMarker.source = 'github-fetch';
-            restoredMarker.commit_sha = _fetchProvenance.commitSha || null;
-            restoredMarker.fetched_at = new Date().toISOString();
-            restoredMarker.auth_mode = _fetchProvenance.authMode || 'anonymous';
-            restoredMarker.extension_version = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
-            restoredMarker.marker_schema_version = 2;
-        }
-        fs.writeFileSync(markerPath, JSON.stringify(restoredMarker, null, 2) + '\n');
+        // Static-fetch v2 marker fields (ADR-009). Additive merge via the
+        // pure helper in lib/edition-install.js; see bootstrap path comment
+        // (and audit F10) for the rationale.
+        const extVersion = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
+        const finalMarker = applyStaticFetchMarkerFields(restoredMarker, _fetchProvenance, extVersion);
+        fs.writeFileSync(markerPath, JSON.stringify(finalMarker, null, 2) + '\n');
     } catch (err) {
         markerWriteFailed = true;
         const msg = err && err.message ? err.message : String(err);
