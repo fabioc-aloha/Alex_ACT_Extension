@@ -90,11 +90,10 @@ try {
 }
 console.log(`   Edition manifest spec_version=${manifest.spec_version}, edition_version=${manifest.edition_version}`);
 
-// ── Step 3c: Stage .github/ bootstrap templates outside brain/ ────
+// ── Step 3c: Stage .github/ bootstrap templates ──────────────────
 // HEIR_OWNED files declared in bootstrap_templates that target .github/
-// must NOT live under brain/ (audit-brain-faithfulness.cjs enforces their
-// absence). Stage them under templates/ so extension.js can seed them at
-// first install without polluting brain/.
+// are staged under templates/ so extension.js can seed them at first
+// install. Flat layout, basename-keyed lookup at runtime.
 console.log('3c. Staging .github/ bootstrap templates...');
 const TEMPLATES_DST = path.join(EXT_DIR, 'templates');
 fs.mkdirSync(TEMPLATES_DST, { recursive: true });
