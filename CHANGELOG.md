@@ -23,7 +23,7 @@ Bootstrap and Upgrade need to reach `api.github.com` and `codeload.github.com`. 
 - **`ACT: Diagnose Fetch` command**: writes a one-shot diagnostic report (extension version, mode, GitHub auth mode, ETag cache contents, heir marker fields) to a dedicated OutputChannel. Run this when reporting Bootstrap or Upgrade issues; paste the output into the bug report.
 - **Activation-time version check**: when a heir workspace is open, the Extension silently checks for a newer Edition release on startup and surfaces an information message ("Edition vNEW is available …") with **Upgrade now** / **Later** buttons. Inhibited to once per 24h per `(current, latest)` version pair. Uses ETag-conditional requests, so the typical cost is zero rate-limit budget after the first call.
 - **Opportunistic GitHub auth**: if you're already signed in to GitHub in VS Code, the Extension uses your session token for fetches, lifting the anonymous 60 req/hr ceiling to authenticated 5,000 req/hr. Never prompts.
-- **New marker fields in `.act-heir.json`**: `source` (`github-fetch` vs `bundled` legacy), `commit_sha` (resolved from the fetched release), `fetched_at` (ISO timestamp), `auth_mode`, `extension_version`. Surfaced via `Diagnose Fetch`.
+- **New marker fields in `.act-heir.json`**: `source` (`github-fetch` vs `bundled` legacy), `commit_sha` (resolved from the fetched release), `fetched_at` (ISO timestamp), `auth_mode`, `extension_version`, `marker_schema_version` (set to `2` when v2 fields are written). Surfaced via `Diagnose Fetch`. The pre-existing `spec_version` field is retained at `1.0` (document format owned by the Extension); `marker_schema_version` is the contract version owned by Edition's `extension-contract.json`.
 
 ### Changed
 

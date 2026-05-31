@@ -347,38 +347,42 @@ async function cmdBootstrap() {
         return;
     }
 
-    // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
-    // resolve BRAIN_DIR by downloading the latest Edition release tarball
-    // before any destructive op. Errors here leave the heir untouched.
+    // Per-heir lockfile FIRST (cheap, local fsync). If a concurrent VS Code
+    // window holds the lock, we surface that before paying for the ~5MB
+    // tarball download. Stale locks (>10min) are broken atomically inside
+    // acquireLock; the message below names the path so the user can force
+    // recovery if they're certain no other instance is running.
+    let lock;
     try {
-        await ensureBrainDir();
+        lock = acquireLock(root);
     } catch (err) {
-        vscode.window.showErrorMessage(`ACT bootstrap: ${err && err.message ? err.message : err}`);
+        const code = err && /** @type {any} */ (err).code;
+        const lockHint = `\n\nIf you're certain no other instance is running, delete ${path.join(root, '.act-upgrade.lock')} and retry.`;
+        const msg = code === 'CONCURRENT_UPGRADE'
+            ? `ACT: brain bootstrap already in progress in another VS Code window. Wait for it to finish, then retry.${lockHint}`
+            : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
+        vscode.window.showWarningMessage(msg);
         return;
     }
 
     try {
-        // Per-heir lockfile guards against two VS Code windows racing the
-        // same workspace. CONCURRENT_UPGRADE surfaces a friendly message;
-        // the second window does not touch the heir's brain.
-        let lock;
+        // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
+        // resolve BRAIN_DIR by downloading the latest Edition release tarball
+        // before any destructive op. Errors here leave the heir untouched.
         try {
-            lock = acquireLock(root);
+            await ensureBrainDir();
         } catch (err) {
-            const code = err && /** @type {any} */ (err).code;
-            const msg = code === 'CONCURRENT_UPGRADE'
-                ? 'ACT: brain bootstrap already in progress in another VS Code window. Wait for it to finish, then retry.'
-                : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
-            vscode.window.showWarningMessage(msg);
+            vscode.window.showErrorMessage(`ACT bootstrap: ${err && err.message ? err.message : err}`);
             return;
         }
+
         try {
             return await _cmdBootstrapBody(root);
         } finally {
-            lock.release();
+            if (_fetchCleanup) _fetchCleanup();
         }
     } finally {
-        if (_fetchCleanup) _fetchCleanup();
+        lock.release();
     }
 }
 
@@ -541,6 +545,14 @@ async function _cmdBootstrapBody(root) {
         // Static-fetch v2 marker fields (ADR-009). Only populated when the
         // brain came from a GitHub fetch; bundled-brain bootstraps keep the
         // v1 shape unchanged. Additive — does not break v1 readers.
+        //
+        // Note on dual schema versioning: `spec_version` (kept at '1.0')
+        // describes the heir-marker DOCUMENT format owned by the Extension.
+        // `marker_schema_version` (bumped to 2) describes the CONTRACT
+        // version Edition's extension-contract.json declares. Both live in
+        // the same JSON because they belong to different schemas with
+        // different owners; readers concerned with the static-fetch contract
+        // should read marker_schema_version, not spec_version.
         if (_fetchProvenance && _fetchProvenance.source === 'github-fetch') {
             marker.source = 'github-fetch';
             marker.commit_sha = _fetchProvenance.commitSha || null;
@@ -831,38 +843,42 @@ async function cmdUpgrade() {
         return;
     }
 
-    // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
-    // resolve BRAIN_DIR by downloading the latest Edition release tarball
-    // before any destructive op. Errors here leave the heir untouched.
+    // Per-heir lockfile FIRST (cheap, local fsync). If a concurrent VS Code
+    // window holds the lock, we surface that before paying for the ~5MB
+    // tarball download. Stale locks (>10min) are broken atomically inside
+    // acquireLock; the message below names the path so the user can force
+    // recovery if they're certain no other instance is running.
+    let lock;
     try {
-        await ensureBrainDir();
+        lock = acquireLock(root);
     } catch (err) {
-        vscode.window.showErrorMessage(`ACT upgrade: ${err && err.message ? err.message : err}`);
+        const code = err && /** @type {any} */ (err).code;
+        const lockHint = `\n\nIf you're certain no other instance is running, delete ${path.join(root, '.act-upgrade.lock')} and retry.`;
+        const msg = code === 'CONCURRENT_UPGRADE'
+            ? `ACT: brain upgrade already in progress in another VS Code window. Wait for it to finish, then retry.${lockHint}`
+            : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
+        vscode.window.showWarningMessage(msg);
         return;
     }
 
     try {
-        // Per-heir lockfile guards against two VS Code windows racing the
-        // same workspace. CONCURRENT_UPGRADE surfaces a friendly message;
-        // the second window does not touch the heir's brain.
-        let lock;
+        // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
+        // resolve BRAIN_DIR by downloading the latest Edition release tarball
+        // before any destructive op. Errors here leave the heir untouched.
         try {
-            lock = acquireLock(root);
+            await ensureBrainDir();
         } catch (err) {
-            const code = err && /** @type {any} */ (err).code;
-            const msg = code === 'CONCURRENT_UPGRADE'
-                ? 'ACT: brain upgrade already in progress in another VS Code window. Wait for it to finish, then retry.'
-                : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
-            vscode.window.showWarningMessage(msg);
+            vscode.window.showErrorMessage(`ACT upgrade: ${err && err.message ? err.message : err}`);
             return;
         }
+
         try {
             return await _cmdUpgradeBody(root, markerPath, marker);
         } finally {
-            lock.release();
+            if (_fetchCleanup) _fetchCleanup();
         }
     } finally {
-        if (_fetchCleanup) _fetchCleanup();
+        lock.release();
     }
 }
 
