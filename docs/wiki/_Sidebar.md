@@ -13,6 +13,7 @@
 
 **Tools and depth**
 
+- [How It Fits Together](How-It-Fits-Together)
 - [The Plugin Mall](The-Plugin-Mall)
 - [The Edition Template](The-Edition-Template)
 - [Project Memory](Project-Memory)

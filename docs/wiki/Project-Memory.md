@@ -91,11 +91,32 @@ Two ways:
 
 Neither action is destructive beyond the local folder. You can always bootstrap again.
 
+## Project memory vs Copilot memory
+
+Project memory (`.github/`) is **not** the same thing as VS Code's Copilot memory tool. They sit at different layers and you'll see both surfaced in the chat:
+
+| Surface | What it is | Scope | Edited by |
+| --- | --- | --- | --- |
+| **Project memory** (`.github/`) | The brain Alex reads on every turn in this workspace | Per-project, on disk | You (plain text) |
+| **Copilot memory** (`/memories/`) | VS Code's built-in memory tool with three persistence tiers | User / repo / session | Alex via the memory tool |
+
+Copilot memory has three scopes:
+
+- `/memories/` — **user tier**: workflow preferences, communication style, tool patterns. Survives across all workspaces and conversations. First ~200 lines auto-load on every session.
+- `/memories/repo/` — **repo tier**: build commands, code conventions, architecture facts. Scoped to the current workspace; persists across conversations; read on demand.
+- `/memories/session/` — **session tier**: in-progress notes for the current conversation only. Cleared at conversation end.
+
+The two layers are complementary, not redundant: project memory holds the **brain** (how Alex reasons in this codebase), Copilot memory holds **preferences and facts** (what Alex remembers about you and this codebase across sessions). When you ask Alex to "remember" something, it picks the right surface based on scope — a workflow preference goes to `/memories/`, a project convention can go to either `.github/instructions/` (always-on rule) or `/memories/repo/` (recallable fact).
+
+For cross-project handoffs and announcements, neither surface is the right one — see [AI-Memory](AI-Memory) for the shared bus that links every ACT workspace on your machine. For the full six-piece architecture (Edition, Extension, Mall, project memory, shared memory, Copilot memory), see [How It Fits Together](How-It-Fits-Together).
+
 ## Related reading
 
+- [How It Fits Together](How-It-Fits-Together): the six pieces in one map, including where Copilot memory fits.
 - [The Plugin Mall](The-Plugin-Mall): where skills come from before they get installed into `.github/skills/`.
+- [AI-Memory](AI-Memory): the shared cross-project channel that sits above per-project memory.
 - [The CSAR Loop](The-CSAR-Loop): the conversational discipline that benefits most from persistent memory.
 
 ---
 
-*Last reviewed: 2026-05-25*
+*Last reviewed: 2026-05-31*

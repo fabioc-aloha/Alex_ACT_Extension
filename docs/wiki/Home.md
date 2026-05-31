@@ -22,12 +22,17 @@ Read these in order:
 
 ### I want depth on a specific project
 
+- **[How It Fits Together](How-It-Fits-Together)**: the six pieces (Edition, Extension, Mall, project memory, shared memory, Copilot memory) and why they're split.
 - **[The Plugin Mall](The-Plugin-Mall)**: 300+ curated skills you can pull in on demand.
 - **[The Edition Template](The-Edition-Template)**: how brain versioning works, using Edition directly without the Extension.
 - **[Project Memory](Project-Memory)**: how Alex remembers your project across sessions.
 - **[AI-Memory](AI-Memory)**: the cross-project channel that links all your ACT workspaces.
 - **[Document Conversion](Document-Conversion)**: right-click between Markdown, Word, HTML, plain text, and email messages.
 - **[Working in Other Languages](Working-in-Other-Languages)**: Portuguese, Spanish, French, German, Italian, Japanese, Chinese, and others.
+
+### What's new in v9.4.0
+
+The Extension now fetches the latest Edition brain from GitHub on demand instead of bundling it in the VSIX. Edition releases reach your workspace immediately on tag-push — no waiting for a Marketplace review cycle. Bootstrap and Upgrade need network access to `api.github.com` and `codeload.github.com`. A new **`ACT: Diagnose Fetch`** command surfaces cache state, auth mode, and marker fields for bug reports. See [How It Fits Together](How-It-Fits-Together) for the architecture, [The Edition Template](The-Edition-Template) for the upgrade lifecycle, and [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help) for failure-mode guidance.
 
 ### Something is off
 

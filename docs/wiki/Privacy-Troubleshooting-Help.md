@@ -66,6 +66,12 @@ If `.github/` got corrupted or you want a clean slate:
 
 See [Project Memory](Project-Memory) for details.
 
+### Bootstrap or Upgrade fails with a network error
+
+Starting in Extension v9.4.0 the brain is fetched from GitHub on demand rather than bundled in the VSIX (see [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md)). Bootstrap and Upgrade need to reach `api.github.com` and `codeload.github.com`. If you are behind a corporate proxy, ask your admin to allowlist those two hosts.
+
+If a fetch fails for any reason, run **ACT: Diagnose Fetch** from the Command Palette. It writes a short diagnostic report (extension version, cache state, GitHub auth mode, heir marker fields) to a dedicated output channel. Paste that into your bug report so the maintainers can triage without guessing. Air-gapped installs are not supported (explicit accepted cost per ADR-009).
+
 ### Plugin Mall search returns nothing
 
 - Make sure the extension is fully loaded (give it a few seconds after startup).
