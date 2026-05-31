@@ -85,12 +85,39 @@ test('listFilesRecursive: empty directory returns []', () => {
     } finally { cleanup(root); }
 });
 
-// ── Symlink-loop protection ──────────────────────────────────────────
-// Skipped on Windows when not running elevated (junctions need permission).
-// The protection itself is platform-agnostic; this test exercises it where
-// the runtime permits the setup.
+// ── Symlink-loop protection (deterministic via _seen parameter) ───────
+// The internal `_seen` Set parameter lets tests exercise the cycle guard
+// without needing OS-level symlink permissions (Windows often refuses).
 
-test('listFilesRecursive: symlink cycle does not infinite-loop', (t) => {
+test('listFilesRecursive: pre-populated _seen short-circuits the walk', () => {
+    const root = mkRoot();
+    try {
+        fs.writeFileSync(path.join(root, 'should-not-appear.md'), 'x');
+        // Pre-populate _seen with the real path of root. The walk must
+        // short-circuit before reading any entries.
+        const seen = new Set([fs.realpathSync(root)]);
+        const files = listFilesRecursive(root, undefined, seen, 0);
+        assert.deepEqual(files, [], 'cycle guard must return [] when real path already seen');
+    } finally { cleanup(root); }
+});
+
+test('listFilesRecursive: _seen accumulates real paths during walk', () => {
+    const root = mkRoot();
+    try {
+        fs.mkdirSync(path.join(root, 'a'));
+        fs.writeFileSync(path.join(root, 'a', 'leaf.md'), 'x');
+        const seen = new Set();
+        listFilesRecursive(root, undefined, seen, 0);
+        // After the walk, _seen must contain the root + every subdirectory
+        // it descended into. This pins the contract that the cycle guard
+        // actually populates _seen (mutation: skipping _seen.add() would
+        // re-walk subdirectories forever in a real cycle).
+        assert.equal(seen.has(fs.realpathSync(root)), true, 'root real-path added to _seen');
+        assert.equal(seen.has(fs.realpathSync(path.join(root, 'a'))), true, 'subdir real-path added to _seen');
+    } finally { cleanup(root); }
+});
+
+test('listFilesRecursive: symlink cycle does not infinite-loop (best-effort, may skip)', (t) => {
     const root = mkRoot();
     try {
         fs.mkdirSync(path.join(root, 'real'));
@@ -100,23 +127,34 @@ test('listFilesRecursive: symlink cycle does not infinite-loop', (t) => {
             fs.symlinkSync(path.join(root, 'real'), path.join(root, 'real', 'loop'), 'junction');
         } catch (err) {
             // Windows without elevated privileges, or other symlink restriction.
-            t.skip(`symlink creation refused (${err && /** @type {any} */ (err).code || err}); test environment lacks symlink permissions`);
+            // The deterministic _seen tests above already cover the contract;
+            // this test is an extra integration check on platforms that allow it.
+            t.skip(`symlink creation refused (${err && /** @type {any} */ (err).code || err}); deterministic _seen tests cover the contract`);
             return;
         }
-        // Walk must terminate. We do not assert on exact output (platform
-        // varies on whether the symlink itself shows up); only that it
-        // doesn't hang and doesn't blow the stack.
         const files = listFilesRecursive(root);
         assert.equal(Array.isArray(files), true);
-        // The real file under the cycle should appear at most once via the
-        // direct path; the cycle's recursion via loop/ is suppressed by the
-        // _seen real-path set.
         const realFileHits = files.filter(f => f.endsWith('real/file.md')).length;
         assert.equal(realFileHits, 1, 'each real file should appear exactly once');
     } finally { cleanup(root); }
 });
 
-test('listFilesRecursive: depth cap protects against pathological nesting', () => {
+test('listFilesRecursive: depth cap returns [] above MAX_RECURSION_DEPTH', () => {
+    const root = mkRoot();
+    try {
+        fs.writeFileSync(path.join(root, 'leaf.md'), 'x');
+        // Calling with _depth=51 (above the cap of 50) must short-circuit
+        // and return [] without reading any entries. Mutation: removing the
+        // depth cap would let this proceed and return ['leaf.md'].
+        const above = listFilesRecursive(root, undefined, undefined, 51);
+        assert.deepEqual(above, [], 'depth-cap guard must return [] above MAX_RECURSION_DEPTH');
+        // Sanity: at depth 0 the leaf is found.
+        const at = listFilesRecursive(root, undefined, undefined, 0);
+        assert.deepEqual(at, ['leaf.md']);
+    } finally { cleanup(root); }
+});
+
+test('listFilesRecursive: pathological 60-level chain terminates without throwing', () => {
     const root = mkRoot();
     try {
         // Build a 60-level deep chain. MAX_RECURSION_DEPTH is 50; we cap
@@ -128,9 +166,12 @@ test('listFilesRecursive: depth cap protects against pathological nesting', () =
             fs.mkdirSync(p);
         }
         fs.writeFileSync(path.join(p, 'leaf.txt'), 'leaf');
-        // Should not throw; should return an empty list (or whatever it
-        // walked up to depth 50). The defensive assertion is "did not throw".
+        // Should not throw; should return only the entries reachable below
+        // the cap. The defensive assertion is "did not throw" + "truncated".
         const files = listFilesRecursive(root);
         assert.equal(Array.isArray(files), true, 'depth cap kept the walk terminating');
+        // The leaf is at depth 60; with MAX_RECURSION_DEPTH=50 it must NOT
+        // appear. Mutation: removing the depth cap would surface the leaf.
+        assert.equal(files.includes('leaf.txt'), false, 'leaf at depth 60 must be unreachable past MAX_RECURSION_DEPTH=50');
     } finally { cleanup(root); }
 });
