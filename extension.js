@@ -9,8 +9,8 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { listFilesRecursive } = require('./lib/fs-utils');
 const { EDITION_REPO } = require('./lib/edition-source');
-const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, _CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
-const { readAndValidateManifest } = require('./lib/edition-install');
+const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
+const { readAndValidateManifest, acquireLock } = require('./lib/edition-install');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 // BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
@@ -152,7 +152,11 @@ async function ensureBrainDir(ctx) {
     };
     _fetchCleanup = () => {
         try { fs.rmSync(fetch.tempParent, { recursive: true, force: true }); } catch { /* best effort */ }
-        BRAIN_DIR = path.join(__dirname, 'brain'); // reset for next call
+        // BRAIN_DIR intentionally NOT reset here. In static-fetch mode the
+        // bundled `<extension>/brain` does not exist; the next ensureBrainDir()
+        // call sets BRAIN_DIR to a freshly-fetched tarball root. Sync callers
+        // that touch BRAIN_DIR between commands gracefully degrade to
+        // 'unknown' (see isStaticFetchMode guard in getBundledEditionVersion).
         _fetchProvenance = null;
         _fetchCleanup = null;
     };
@@ -354,7 +358,25 @@ async function cmdBootstrap() {
     }
 
     try {
-        return await _cmdBootstrapBody(root);
+        // Per-heir lockfile guards against two VS Code windows racing the
+        // same workspace. CONCURRENT_UPGRADE surfaces a friendly message;
+        // the second window does not touch the heir's brain.
+        let lock;
+        try {
+            lock = acquireLock(root);
+        } catch (err) {
+            const code = err && /** @type {any} */ (err).code;
+            const msg = code === 'CONCURRENT_UPGRADE'
+                ? 'ACT: brain bootstrap already in progress in another VS Code window. Wait for it to finish, then retry.'
+                : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
+            vscode.window.showWarningMessage(msg);
+            return;
+        }
+        try {
+            return await _cmdBootstrapBody(root);
+        } finally {
+            lock.release();
+        }
     } finally {
         if (_fetchCleanup) _fetchCleanup();
     }
@@ -515,6 +537,18 @@ async function _cmdBootstrapBody(root) {
             const match = marker.repo_url.match(/github\.com[:/]([^/]+)/);
             if (match) marker.contact.owner = match[1];
         } catch { /* no git remote */ }
+
+        // Static-fetch v2 marker fields (ADR-009). Only populated when the
+        // brain came from a GitHub fetch; bundled-brain bootstraps keep the
+        // v1 shape unchanged. Additive — does not break v1 readers.
+        if (_fetchProvenance && _fetchProvenance.source === 'github-fetch') {
+            marker.source = 'github-fetch';
+            marker.commit_sha = _fetchProvenance.commitSha || null;
+            marker.fetched_at = new Date().toISOString();
+            marker.auth_mode = _fetchProvenance.authMode || 'anonymous';
+            marker.extension_version = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
+            marker.marker_schema_version = 2;
+        }
 
         fs.mkdirSync(path.dirname(markerPath), { recursive: true });
         fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2) + '\n');
@@ -808,7 +842,25 @@ async function cmdUpgrade() {
     }
 
     try {
-        return await _cmdUpgradeBody(root, markerPath, marker);
+        // Per-heir lockfile guards against two VS Code windows racing the
+        // same workspace. CONCURRENT_UPGRADE surfaces a friendly message;
+        // the second window does not touch the heir's brain.
+        let lock;
+        try {
+            lock = acquireLock(root);
+        } catch (err) {
+            const code = err && /** @type {any} */ (err).code;
+            const msg = code === 'CONCURRENT_UPGRADE'
+                ? 'ACT: brain upgrade already in progress in another VS Code window. Wait for it to finish, then retry.'
+                : `ACT: could not acquire upgrade lock: ${err && err.message ? err.message : err}`;
+            vscode.window.showWarningMessage(msg);
+            return;
+        }
+        try {
+            return await _cmdUpgradeBody(root, markerPath, marker);
+        } finally {
+            lock.release();
+        }
     } finally {
         if (_fetchCleanup) _fetchCleanup();
     }
@@ -1073,6 +1125,18 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
         const restoredMarker = readMarkerSafe(markerPath) || marker;
         restoredMarker.edition_version = bundledVersion;
         restoredMarker.last_sync_at = new Date().toISOString();
+        // Static-fetch v2 marker fields (ADR-009). Only populated when the
+        // brain came from a GitHub fetch this upgrade cycle; bundled-brain
+        // upgrades leave the v1 fields untouched. Additive — does not break
+        // v1 readers.
+        if (_fetchProvenance && _fetchProvenance.source === 'github-fetch') {
+            restoredMarker.source = 'github-fetch';
+            restoredMarker.commit_sha = _fetchProvenance.commitSha || null;
+            restoredMarker.fetched_at = new Date().toISOString();
+            restoredMarker.auth_mode = _fetchProvenance.authMode || 'anonymous';
+            restoredMarker.extension_version = (_extensionContext && _extensionContext.extension && _extensionContext.extension.packageJSON && _extensionContext.extension.packageJSON.version) || 'unknown';
+            restoredMarker.marker_schema_version = 2;
+        }
         fs.writeFileSync(markerPath, JSON.stringify(restoredMarker, null, 2) + '\n');
     } catch (err) {
         markerWriteFailed = true;
