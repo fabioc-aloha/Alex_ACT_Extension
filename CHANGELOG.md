@@ -6,6 +6,47 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.4.0] - 2026-MM-DD
+
+**Minor [constitutional] — Extension becomes a static tool; brain now fetched from GitHub at runtime per [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md).**
+
+The VSIX no longer ships a bundled `brain/` directory. On `Bootstrap This Workspace` or `Upgrade Brain`, the Extension downloads the latest tagged Alex_ACT_Edition release from GitHub, validates the manifest contract (spec 1.4 minimum), and installs the declared subtrees into the heir workspace. Edition releases now reach heirs immediately on tag-push — no more 24-hour Marketplace cycle for brain content.
+
+**End-user behavior is unchanged**: same command names, same workflow, same brain. The migration is silent on first upgrade; users learn the difference only if a fetch fails (in which case the new error UX names the failure and points at `ACT: Diagnose Fetch`).
+
+### Network requirement
+
+Bootstrap and Upgrade need to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your network admin to allowlist those two hosts. Offline / air-gapped installs are not supported (explicit accepted cost per ADR-009).
+
+### Added
+
+- **`ACT: Diagnose Fetch` command**: writes a one-shot diagnostic report (extension version, mode, GitHub auth mode, ETag cache contents, heir marker fields) to a dedicated OutputChannel. Run this when reporting Bootstrap or Upgrade issues; paste the output into the bug report.
+- **Activation-time version check**: when a heir workspace is open, the Extension silently checks for a newer Edition release on startup and surfaces an information message ("Edition vNEW is available …") with **Upgrade now** / **Later** buttons. Inhibited to once per 24h per `(current, latest)` version pair. Uses ETag-conditional requests, so the typical cost is zero rate-limit budget after the first call.
+- **Opportunistic GitHub auth**: if you're already signed in to GitHub in VS Code, the Extension uses your session token for fetches, lifting the anonymous 60 req/hr ceiling to authenticated 5,000 req/hr. Never prompts.
+- **New marker fields in `.act-heir.json`**: `source` (`github-fetch` vs `bundled` legacy), `commit_sha` (resolved from the fetched release), `fetched_at` (ISO timestamp), `auth_mode`, `extension_version`. Surfaced via `Diagnose Fetch`.
+
+### Changed
+
+- **VSIX size**: ~brain payload removed. Faster install, faster updates.
+- **Extension version reflects host-code changes only** (true dual-track decoupling per ADR-009 Adoption decision). Edition's iteration cadence is now independent of Marketplace review.
+- **`build-extension.cjs`**: `.vscodeignore` now excludes `brain/**`; the brain faithfulness audit step is replaced with an info-log explaining it's moot under the static-fetch model.
+
+### Compatibility
+
+- **Heirs on existing v9.3.0 bundled installs**: upgrade to v9.4.0, then run `ACT: Upgrade Brain` once. The upgrade fetches from GitHub instead of from the bundled `brain/` — semantics are identical from the heir's perspective.
+- **Minimum Edition version**: 3.2.0 (the first Edition release with manifest spec 1.4 + the static-fetch contract fields). Older Edition releases are rejected with a clear error pointing to the next release.
+
+### Failure modes (each gets a typed user-facing message)
+
+- Network unreachable / corporate proxy blocking github.com → message names the required allowlist hosts.
+- GitHub rate-limited → message tells you signing in raises the limit; will retry automatically after the rate-limit reset.
+- Edition release tarball missing or unpublished → message tells you to check `Diagnose Fetch` output and retry.
+- Edition release missing contract fields (legacy pre-v3.2.0) → message tells you to wait for the next Edition release.
+- Extension too old for the Edition's `min_extension_version` → message tells you to update the Extension via VS Code first.
+- Two VS Code windows on the same heir racing on upgrade → second window sees a per-heir lockfile and surfaces a clear "already in progress" message. No torn brain.
+
+All failure paths run **before** any destructive op, so a failed Bootstrap or Upgrade leaves your existing brain unchanged.
+
 ## [9.3.0] - 2026-05-29
 
 **Minor [behaviour] — Edition refresh v3.0.1 → v3.1.0 (Phase 5a Plugin Mall catalog prompts + shared-core audit fixes).**
@@ -190,8 +231,6 @@ After upgrading, the heir's `.vscode/settings.json` will gain three new keys if 
 
 No Extension surface code changes. Same commands, same activation, same walkthrough.
 
-
-
 **Patch [behaviour] — replicate Edition's `.github/` and `.vscode/` layout correctly on bootstrap and upgrade.** Prior versions had two related defects: (1) bundled `brain/.vscode/markdown-light.css` and `brain/.vscode/settings.json` were copied into `.github/.vscode/` inside the heir's brain instead of the workspace-root `.vscode/` folder where VS Code expects them; (2) Edition's heir-owned `.github/config/cognitive-config.json` template was never seeded because it is intentionally absent from `brain/` per the faithfulness audit contract, leaving heirs without the schema-correct config for AI-Memory routing and confidence-badge toggles. This patch fixes both: `.vscode/*` now lands at the workspace root, and `.github/` bootstrap templates are staged in the Extension's `templates/` directory at build time and seeded on first install only.
 
 ### What changed
@@ -230,8 +269,6 @@ Full Edition release notes: see `Alex_ACT_Edition` v2.5.0 tag.
 - **For users**: no action required. Auto-updates from v8.11.3.
 - **For heirs**: new skills are auto-available after VSIX update; no `/upgrade` needed for the Extension's bundled brain (Extension ships the brain inert at `brain/`). Heirs that synced from Edition pre-v2.5.0 can still pull via their existing `/upgrade` flow.
 
-
-
 **Patch [clarification] — code review cosmetics on top of v8.11.2.** Fixes deferred from the v8.11.2 review: hardens converter execution against shell metacharacters, adds a depth-warning to the symlink guard, sidecars the full migration classification next to the truncated markdown, and stops tracking the build-generated `.vscodeignore`. No functional changes for already-working code paths.
 
 ### Changed
@@ -245,10 +282,12 @@ Full Edition release notes: see `Alex_ACT_Edition` v2.5.0 tag.
 - **`MIGRATION-REVIEW.json` sidecar** (`migration.js#writeMigrationReview`) — written alongside `MIGRATION-REVIEW.md` with the complete classification (no truncation). The markdown summary still truncates each section at 50 entries for human readability; the JSON is the authoritative artifact for tooling and audit on installs with >50 customised or custom files.
 - **`loadV840Index` defensive-filter rationale** (`migration.js`) — docblock now explains why the `brain-files/` prefix filter is safe (v8.4.0 manifest is a frozen historical artifact; no forward-compatibility risk).
 
+<!-- markdownlint-disable-next-line MD024 -->
 ### Brain version
 
 Brain pinned to Edition v2.4.0 (unchanged from v8.11.1/.2). No brain content changes; pure surface cleanup.
 
+<!-- markdownlint-disable-next-line MD024 -->
 ### Migration notes
 
 - **For users**: no action required. Auto-updates from v8.11.2.
@@ -313,10 +352,9 @@ Brain pinned to Edition v2.4.0 (same as v8.11.0). Brain content unchanged from v
 - **For users**: no action required. Auto-updates from v8.11.0. `.vscode/` assets land in the workspace on install; existing user `.vscode/settings.json` is not overwritten — the bundled file is a template for first-install, not a runtime override.
 - **For anyone forking the build**: the new `audit-brain-faithfulness.cjs` script is the recommended verification step before publishing any VSIX. Run `node scripts/audit-brain-faithfulness.cjs` after build; non-zero exit means the bundled brain doesn't match the tagged Edition source.
 
-
-
 **Minor [behaviour] — remove bundled Plugin Mall catalog.** Mall evolves faster than Extension release cadence, so any snapshot bundled in the VSIX is stale by definition. Removed `catalog/CATALOG.json` (234 KB, 297 plugins) along with the `alex-act.mall-search` command, the QuickPick UI, and the status-bar menu entry. Mall discovery now goes exclusively through Copilot Chat (`/mall search <keyword>`, `/mall install <skill>`) which queries the live Mall via the brain's `mall-installation` instruction — always fresh, no staleness ceiling.
 
+<!-- markdownlint-disable-next-line MD024 -->
 ### Removed
 
 - **`catalog/CATALOG.json`** (234 KB, 297-plugin snapshot from build time) — replaced by live Copilot Chat queries against the Mall repo.
@@ -326,11 +364,13 @@ Brain pinned to Edition v2.4.0 (same as v8.11.0). Brain content unchanged from v
 - **`MALL_REMOTE`, `CATALOG_DST`, `MALL_CATALOG` constants** + Step 4 "Bundle Mall catalog" in `build-extension.cjs`. Build now clones Edition only, in roughly half the time.
 - **`!catalog/**` allowlist entry** in the generated `.vscodeignore`.
 
+<!-- markdownlint-disable-next-line MD024 -->
 ### Changed
 
 - **Welcome walkthrough step "plugin-mall"**: CTA changed from `[Search Plugin Mall](command:alex-act.mall-search)` to `[Open Copilot Chat](command:workbench.action.chat.open)` with prompt for `/mall search` and `/mall install`. Completion event removed (step is now informational; walkthrough no longer gates on the dead command).
 - **Build script docstring** updated to document why Mall is no longer bundled. Steps renumbered 1-9 (was 1-10) after removing Step 4.
 
+<!-- markdownlint-disable-next-line MD024 -->
 ### Migration notes
 
 - **For users**: nothing breaks. Plugin Mall search still works via `/mall search` in Copilot Chat — same workflow heirs have always used. The dedicated VS Code command and status-bar entry are gone; the chat path is now the only path.
@@ -455,7 +495,6 @@ When ACT Edition v9.0.0 activates in a workspace it identifies as AlexMaster-boo
 ---
 
 ## [2.0.5] - 2026-05-21
-
 
 **Patch — 25 shared-core brain files gain `## Would Revise If` falsifier sections.** Mirror of Supervisor D2(a) commit `c6327bb`. Each WRI names specific failure modes that would invalidate the file's advice — not boilerplate. Brain epistemic-qa coverage rises 45.5% → ~91% in Edition. No behavioral change for heirs: the files still direct the same actions; the WRI is an epistemic addition that names the conditions under which each rule should be revisited.
 

@@ -30,6 +30,12 @@ The brain copies into `.github/` and the bootstrap toast offers three one-click 
 
 Before your first real chat, open `.github/copilot-instructions.local.md` and fill in the `## Project Context` paragraph. Identity grounding from session 1 beats identity grounding at session 10.
 
+### Network requirement
+
+Starting in v9.4.0, the Extension fetches the latest Edition brain from GitHub on first use, rather than shipping a bundled copy that ages with each Marketplace release. The fetch happens transparently when you run **Bootstrap** or **Upgrade Brain**. The Extension needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your network admin to allowlist those two hosts. See [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md) for the rationale.
+
+If a Bootstrap or Upgrade fails for any reason, run **Alex ACT: Diagnose Fetch** from the Command Palette and paste the resulting output into your bug report.
+
 ## Coming from an older version?
 
 If you previously had **Alex Cognitive Architecture (AlexMaster)** installed, this extension is the direct successor — same Marketplace ID, auto-updates in place. No manual migration needed; the brain overwrites cleanly on upgrade.

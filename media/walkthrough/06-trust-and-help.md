@@ -25,6 +25,8 @@ Write your first message in Portuguese, Spanish, French, German, Italian, Japane
 - **Chat panel gone:** `View → Chat` or `Ctrl+Alt+I`.
 - **Fresh conversation:** click **+** at the top of the chat.
 - **Re-open this guide:** Command Palette → *Alex: Open Welcome Guide*.
+- **Bootstrap or Upgrade fails with a network error:** the Extension fetches the latest Edition brain from GitHub on first use. It needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your admin to allowlist those two hosts.
+- **Reporting an install issue:** run *ACT: Diagnose Fetch* from the Command Palette. It writes a short diagnostic report (extension version, fetch cache state, heir marker) to a dedicated output channel. Paste that into your bug report so the maintainers can diagnose without guessing.
 
 ## Learn the framework
 
