@@ -225,7 +225,12 @@ const vscodeignore = [
     'MIGRATION.md',
     'PLUGINS.md',
     'README.md',
-    '!brain/**',
+    // Per ADR-009 Phase 1B.9: brain/ is excluded from the VSIX. The
+    // Extension fetches the latest Edition brain from GitHub at runtime.
+    // Local build-extension.cjs still copies brain/ to disk for dev
+    // inspection, but vsce excludes it from the published package.
+    'brain/**',
+    'test/**',
     'node_modules',
     '.vscode-test',
     'build-extension.cjs',
@@ -242,22 +247,26 @@ fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
 // Edition. Edition's brain content still flows through brain/ (Step 3).
 console.log('6-7. Skipping README/CHANGELOG/LICENSE sync (Extension-owned).');
 
-// ── Step 7b: Brain faithfulness gate ─────────────────────────────
-// Audit brain/ against the Edition tag we just cloned. Any mismatch / drift /
-// missing-declared-file fails the build before we emit a VSIX. This is the
-// load-bearing gate that guarantees what we publish is byte-identical to the
-// tagged Edition release (modulo the manifested HEIR_OWNED exclusions).
-console.log('7b. Auditing brain faithfulness against tagged Edition...');
-try {
-    execFileSync(process.execPath,
-        [path.join(EXT_DIR, 'scripts', 'audit-brain-faithfulness.cjs'),
-            '--edition-repo', editionDir,
-            '--tag', ref === 'main' ? `v${fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim()}` : ref],
-        { stdio: 'inherit' });
-} catch (e) {
-    console.error('FATAL: brain faithfulness audit failed (see output above).');
-    process.exit(1);
-}
+// ── Step 7b: Brain faithfulness gate (deprecated, ADR-009) ────────
+// Pre-ADR-009 (Phase 1B.9): this gate audited brain/ against the Edition
+// tag and was load-bearing — it guaranteed the published VSIX was byte-
+// identical to a tagged Edition release.
+//
+// Post-ADR-009: brain/ is no longer shipped in the VSIX (see Step 5's
+// .vscodeignore). The Extension fetches the latest Edition brain from
+// GitHub at runtime, so there is nothing to be faithful to here. The
+// new contract is enforced at fetch time by lib/edition-install.js
+// against the spec-1.4 manifest in the fetched tarball.
+//
+// The release-preflight skill replaces the old check with two cheap
+// invariants (per ADR-009 Phase 1C.2):
+//   1. VSIX must not contain a brain/ directory
+//   2. lib/edition-source.js must point at the canonical Edition repo
+//
+// Phase 3 (3.1) removes brain/ from this repo entirely and deletes the
+// brain-copy steps (3, 3b, 3c) above. Until then, brain/ is still
+// produced on disk for dev inspection but never reaches the VSIX.
+console.log('7b. Brain faithfulness audit skipped (ADR-009 — Extension fetches Edition at runtime; brain/ not in VSIX).');
 
 // ── Step 8: Summary ──────────────────────────────────────────────
 const version = fs.readFileSync(path.join(BRAIN_DST, 'VERSION'), 'utf8').trim();

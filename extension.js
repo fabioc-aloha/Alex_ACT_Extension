@@ -8,21 +8,179 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { listFilesRecursive } = require('./lib/fs-utils');
+const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, _CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
+const { readAndValidateManifest } = require('./lib/edition-install');
 
 // ── Paths ───────────────────────────────────────────────────────────────
-const BRAIN_DIR = path.join(__dirname, 'brain');
+// BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
+// brain). In v9.4.0+ (per ADR-009 static-fetch) the VSIX ships no `brain/`
+// directory; ensureBrainDir() populates BRAIN_DIR with the .github root
+// of a freshly-fetched Edition tarball before any destructive op runs.
+//
+// Sync callers (status bar, getBundledEditionVersion) gracefully degrade
+// when bundle is absent and tarball has not yet been fetched this session.
+let BRAIN_DIR = path.join(__dirname, 'brain');
+
+// Set at activate() time so the static-fetch helper can reach extension
+// state (globalState for ETag cache, extension.packageJSON.version for
+// User-Agent) from sync utility functions. Null until activate runs;
+// callers that need ctx before activation should not exist in practice.
+/** @type {vscode.ExtensionContext | null} */
+let _extensionContext = null;
+
+// Static-fetch state. Populated by ensureBrainDir() in fetch mode; null
+// when the bundled brain is in use.
+let _fetchProvenance = null; // { source, tag, commitSha, authMode, tempParent }
+let _fetchCleanup = null;    // () => void
+
+/**
+ * True if the Extension is running in static-fetch mode (no bundled brain
+ * directory present in the install location).
+ */
+function isStaticFetchMode() {
+    return !fs.existsSync(path.join(__dirname, 'brain'));
+}
+
+/**
+ * Read the last-known Edition version from globalState (populated by
+ * getLatestTag's ETag cache). Used by sync callers in static-fetch mode
+ * when they need to display an "available version" without paying the
+ * cost of an HTTPS round-trip.
+ *
+ * @param {vscode.ExtensionContext} ctx
+ * @returns {string | null}
+ */
+function getCachedLatestEditionTag(ctx) {
+    try {
+        const cached = ctx && ctx.globalState && ctx.globalState.get(EDITION_FETCH_CACHE_KEY);
+        if (cached && typeof cached.tag === 'string') return cached.tag;
+    } catch { /* best effort */ }
+    return null;
+}
+
+/**
+ * Ensure BRAIN_DIR points at a usable Edition brain. In bundled mode
+ * (`<extension>/brain` exists) this is a no-op. In static-fetch mode this
+ * downloads the latest Edition release tarball to a per-fetch temp dir,
+ * validates the manifest contract per ADR-009, and points BRAIN_DIR at
+ * `<tarball>/.github`.
+ *
+ * Throws a typed error on any failure; callers should let the throw
+ * propagate BEFORE any destructive op runs against the heir.
+ *
+ * Sets `_fetchCleanup` to a function that deletes the temp dir. The
+ * cmdBootstrap / cmdUpgrade wrappers call it in their finally blocks.
+ *
+ * @param {vscode.ExtensionContext} [ctx]
+ * @returns {Promise<{ source: 'bundled' | 'github-fetch', tag?: string, commitSha?: string | null, authMode?: 'authenticated' | 'anonymous' }>}
+ */
+async function ensureBrainDir(ctx) {
+    ctx = ctx || _extensionContext;
+    if (!ctx) {
+        // No context — refuse rather than guess. This should not happen
+        // in practice; both bootstrap and upgrade run after activate().
+        throw new Error('ensureBrainDir called before activate(); cannot reach extension state.');
+    }
+    const bundled = path.join(__dirname, 'brain');
+    if (fs.existsSync(bundled)) {
+        BRAIN_DIR = bundled;
+        _fetchProvenance = { source: 'bundled' };
+        _fetchCleanup = null;
+        return { source: 'bundled' };
+    }
+
+    // Static-fetch path. Acquire silent auth (no prompt), fetch latest
+    // tag with ETag-conditional cache, then download tarball.
+    const extensionVersion = (ctx && ctx.extension && ctx.extension.packageJSON && ctx.extension.packageJSON.version) || '0.0.0';
+    const authToken = await getSilentAuthToken(vscode);
+
+    let tagInfo;
+    try {
+        tagInfo = await getLatestTag(extensionVersion, ctx.globalState, { authToken });
+    } catch (err) {
+        // Re-throw with a friendlier message for the bootstrap/upgrade
+        // callers. The /typed/ code property is preserved for diagnostics.
+        const code = /** @type {any} */ (err).code || 'FETCH_FAILED';
+        const msg = code === 'TIMEOUT'
+            ? 'Could not reach github.com to check for the latest Edition release. Check your connection. If you are behind a corporate proxy, allowlist api.github.com and codeload.github.com.'
+            : code === 'RATE_LIMITED'
+                ? 'GitHub rate limit reached for fetching the Edition release list. Sign in to GitHub in VS Code to raise the limit from 60 to 5,000 requests per hour.'
+                : code === 'REPO_GONE'
+                    ? 'The Edition repository appears unreachable. Check https://www.githubstatus.com for an active incident; if the outage persists, see ADR-009 (extension brain delivery).'
+                    : `Could not fetch the Edition release list from GitHub: ${err && err.message ? err.message : err}`;
+        const friendly = new Error(msg);
+        /** @type {any} */ (friendly).code = code;
+        /** @type {any} */ (friendly).cause = err;
+        throw friendly;
+    }
+
+    let fetch;
+    try {
+        fetch = await fetchTarball(tagInfo.tag, extensionVersion, { authToken });
+    } catch (err) {
+        const code = /** @type {any} */ (err).code || 'TARBALL_FETCH_FAILED';
+        const msg = code === 'TAG_NOT_FOUND'
+            ? `GitHub published the Edition release list, but the tarball for ${tagInfo.tag} is missing. The release may have been unpublished; try again later, or report it with the output of "ACT: Diagnose Fetch".`
+            : code === 'RATE_LIMITED'
+                ? `GitHub rate-limited the download of Edition ${tagInfo.tag}. Sign in to GitHub in VS Code to raise the limit from 60 to 5,000 requests per hour.`
+                : `Could not download the Edition ${tagInfo.tag} tarball from GitHub: ${err && err.message ? err.message : err}`;
+        const friendly = new Error(msg);
+        /** @type {any} */ (friendly).code = code;
+        /** @type {any} */ (friendly).cause = err;
+        throw friendly;
+    }
+
+    // Validate the manifest contract BEFORE any destructive op.
+    try {
+        readAndValidateManifest(fetch.tarballRoot, extensionVersion, tagInfo.tag);
+    } catch (err) {
+        // Clean up temp dir before re-throwing — caller's finally will
+        // also try, but doing it here means callers that never get to
+        // their finally (early throw) don't leak the temp dir.
+        try { fs.rmSync(fetch.tempParent, { recursive: true, force: true }); } catch { /* best effort */ }
+        throw err;
+    }
+
+    BRAIN_DIR = path.join(fetch.tarballRoot, '.github');
+    _fetchProvenance = {
+        source: 'github-fetch',
+        tag: tagInfo.tag,
+        commitSha: tagInfo.commitSha,
+        authMode: tagInfo.authMode,
+        tempParent: fetch.tempParent
+    };
+    _fetchCleanup = () => {
+        try { fs.rmSync(fetch.tempParent, { recursive: true, force: true }); } catch { /* best effort */ }
+        BRAIN_DIR = path.join(__dirname, 'brain'); // reset for next call
+        _fetchProvenance = null;
+        _fetchCleanup = null;
+    };
+    return {
+        source: 'github-fetch',
+        tag: tagInfo.tag,
+        commitSha: tagInfo.commitSha,
+        authMode: tagInfo.authMode
+    };
+}
 
 // ── Bundled brain introspection ──────────────────────────────────────────
 function getBundledEditionVersion() {
     try {
         const v = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
         if (!v || v === 'unknown') {
-            console.warn('ACT: brain/VERSION is missing or empty — bundled brain may be incomplete.');
+            // Not a warning in static-fetch mode — sync callers don't
+            // know whether ensureBrainDir() has populated BRAIN_DIR yet.
+            if (!isStaticFetchMode()) {
+                console.warn('ACT: brain/VERSION is missing or empty — bundled brain may be incomplete.');
+            }
             return 'unknown';
         }
         return v;
     } catch (e) {
-        console.warn('ACT: brain/VERSION unreadable:', e && e.message ? e.message : e);
+        // Same: silent in static-fetch mode pre-ensureBrainDir.
+        if (!isStaticFetchMode()) {
+            console.warn('ACT: brain/VERSION unreadable:', e && e.message ? e.message : e);
+        }
         return 'unknown';
     }
 }
@@ -183,6 +341,31 @@ async function cmdBootstrap() {
         vscode.window.showErrorMessage('ACT: Open a workspace folder first.');
         return;
     }
+
+    // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
+    // resolve BRAIN_DIR by downloading the latest Edition release tarball
+    // before any destructive op. Errors here leave the heir untouched.
+    try {
+        await ensureBrainDir();
+    } catch (err) {
+        vscode.window.showErrorMessage(`ACT bootstrap: ${err && err.message ? err.message : err}`);
+        return;
+    }
+
+    try {
+        return await _cmdBootstrapBody(root);
+    } finally {
+        if (_fetchCleanup) _fetchCleanup();
+    }
+}
+
+/**
+ * Body of cmdBootstrap, split out so the static-fetch ensureBrainDir +
+ * try/finally cleanup can wrap the original logic without rewriting it.
+ *
+ * @param {string} root
+ */
+async function _cmdBootstrapBody(root) {
 
     // Refuse on constellation source repos. The padlock in the status bar
     // already telegraphs this; the modal-blocking refusal is the safety net
@@ -612,6 +795,33 @@ async function cmdUpgrade() {
         );
         return;
     }
+
+    // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
+    // resolve BRAIN_DIR by downloading the latest Edition release tarball
+    // before any destructive op. Errors here leave the heir untouched.
+    try {
+        await ensureBrainDir();
+    } catch (err) {
+        vscode.window.showErrorMessage(`ACT upgrade: ${err && err.message ? err.message : err}`);
+        return;
+    }
+
+    try {
+        return await _cmdUpgradeBody(root, markerPath, marker);
+    } finally {
+        if (_fetchCleanup) _fetchCleanup();
+    }
+}
+
+/**
+ * Body of cmdUpgrade, split out so the static-fetch ensureBrainDir +
+ * try/finally cleanup can wrap the original logic without rewriting it.
+ *
+ * @param {string} root
+ * @param {string} markerPath
+ * @param {any} marker
+ */
+async function _cmdUpgradeBody(root, markerPath, marker) {
     const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
     const currentVersion = marker.edition_version || '0.0.0';
 
@@ -1290,6 +1500,14 @@ function activate(context) {
     const channel = getActivationOutputChannel();
     channel.appendLine('[activate] Starting activation.');
 
+    // Stash context so static-fetch helpers (ensureBrainDir, getCachedLatestEditionTag)
+    // can reach extension state from sync utilities. Cleared in deactivate().
+    _extensionContext = context;
+
+    // Sweep any stale per-fetch temp dirs left behind by crashed prior runs.
+    // Best-effort; doesn't block activation if tmpdir is unreadable.
+    try { sweepStaleTempDirs(); } catch (err) { logActivationError(channel, 'sweepStaleTempDirs', err); }
+
     let criticalReady = false;
     try {
         const criticalCount = registerCriticalCommands(context, channel);
@@ -1351,6 +1569,119 @@ function activate(context) {
             }
         } catch { /* silent */ }
 
+        // Static-fetch activation-time check (ADR-009 Phase 1B step 6).
+        // Only fires when the bundled brain is absent (true in v9.4.0+
+        // shipped VSIXes; sidesteps the dev-clone case where brain/ is
+        // present). Calls getLatestTag with ETag caching — typical cost
+        // after the first call is one 304 response (zero rate-limit budget).
+        // Surfaces an information message when a newer Edition is available,
+        // inhibited to once per 24h per (current, latest) version pair.
+        if (isStaticFetchMode()) {
+            (async () => {
+                const root = getWorkspaceRoot();
+                if (!root) return;
+                const markerPath = getMarkerPath(root);
+                if (!fs.existsSync(markerPath)) return;
+                const marker = readMarkerSafe(markerPath);
+                if (!marker || !marker.edition_version) return;
+                try {
+                    const extVersion = (context.extension && context.extension.packageJSON && context.extension.packageJSON.version) || '0.0.0';
+                    const authToken = await getSilentAuthToken(vscode);
+                    const result = await getLatestTag(extVersion, context.globalState, { authToken });
+                    const latestClean = (result.tag || '').replace(/^v/, '');
+                    const currentClean = marker.edition_version;
+                    if (!latestClean || latestClean === currentClean) return;
+                    // Inhibit to once-per-24h per version pair.
+                    const INHIBIT_KEY = `alex-act.upgradeNudgeShown.${currentClean}.${latestClean}`;
+                    const lastShown = context.globalState.get(INHIBIT_KEY);
+                    if (lastShown && Date.now() - Number(lastShown) < 24 * 60 * 60 * 1000) return;
+                    context.globalState.update(INHIBIT_KEY, Date.now());
+                    const choice = await vscode.window.showInformationMessage(
+                        `Edition v${latestClean} is available (you're on v${currentClean}). Run "ACT: Upgrade Brain" to update.`,
+                        'Upgrade now',
+                        'Later'
+                    );
+                    if (choice === 'Upgrade now') {
+                        vscode.commands.executeCommand('alex-act.upgrade');
+                    }
+                } catch (err) {
+                    // Silent on the activation path; a real failure surfaces
+                    // when the user invokes Upgrade explicitly. The Diagnose
+                    // Fetch command captures the error for inspection.
+                    channel.appendLine(`[activate] static-fetch version check failed: ${err && err.message ? err.message : err}`);
+                }
+            })();
+        }
+
+        // ACT: Diagnose Fetch — on-demand diagnostic command (no telemetry
+        // alternative per ADR-009 Adoption decisions). Writes a one-shot
+        // report to a dedicated OutputChannel; user copy-pastes into bug
+        // reports. Never makes a NEW network call — only reports cached
+        // state from globalState.
+        context.subscriptions.push(vscode.commands.registerCommand('alex-act.diagnoseFetch', async () => {
+            const ch = vscode.window.createOutputChannel('Alex ACT: Diagnose Fetch');
+            ch.show();
+            ch.appendLine(`=== Alex ACT Diagnose Fetch — ${new Date().toISOString()} ===`);
+            try {
+                const extVersion = (context.extension && context.extension.packageJSON && context.extension.packageJSON.version) || 'unknown';
+                ch.appendLine(`Extension version    : ${extVersion}`);
+                ch.appendLine(`Mode                  : ${isStaticFetchMode() ? 'static-fetch (no bundled brain)' : 'bundled brain'}`);
+                ch.appendLine(`Edition repo          : fabioc-aloha/Alex_ACT_Edition`);
+
+                // Auth mode (silent — does not prompt)
+                let authMode = 'anonymous';
+                try {
+                    const session = await vscode.authentication.getSession('github', [], { silent: true });
+                    if (session) authMode = 'authenticated (GitHub session present)';
+                } catch { /* best effort */ }
+                ch.appendLine(`Auth mode             : ${authMode}`);
+
+                // ETag cache (populated by getLatestTag on prior call)
+                const cache = context.globalState.get(EDITION_FETCH_CACHE_KEY);
+                if (cache) {
+                    ch.appendLine(`ETag cache            :`);
+                    ch.appendLine(`  tag                : ${cache.tag || '(none)'}`);
+                    ch.appendLine(`  commit_sha         : ${cache.commitSha || '(none)'}`);
+                    ch.appendLine(`  published_at       : ${cache.publishedAt || '(none)'}`);
+                    ch.appendLine(`  etag               : ${cache.etag || '(none)'}`);
+                    ch.appendLine(`  last_modified      : ${cache.lastModified || '(none)'}`);
+                    ch.appendLine(`  cached_at          : ${cache.cachedAt || '(none)'}`);
+                } else {
+                    ch.appendLine(`ETag cache            : empty (no prior fetch this install)`);
+                }
+
+                // Heir marker, if this workspace is a heir
+                const root = getWorkspaceRoot();
+                if (root) {
+                    const markerPath = getMarkerPath(root);
+                    if (fs.existsSync(markerPath)) {
+                        ch.appendLine(`\nCurrent heir marker (${path.relative(root, markerPath) || markerPath}):`);
+                        try {
+                            const m = readMarkerSafe(markerPath) || {};
+                            ch.appendLine(`  heir_id            : ${m.heir_id || '(none)'}`);
+                            ch.appendLine(`  edition_version    : ${m.edition_version || '(none)'}`);
+                            ch.appendLine(`  source             : ${m.source || '(legacy, pre-v9.4 bundled install)'}`);
+                            ch.appendLine(`  commit_sha         : ${m.commit_sha || '(none)'}`);
+                            ch.appendLine(`  fetched_at         : ${m.fetched_at || '(none)'}`);
+                            ch.appendLine(`  auth_mode          : ${m.auth_mode || '(none)'}`);
+                            ch.appendLine(`  extension_version  : ${m.extension_version || '(unknown)'}`);
+                        } catch (err) {
+                            ch.appendLine(`  (marker unreadable: ${err && err.message ? err.message : err})`);
+                        }
+                    } else {
+                        ch.appendLine(`\nThis workspace is not an ACT heir (no .act-heir.json).`);
+                    }
+                } else {
+                    ch.appendLine(`\nNo open workspace.`);
+                }
+
+                ch.appendLine(`\n--- End of diagnostic report ---`);
+                ch.appendLine(`Paste this output into bug reports per ADR-009.`);
+            } catch (err) {
+                ch.appendLine(`(diagnose-fetch crashed: ${err && err.message ? err.message : err})`);
+            }
+        }));
+
         // Startup: show the ACT status bar item whenever a workspace is open.
         // Four states share one click target (cmdStatusBarMenu adapts to each):
         //   1. Protected constellation repo       → "$(lock) ACT — <Name>"
@@ -1379,6 +1710,14 @@ function activate(context) {
                         : null;
                     let bundledVersion = '';
                     try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
+                    // Static-fetch fallback: no bundled brain, but the
+                    // activation-time check may have cached the latest
+                    // Edition tag in globalState. Use that as the
+                    // "available version" for the upgrade arrow.
+                    if (!bundledVersion) {
+                        const cached = getCachedLatestEditionTag(context);
+                        if (cached) bundledVersion = cached.replace(/^v/, '');
+                    }
 
                     if (protectedMarker) {
                         const name = protectedMarker.name || 'Protected';
@@ -1444,6 +1783,13 @@ function deactivate() {
         _activationChannel.dispose();
         _activationChannel = null;
     }
+    // Static-fetch cleanup: dispose any leftover per-fetch temp dir
+    // (should be empty if cmd wrappers ran their finally blocks, but
+    // belt-and-suspenders against extension-host crashes mid-fetch).
+    if (_fetchCleanup) {
+        try { _fetchCleanup(); } catch { /* best effort */ }
+    }
+    _extensionContext = null;
 }
 
 module.exports = { activate, deactivate };
