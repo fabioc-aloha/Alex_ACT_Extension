@@ -20,7 +20,7 @@ const os = require('node:os');
 const path = require('node:path');
 const https = require('node:https');
 
-const { getLatestTag, fetchTarball, sweepStaleTempDirs } = require('../lib/edition-fetch');
+const { getLatestTag, fetchTarball } = require('../lib/edition-fetch');
 const { readAndValidateManifest } = require('../lib/edition-install');
 
 const EXT_VERSION = '9.4.0';
@@ -58,11 +58,29 @@ async function tagExists(tag) {
     });
 }
 
+/**
+ * getLatestTag (the function under test) hits `/releases/latest`, which
+ * requires a GitHub Release to have been published — a tag alone is NOT
+ * enough. Skip the integration suite when no Release exists for the
+ * minimum Edition version we need.
+ */
+async function releaseExists() {
+    return new Promise((resolve) => {
+        const url = `https://api.github.com/repos/fabioc-aloha/Alex_ACT_Edition/releases/latest`;
+        const req = https.get(url, { headers: { 'User-Agent': `Alex_ACT_Extension-tests/${EXT_VERSION}` } }, (res) => {
+            res.resume();
+            resolve(res.statusCode === 200);
+        });
+        req.setTimeout(3000, () => { req.destroy(); resolve(false); });
+        req.on('error', () => resolve(false));
+    });
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────
 
 test('integration: getLatestTag against real GitHub', { skip: false }, async (t) => {
     if (!(await networkReachable())) { t.skip('network unreachable'); return; }
-    if (!(await tagExists(SKIP_TAG))) { t.skip(`Edition ${SKIP_TAG} not yet released — defer this test`); return; }
+    if (!(await releaseExists())) { t.skip('no published GitHub Release exists yet — publish via `gh release create` before running integration tests'); return; }
 
     const state = makeMemoryState();
     const result = await getLatestTag(EXT_VERSION, state);
@@ -73,7 +91,7 @@ test('integration: getLatestTag against real GitHub', { skip: false }, async (t)
 
 test('integration: ETag cache → second call returns 304 fromCache=true', async (t) => {
     if (!(await networkReachable())) { t.skip('network unreachable'); return; }
-    if (!(await tagExists(SKIP_TAG))) { t.skip(`Edition ${SKIP_TAG} not yet released — defer this test`); return; }
+    if (!(await releaseExists())) { t.skip('no published GitHub Release exists yet'); return; }
 
     const state = makeMemoryState();
     const first = await getLatestTag(EXT_VERSION, state);
@@ -85,7 +103,7 @@ test('integration: ETag cache → second call returns 304 fromCache=true', async
 
 test('integration: fetchTarball + readAndValidateManifest end-to-end', async (t) => {
     if (!(await networkReachable())) { t.skip('network unreachable'); return; }
-    if (!(await tagExists(SKIP_TAG))) { t.skip(`Edition ${SKIP_TAG} not yet released — defer this test`); return; }
+    if (!(await releaseExists())) { t.skip('no published GitHub Release exists yet'); return; }
 
     const state = makeMemoryState();
     const { tag } = await getLatestTag(EXT_VERSION, state);
@@ -105,22 +123,5 @@ test('integration: fetchTarball + readAndValidateManifest end-to-end', async (t)
     }
 });
 
-test('integration: sweepStaleTempDirs cleans up alex-act-fetch-* >24h', () => {
-    // This test runs locally without network — verifies the sweeper logic.
-    const old = fs.mkdtempSync(path.join(os.tmpdir(), 'alex-act-fetch-old-'));
-    fs.writeFileSync(path.join(old, 'sentinel.txt'), 'x');
-    const oldTime = (Date.now() - 25 * 60 * 60 * 1000) / 1000;
-    fs.utimesSync(old, oldTime, oldTime);
-
-    const fresh = fs.mkdtempSync(path.join(os.tmpdir(), 'alex-act-fetch-fresh-'));
-
-    try {
-        const result = sweepStaleTempDirs();
-        assert.equal(result.swept >= 1, true, `expected ≥1 swept, got ${result.swept}`);
-        assert.equal(fs.existsSync(old), false, 'stale dir should be removed');
-        assert.equal(fs.existsSync(fresh), true, 'fresh dir should be preserved');
-    } finally {
-        try { fs.rmSync(old, { recursive: true, force: true }); } catch { /* may already be gone */ }
-        try { fs.rmSync(fresh, { recursive: true, force: true }); } catch { /* best effort */ }
-    }
-});
+// sweepStaleTempDirs coverage moved to edition-fetch.unit.test.js — it does
+// not require network and runs in the default `npm test` suite.
