@@ -8,6 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { listFilesRecursive } = require('./lib/fs-utils');
+const { EDITION_REPO } = require('./lib/edition-source');
 const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, _CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
 const { readAndValidateManifest } = require('./lib/edition-install');
 
@@ -1626,7 +1627,7 @@ function activate(context) {
                 const extVersion = (context.extension && context.extension.packageJSON && context.extension.packageJSON.version) || 'unknown';
                 ch.appendLine(`Extension version    : ${extVersion}`);
                 ch.appendLine(`Mode                  : ${isStaticFetchMode() ? 'static-fetch (no bundled brain)' : 'bundled brain'}`);
-                ch.appendLine(`Edition repo          : fabioc-aloha/Alex_ACT_Edition`);
+                ch.appendLine(`Edition repo          : ${EDITION_REPO.owner}/${EDITION_REPO.repo}`);
 
                 // Auth mode (silent — does not prompt)
                 let authMode = 'anonymous';
