@@ -6,7 +6,7 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-## [9.4.0] - 2026-MM-DD
+## [9.4.0] - 2026-06-01
 
 **Minor [constitutional] — Extension becomes a static tool; brain now fetched from GitHub at runtime per [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md).**
 
