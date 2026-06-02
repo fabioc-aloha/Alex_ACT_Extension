@@ -118,11 +118,12 @@ Contact info, dates of birth, health data, financial data, credentials are **nev
 
 ## Related reading
 
-- [Project Memory](Project-Memory): the per-workspace layer that AI-Memory sits above.
+- [How It Fits Together](How-It-Fits-Together): the six pieces in one map — Edition, Extension, Mall, project memory, this shared bus, and VS Code's Copilot memory tiers.
+- [Project Memory](Project-Memory): the per-workspace layer that this bus sits above.
 - [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help): broader data-flow story.
 - [Migrating to v9](Migrating-to-v9): upgrading from OneDrive-based AI-Memory.
 - [The Plugin Mall](The-Plugin-Mall): where `/mall-contribute` proposals land.
 
 ---
 
-*Last reviewed: 2026-05-27*
+*Last reviewed: 2026-05-31*

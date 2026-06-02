@@ -13,8 +13,24 @@ Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They
 - **A cognitive architecture** installed into your project's `.github/` folder — skills, instructions, prompts, agents, and muscles that GitHub Copilot reads on every request
 - **The 10 ACT tenets** operationalized as runtime behavior, not just docs
 - **A 7-step critical-thinking pass** that fires on medium and high-stakes decisions
-- **A Plugin Mall** of optional skills you can adopt on demand
+- **The [Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** — thousands of trust-scored plugins across dozens of stores, installed on demand at the version you pick
 - **Self-upgrading**: `/upgrade` keeps your brain current; existing customizations preserved
+
+## The Plugin Mall
+
+The bundled brain is deliberately small. When a project needs more — a new domain, a niche tool, a different opinion — the **[Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** is a curated search index over **thousands of plugins from dozens of upstream stores** (Anthropic, Microsoft `awesome-copilot`, community catalogs, and many more). Every plugin carries a published 0–100 trust score built from provenance, maintenance, adoption, license clarity, and frontmatter completeness — so you see *why* one plugin scored higher than another before you install it.
+
+Heirs install from upstream at a pinned version. The Mall never sits in the middle of the supply chain; it just helps you find and judge.
+
+| Slash command | What it does |
+| --- | --- |
+| `/mall-search <query>` | Search the full catalog by name, tag, or description |
+| `/mall-show <name>` | Full metadata + trust signals for one plugin |
+| `/mall-install <name>[@<version>]` | Pin a version and install from upstream |
+| `/mall-upgrade <name>` | Compare installed SHA vs current default |
+| `/mall-list` | Show locally installed plugins with pinned versions |
+
+Browse the catalog: [full index](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall/blob/main/catalog/INDEX.md) · [by category](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall/tree/main/catalog/categories) · [by store](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall/tree/main/catalog/stores) · [trust audit](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall/blob/main/scoring/TRUST-AUDIT.md).
 
 ## Installing
 
@@ -29,6 +45,12 @@ The brain copies into `.github/` and the bootstrap toast offers three one-click 
 - **Open README** — the project's own README in a preview pane
 
 Before your first real chat, open `.github/copilot-instructions.local.md` and fill in the `## Project Context` paragraph. Identity grounding from session 1 beats identity grounding at session 10.
+
+### Network requirement
+
+Starting in v9.4.0, the Extension fetches the latest Edition brain from GitHub on first use, rather than shipping a bundled copy that ages with each Marketplace release. The fetch happens transparently when you run **Bootstrap** or **Upgrade Brain**. The Extension needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your network admin to allowlist those two hosts. See [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md) for the rationale.
+
+If a Bootstrap or Upgrade fails for any reason, run **Alex ACT: Diagnose Fetch** from the Command Palette and paste the resulting output into your bug report.
 
 ## Coming from an older version?
 

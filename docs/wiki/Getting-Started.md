@@ -13,6 +13,8 @@ If you arrived here from a fresh VS Code install:
 
 When the extension loads it opens a welcome walkthrough. You can re-open it any time with `Ctrl+Shift+P` then *Alex: Open Welcome Guide*.
 
+> **Network requirement (v9.4.0+).** The first Bootstrap or Upgrade fetches the latest Edition brain from GitHub. The Extension needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your admin to allowlist those two hosts. See [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help) for failure-mode guidance.
+
 ## 2. Sign in to GitHub Copilot
 
 GitHub Copilot is now built into VS Code (no separate extension required). You do need a GitHub account signed in:
