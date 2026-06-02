@@ -6,6 +6,26 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.4.1] - 2026-06-02
+
+**Patch [behaviour] — heir-marker `commit_sha` provenance fix: resolve via tag ref (immutable) before falling back to branch ref.**
+
+### Fixed
+
+- `[behaviour]` `lib/edition-fetch.js` `resolveCommitSha`: when GitHub Releases are created without `--target <sha>` (the platform default — `target_commitish` defaults to the branch name, typically `main`), the prior implementation resolved that branch to its current HEAD. The recorded SHA matched the released tag only by coincidence; the moment `main` moved past the latest tag, every Bootstrap and Upgrade would record the wrong commit. Fixed by trying `/git/ref/tags/<tag>` first (immutable; resolves annotated tags through the standard one-extra-deref). Falls back to the branch ref only when the tag lookup fails. Both paths remain non-fatal — `commit_sha` is diagnostic-only and Bootstrap never blocks on it.
+
+### Changed
+
+- `[clarification]` Renamed `_resolveCommitSha` to `resolveCommitSha` and exported it for direct unit testing. No behavioral change to existing consumers; `getLatestTag` is the only caller.
+
+### Tests
+
+- Added 3 unit tests covering the SHA-passthrough fast path, null-safety on empty/invalid inputs, and the bogus-40-char-non-hex rejection. Network-dependent paths (tag-ref + branch-ref) covered by integration tests against the live Edition repo.
+
+### Why this matters
+
+GitHub's REST API treats `target_commitish` as effectively read-only after a Release is published (HTTP 500 on `gh release edit --target <sha>` when the tag pre-exists). This means provenance pinning **cannot** be repaired via Release-object curation; it has to happen in the consumer (the Extension). Captured in `Alex_ACT_Supervisor/.github/skills/release-ritual/SKILL.md` Step 7.5.
+
 ## [9.4.0] - 2026-06-01
 
 **Minor [constitutional] — Extension becomes a static tool; brain now fetched from GitHub at runtime per [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md).**

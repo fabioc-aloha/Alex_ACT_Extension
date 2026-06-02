@@ -20,7 +20,36 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { getSilentAuthToken, sweepStaleTempDirs } = require('../lib/edition-fetch');
+const { getSilentAuthToken, sweepStaleTempDirs, resolveCommitSha } = require('../lib/edition-fetch');
+
+// ── resolveCommitSha fast-path (no HTTP) ─────────────────────────────
+//
+// The branches that DO hit GitHub (tag-ref + branch-ref fallback) live
+// in edition-fetch.integration.test.js. The SHA-passthrough case is
+// pure logic and tested here.
+
+test('resolveCommitSha: returns SHA verbatim when target is already 40-char hex', async () => {
+    const sha = '29237f5846794321c91d627e5b60ab2b383b1595';
+    const out = await resolveCommitSha(sha, 'v3.2.1', '9.4.1', null, 3000);
+    assert.equal(out, sha, 'pre-resolved SHA must short-circuit before any HTTP call');
+});
+
+test('resolveCommitSha: returns null when both target and tag are empty/invalid', async () => {
+    assert.equal(await resolveCommitSha(null, null, '9.4.1', null, 3000), null);
+    assert.equal(await resolveCommitSha('', '', '9.4.1', null, 3000), null);
+    assert.equal(await resolveCommitSha(undefined, undefined, '9.4.1', null, 3000), null);
+});
+
+test('resolveCommitSha: rejects non-hex 40-char strings as SHA (must fall through to ref lookup)', async () => {
+    // This is a guard against accepting garbage as a SHA. With no tag and
+    // an invalid SHA-looking target, the branch lookup will fail anyway,
+    // but the important property is we do not return the bogus value.
+    const bogus = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'; // 40 chars, not hex
+    const out = await resolveCommitSha(bogus, null, '9.4.1', null, 3000);
+    // Either null (branch fallback fails) or a real SHA from network.
+    // What it must NOT be is `bogus`.
+    assert.notEqual(out, bogus, 'bogus 40-char non-hex must not be accepted as SHA');
+});
 
 // ── getSilentAuthToken ────────────────────────────────────────────────
 
