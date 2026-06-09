@@ -318,6 +318,236 @@ test('install: refuses to write when manifest is invalid (heir unchanged)', () =
     } finally { cleanup(tarball); cleanup(heir); }
 });
 
+// ── vscode_assets + bootstrap_templates (ADR-009 amendment 2026-06-09) ──
+
+function setupTarballWithVscodeAssets(manifestOverrides, vscodeFiles) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'install-test-'));
+    const mp = path.join(root, MANIFEST_REL_PATH);
+    fs.mkdirSync(path.dirname(mp), { recursive: true });
+    fs.writeFileSync(mp, JSON.stringify(validManifest(manifestOverrides), null, 2));
+    // brain_subtrees content
+    fs.mkdirSync(path.join(root, '.github'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.github', 'placeholder.md'), 'x');
+    // .vscode/ content
+    if (vscodeFiles) {
+        const vsDir = path.join(root, '.vscode');
+        fs.mkdirSync(vsDir, { recursive: true });
+        for (const [name, content] of Object.entries(vscodeFiles)) {
+            fs.writeFileSync(path.join(vsDir, name), content);
+        }
+    }
+    return root;
+}
+
+test('vscode_assets: absent field → empty array, no install', () => {
+    const tarball = setupTarballWithVscodeAssets({});
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.vscodeAssetsCopied, []);
+        assert.equal(fs.existsSync(path.join(heir, '.vscode')), false);
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('vscode_assets: installs declared file into heir .vscode/', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { vscode_assets: ['markdown-light.css'] },
+        { 'markdown-light.css': '/* edition css */' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.vscodeAssetsCopied, ['.vscode/markdown-light.css']);
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.vscode', 'markdown-light.css'), 'utf8'),
+            '/* edition css */'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('vscode_assets: refresh on every install (overwrites heir copy)', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { vscode_assets: ['markdown-light.css'] },
+        { 'markdown-light.css': '/* edition v2 */' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        fs.mkdirSync(path.join(heir, '.vscode'));
+        fs.writeFileSync(path.join(heir, '.vscode', 'markdown-light.css'), '/* heir-edited */');
+        installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.vscode', 'markdown-light.css'), 'utf8'),
+            '/* edition v2 */'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('vscode_assets: path separator in entry → MANIFEST_INVALID_VSCODE_ASSET', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { vscode_assets: ['../escape.css'] },
+        { 'markdown-light.css': 'x' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        assert.throws(
+            () => installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' }),
+            (err) => /** @type {any} */ (err).code === 'MANIFEST_INVALID_VSCODE_ASSET'
+        );
+        // Heir untouched
+        assert.equal(fs.existsSync(path.join(heir, '.vscode')), false);
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('vscode_assets: declared file missing from tarball → MANIFEST_VSCODE_ASSET_MISSING', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { vscode_assets: ['missing.css'] },
+        { 'markdown-light.css': 'x' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        assert.throws(
+            () => installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' }),
+            (err) => /** @type {any} */ (err).code === 'MANIFEST_VSCODE_ASSET_MISSING'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: absent field → empty arrays, no install', () => {
+    const tarball = setupTarballWithVscodeAssets({});
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.bootstrapTemplatesInstalled, []);
+        assert.deepEqual(result.bootstrapTemplatesSkipped, []);
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: installs when target absent (first-install semantics)', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { bootstrap_templates: ['.vscode/settings.json', '.vscode/extensions.json'] },
+        { 'settings.json': '{"editor.tabSize":2}', 'extensions.json': '{"recommendations":[]}' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.bootstrapTemplatesInstalled.sort(), ['.vscode/extensions.json', '.vscode/settings.json']);
+        assert.deepEqual(result.bootstrapTemplatesSkipped, []);
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.vscode', 'settings.json'), 'utf8'),
+            '{"editor.tabSize":2}'
+        );
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.vscode', 'extensions.json'), 'utf8'),
+            '{"recommendations":[]}'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: preserves heir-edited file on upgrade (skips, does NOT clobber)', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { bootstrap_templates: ['.vscode/settings.json'] },
+        { 'settings.json': '{"editor.tabSize":2}' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        fs.mkdirSync(path.join(heir, '.vscode'));
+        fs.writeFileSync(path.join(heir, '.vscode', 'settings.json'), '{"heir":"customized"}');
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.bootstrapTemplatesInstalled, []);
+        assert.deepEqual(result.bootstrapTemplatesSkipped, ['.vscode/settings.json']);
+        // Heir customization preserved
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.vscode', 'settings.json'), 'utf8'),
+            '{"heir":"customized"}'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: entry with .. → MANIFEST_INVALID_BOOTSTRAP_TEMPLATE', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { bootstrap_templates: ['../escape.txt'] },
+        { 'settings.json': 'x' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        assert.throws(
+            () => installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' }),
+            (err) => /** @type {any} */ (err).code === 'MANIFEST_INVALID_BOOTSTRAP_TEMPLATE'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: declared file missing from tarball → MANIFEST_BOOTSTRAP_TEMPLATE_MISSING', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        { bootstrap_templates: ['.vscode/never-existed.json'] },
+        { 'settings.json': 'x' }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        assert.throws(
+            () => installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' }),
+            (err) => /** @type {any} */ (err).code === 'MANIFEST_BOOTSTRAP_TEMPLATE_MISSING'
+        );
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
+test('bootstrap_templates: entries inside brain_subtree get overwritten by subtree then skipped', () => {
+    // Edge case documented in ADR-009 amendment 2026-06-09. cognitive-config.json
+    // lives at .github/config/ which is inside the .github subtree. The subtree
+    // copy lands the Edition version there first; the bootstrap_templates loop
+    // then sees it exists and skips. Net: Edition version always wins for
+    // inside-subtree entries (no heir-preservation for this path), unlike
+    // outside-subtree entries which behave per first-install semantics.
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'install-test-'));
+    const mp = path.join(root, MANIFEST_REL_PATH);
+    fs.mkdirSync(path.dirname(mp), { recursive: true });
+    fs.writeFileSync(mp, JSON.stringify(validManifest({
+        bootstrap_templates: ['.github/config/cognitive-config.json']
+    }), null, 2));
+    fs.mkdirSync(path.join(root, '.github', 'config'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.github', 'config', 'cognitive-config.json'), '{"edition":true}');
+
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        // Pre-existing heir version
+        fs.mkdirSync(path.join(heir, '.github', 'config'), { recursive: true });
+        fs.writeFileSync(path.join(heir, '.github', 'config', 'cognitive-config.json'), '{"heir":true}');
+        const result = installFromTarball(heir === root ? '/never' : root, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        // Loop skipped (file already existed post-subtree-copy)
+        assert.deepEqual(result.bootstrapTemplatesSkipped, ['.github/config/cognitive-config.json']);
+        // Edition version wins (subtree copy clobbered heir's first)
+        assert.equal(
+            fs.readFileSync(path.join(heir, '.github', 'config', 'cognitive-config.json'), 'utf8'),
+            '{"edition":true}'
+        );
+    } finally { cleanup(root); cleanup(heir); }
+});
+
+test('install: subtree + vscode_assets + bootstrap_templates all happen in order, marker last', () => {
+    const tarball = setupTarballWithVscodeAssets(
+        {
+            vscode_assets: ['markdown-light.css'],
+            bootstrap_templates: ['.vscode/settings.json']
+        },
+        {
+            'markdown-light.css': '/* css */',
+            'settings.json': '{"key":"value"}'
+        }
+    );
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const result = installFromTarball(tarball, heir, '9.5.0', { fetchedTag: 'v3.2.0' });
+        assert.deepEqual(result.subtreesCopied, ['.github']);
+        assert.deepEqual(result.vscodeAssetsCopied, ['.vscode/markdown-light.css']);
+        assert.deepEqual(result.bootstrapTemplatesInstalled, ['.vscode/settings.json']);
+        // All three categories present in heir
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'placeholder.md')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.vscode', 'markdown-light.css')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.vscode', 'settings.json')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.act-heir.json')), true);
+    } finally { cleanup(tarball); cleanup(heir); }
+});
+
 // ── applyStaticFetchMarkerFields ──────────────────────────────────────
 // Pure-function coverage of the marker merge that extension.js performs at
 // bootstrap and upgrade time (audit F10 — fills the integration gap so the

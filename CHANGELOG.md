@@ -6,6 +6,44 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.0] - 2026-06-09
+
+**Minor [behaviour] — Bootstrap and Upgrade now install `.vscode/` files declared by Edition.**
+
+Closes a regression introduced with the static-fetch cutover (v9.4.0). The Edition manifest has been declaring `vscode_assets` (`.vscode/markdown-light.css`) and `bootstrap_templates` (`.vscode/extensions.json`, `.vscode/settings.json`, `.github/config/cognitive-config.json`) for some time, but `lib/edition-install.js` only honored `brain_subtrees`. The result on a fresh bootstrap or upgrade: heirs got `.github/` correctly but `.vscode/` was empty — no recommended extensions prompt, no Mermaid/markdown settings, no light-mode markdown stylesheet. Pre-v9.4.0 (bundled-brain era) the build script copied `.vscode/` into the VSIX; static-fetch dropped that path with nothing to replace it.
+
+### What heirs see after upgrading
+
+Run `ACT: Upgrade Brain` once on the upgraded Extension. The Extension now also installs:
+
+- `.vscode/markdown-light.css` — Edition-owned, refreshed on every install (`vscode_assets` semantics)
+- `.vscode/extensions.json` — first-install only; if you already edited it, your version is preserved
+- `.vscode/settings.json` — first-install only; same heir-preservation rule
+- `.github/config/cognitive-config.json` — present on every install (this file lives inside the `.github` subtree, so Edition's version always wins)
+
+Existing heirs that bootstrapped on v9.4.0/9.4.1 and never got these files will get them on the next `ACT: Upgrade Brain`. Heirs that hand-created their own `.vscode/settings.json` keep it (first-install semantics protect heir edits).
+
+### Added
+
+- `[behaviour]` `lib/edition-install.js` now reads two additional manifest fields per the [ADR-009 amendment 2026-06-09](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md#edition-contract):
+  - `manifest.vscode_assets` — array of basenames under `.vscode/`. Refresh-always semantics: copied on every install and upgrade. Optional; absent or `[]` is a no-op for backward-compat with pre-2026-06-09 Edition releases.
+  - `manifest.bootstrap_templates` — array of repo-relative paths. First-install-only semantics: copied only when the target file does not already exist in the heir. Heir edits are preserved on upgrade. Optional; absent or `[]` is a no-op.
+- `[behaviour]` Validation for both new fields runs **before any destructive op**, symmetric to the existing `brain_subtrees` checks. Path-traversal (`..`), absolute paths, and (for `vscode_assets`) path separators are rejected. Files declared but absent from the tarball throw typed errors (`MANIFEST_INVALID_VSCODE_ASSET`, `MANIFEST_VSCODE_ASSET_MISSING`, `MANIFEST_INVALID_BOOTSTRAP_TEMPLATE`, `MANIFEST_BOOTSTRAP_TEMPLATE_MISSING`).
+- `[behaviour]` `installFromTarball` return shape extended with `vscodeAssetsCopied`, `bootstrapTemplatesInstalled`, `bootstrapTemplatesSkipped` for diagnostic logging.
+
+### Tests
+
+- Added 12 unit tests covering: absent fields are a no-op, declared files install correctly, refresh-always vs first-install-only semantics, heir customizations preserved by `bootstrap_templates`, path-traversal rejected for both fields, missing files in tarball produce typed errors, and the edge case where `bootstrap_templates` entries inside a `brain_subtrees` path get overwritten by the subtree copy first. Total: 86/86 tests pass (was 74/74).
+
+### Brain contract
+
+- `min_extension_version` unchanged (still 9.4.0). Older Extensions continue to install Edition releases — they just won't copy `.vscode/` files. New Extensions get more.
+- Manifest fields `vscode_assets` and `bootstrap_templates` remain **optional** in the contract. Legacy Edition releases without them work unchanged.
+
+### Why this is a minor bump, not a patch
+
+Heirs notice the change (new files appear in `.vscode/` after upgrade), and bootstrap/upgrade behavior changed. Per `version-management.instructions.md` "would a heir notice?" test, that's minor.
+
 ## [9.4.1] - 2026-06-02
 
 **Patch [behaviour] — heir-marker `commit_sha` provenance fix: resolve via tag ref (immutable) before falling back to branch ref.**
