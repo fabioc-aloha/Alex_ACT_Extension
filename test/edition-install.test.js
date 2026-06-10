@@ -619,3 +619,124 @@ test('applyStaticFetchMarkerFields: missing extensionVersion defaults to unknown
     );
     assert.equal(out.extension_version, 'unknown');
 });
+
+// ── HEIR_OWNED source-side filter (added v9.5.1, defense against leak of
+//    Edition's curator workflows / dependabot.yml into heir trees) ──────
+
+const { _loadHeirOwnedGlobs, _matchesHeirOwnedGlob } = require('../lib/edition-install');
+
+function setupRegistry(tarballRoot, heirOwned) {
+    const regDir = path.join(tarballRoot, '.github', 'scripts');
+    fs.mkdirSync(regDir, { recursive: true });
+    const regPath = path.join(regDir, '_registry.cjs');
+    fs.writeFileSync(regPath, `module.exports = { HEIR_OWNED: ${JSON.stringify(heirOwned)} };\n`);
+    return regPath;
+}
+
+test('_matchesHeirOwnedGlob: literal path matches exactly', () => {
+    assert.equal(_matchesHeirOwnedGlob('.github/dependabot.yml', ['.github/dependabot.yml']), true);
+    assert.equal(_matchesHeirOwnedGlob('.github/dependabot.yaml', ['.github/dependabot.yml']), false);
+});
+
+test('_matchesHeirOwnedGlob: dir/** matches descendants but not unrelated paths', () => {
+    const globs = ['.github/workflows/**'];
+    assert.equal(_matchesHeirOwnedGlob('.github/workflows/brain-qa.yml', globs), true);
+    assert.equal(_matchesHeirOwnedGlob('.github/workflows/sub/deep.yml', globs), true);
+    assert.equal(_matchesHeirOwnedGlob('.github/workflows', globs), true);
+    assert.equal(_matchesHeirOwnedGlob('.github/instructions/critical-thinking.instructions.md', globs), false);
+});
+
+test('_matchesHeirOwnedGlob: unsupported glob shape (single-segment *) does not match', () => {
+    // Edition's HEIR_OWNED is flat literal or `path/**`. A `*.yml` pattern
+    // is outside the supported vocabulary and intentionally not matched.
+    assert.equal(_matchesHeirOwnedGlob('.github/dependabot.yml', ['.github/*.yml']), false);
+});
+
+test('_loadHeirOwnedGlobs: missing _registry.cjs → empty array (graceful)', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'heirglobs-'));
+    try {
+        assert.deepEqual(_loadHeirOwnedGlobs(root), []);
+    } finally { cleanup(root); }
+});
+
+test('_loadHeirOwnedGlobs: malformed _registry.cjs → empty array (graceful)', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'heirglobs-'));
+    try {
+        const regDir = path.join(root, '.github', 'scripts');
+        fs.mkdirSync(regDir, { recursive: true });
+        fs.writeFileSync(path.join(regDir, '_registry.cjs'), 'this is not valid js {');
+        assert.deepEqual(_loadHeirOwnedGlobs(root), []);
+    } finally { cleanup(root); }
+});
+
+test('_loadHeirOwnedGlobs: returns array from registry', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'heirglobs-'));
+    try {
+        setupRegistry(root, ['.github/workflows/**', '.github/dependabot.yml']);
+        const globs = _loadHeirOwnedGlobs(root);
+        assert.deepEqual(globs, ['.github/workflows/**', '.github/dependabot.yml']);
+    } finally { cleanup(root); }
+});
+
+test('install: HEIR_OWNED files in tarball are NOT copied to heir', () => {
+    const root = setupTarballRoot(validManifest(), {
+        '.github': {
+            'copilot-instructions.md': 'brain content',
+            'instructions/foo.instructions.md': 'rule',
+            'workflows/curator-only.yml': 'on: push',
+            'dependabot.yml': 'version: 2',
+            'episodic/note-2026-06-10.md': 'history'
+        }
+    });
+    setupRegistry(root, [
+        '.github/workflows/**',
+        '.github/dependabot.yml',
+        '.github/episodic/**'
+    ]);
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-'));
+    try {
+        installFromTarball(root, heir, '9.5.1', {});
+        // Brain content lands.
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'copilot-instructions.md')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'instructions', 'foo.instructions.md')), true);
+        // Curator-owned content filtered out.
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'workflows', 'curator-only.yml')), false, 'workflows/ must not leak');
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'dependabot.yml')), false, 'dependabot.yml must not leak');
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'episodic', 'note-2026-06-10.md')), false, 'episodic/ must not leak');
+    } finally { cleanup(root); cleanup(heir); }
+});
+
+test('install: graceful fallback when tarball has no _registry.cjs (older Edition)', () => {
+    // Pre-v9.5.1 behavior preserved: no registry → no filter → verbatim copy.
+    const root = setupTarballRoot(validManifest(), {
+        '.github': {
+            'copilot-instructions.md': 'brain',
+            'workflows/x.yml': 'on: push'
+        }
+    });
+    // Deliberately no setupRegistry — tarball lacks _registry.cjs.
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-'));
+    try {
+        installFromTarball(root, heir, '9.5.1', {});
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'copilot-instructions.md')), true);
+        // Without registry guidance, files copy verbatim.
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'workflows', 'x.yml')), true);
+    } finally { cleanup(root); cleanup(heir); }
+});
+
+test('install: heir-owned local/ subdirectory in Edition tarball does not land in heir', () => {
+    // Catches the case where Edition accidentally commits a local/ overlay.
+    const root = setupTarballRoot(validManifest(), {
+        '.github': {
+            'skills/baseline-skill/SKILL.md': 'baseline',
+            'skills/local/curator-test/SKILL.md': 'curator-only test artifact'
+        }
+    });
+    setupRegistry(root, ['.github/skills/local/**']);
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-'));
+    try {
+        installFromTarball(root, heir, '9.5.1', {});
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'skills', 'baseline-skill', 'SKILL.md')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'skills', 'local', 'curator-test', 'SKILL.md')), false);
+    } finally { cleanup(root); cleanup(heir); }
+});

@@ -6,6 +6,31 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.1] - 2026-06-10
+
+**Patch [behaviour] — close HEIR_OWNED leak during static-fetch install.**
+
+Before v9.5.1, the brain-subtree copy in `lib/edition-install.js installFromTarball` walked every file under each declared subtree verbatim. When Edition's own `.github/` gained curator-only files matching HEIR_OWNED globs (e.g. `.github/workflows/*.yml`, `.github/dependabot.yml`), those files leaked into every heir on the next Bootstrap or Upgrade. The Extension's recovery pattern (`collectHeirOwnedSnapshot` in `extension.js cmdUpgrade`) only restored HEIR_OWNED files that existed in the heir's snapshot pre-upgrade — a heir with no prior `.github/workflows/` had nothing to restore, so Edition's curator workflows persisted in the heir's tree.
+
+### Fixed
+
+- `lib/edition-install.js` now loads `HEIR_OWNED` from the fetched tarball's `.github/scripts/_registry.cjs` (best-effort) and filters the brain-subtree copy source-side. Files matching any HEIR_OWNED glob are skipped during the copy; the heir's own files at those paths (recovered by `cmdUpgrade`'s backup-install-recover pattern) remain authoritative. Defense in depth alongside the existing recovery pass.
+- Graceful degradation: Edition tags older than the registry export (or any registry that fails to load) fall back to verbatim copy, preserving pre-v9.5.1 behavior.
+- New supported glob shapes: literal paths and `path/**` (matches every Edition HEIR_OWNED entry as of 2026-06-10). Other glob shapes (e.g. `*.yml`) are not matched and would need explicit handling.
+
+### Added
+
+- `_loadHeirOwnedGlobs(tarballRoot)` and `_matchesHeirOwnedGlob(rel, patterns)` helpers exported from `lib/edition-install.js` for tests + diagnostics.
+- 9 new unit tests in `test/edition-install.test.js` covering: literal-path matching, `path/**` glob matching, unsupported-glob non-matching, missing-registry graceful fallback, malformed-registry graceful fallback, valid-registry happy path, end-to-end HEIR_OWNED file exclusion during install, pre-v9.5.1-compatible verbatim copy when registry absent, and local/ overlay protection. Full Extension suite: 98 tests pass (was 89).
+
+### Heir impact
+
+Heirs running v9.5.1+ on next `/upgrade` against Edition v3.4.1+ get a clean subtree (no curator workflows / dependabot.yml in their tree). Heirs running v9.5.0 or earlier still leak workflows from Edition until they update via Marketplace; the leaked files are heir-owned per Edition's `_registry.cjs`, so heirs can safely `rm` them after they update.
+
+### Falsifier
+
+The filter is decorative if 90 days pass (re-evaluate 2026-09-10) with zero heir-owned files in Edition tarballs (the only file Edition currently emits matching the filter is `.github/dependabot.yml` shipped this same day, and the workflows added the same day). If so, narrow scope or sunset.
+
 ## [9.5.0] - 2026-06-09
 
 **Minor [behaviour] — Bootstrap and Upgrade now install `.vscode/` files declared by Edition.**
