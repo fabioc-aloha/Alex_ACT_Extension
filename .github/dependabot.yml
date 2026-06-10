@@ -1,0 +1,13 @@
+# AP-03: Dependabot for github-actions ecosystem only.
+# npm scope intentionally absent — Extension's package.json declares 0
+# dependencies and 0 devDependencies by design (zero-dep, pure-stdlib host code).
+# Authoritative spec: Alex_ACT_Supervisor/docs/proposals/fleet-adoption-2026-06-10.md
+# Falsifier: re-evaluate by 2026-09-10 (90 days).
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
