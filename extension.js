@@ -1218,11 +1218,19 @@ async function cmdStatusBarMenu() {
     if (isHeir) {
         const marker = readMarkerSafe(getMarkerPath(root));
         if (marker) {
-            try {
-                editionVersion = marker.edition_version;
-                bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
-                upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
-            } catch { /* fall through */ }
+            editionVersion = marker.edition_version;
+            try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
+            // Static-fetch fallback: no bundled brain post-ADR-009, but the
+            // activation-time version check may have cached the latest
+            // Edition tag in globalState. Use that as the "available
+            // version" so the Upgrade Brain pick mirrors the status-bar
+            // arrow indicator. Without this, the status bar shows
+            // "ACT vX.Y.Z ↑" but the QuickPick hides the Upgrade item.
+            if (!bundledVersion) {
+                const cached = getCachedLatestEditionTag(_extensionContext);
+                if (cached) bundledVersion = cached.replace(/^v/, '');
+            }
+            upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
         }
     }
 

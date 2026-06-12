@@ -6,6 +6,24 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.2] - 2026-06-12
+
+**Patch [behaviour] — restore Upgrade Brain item in status-bar QuickPick under static-fetch mode.**
+
+User-reported: clicking the `$(brain) ACT vX.Y.Z ↑` status-bar item opened the action menu but the **Upgrade Brain** pick was missing. The status-bar text correctly read the cached latest Edition tag from `globalState` (populated by the activation-time version check) and showed the up-arrow indicator, but `cmdStatusBarMenu` in `extension.js` read `BRAIN_DIR/VERSION` only. Post-ADR-009 (v9.4.0+) the Extension ships no bundled `brain/` directory, so the read threw, `bundledVersion` stayed empty, `upgradeAvailable` evaluated false, and the QuickPick suppressed the Upgrade item. Status bar and QuickPick were reading different sources of truth for the same signal.
+
+### Fixed
+
+- `cmdStatusBarMenu` now mirrors the status-bar item's static-fetch fallback: when `BRAIN_DIR/VERSION` is absent (the normal case post-v9.4.0), reads the cached latest Edition tag from `globalState` via `getCachedLatestEditionTag(_extensionContext)` and uses that as the available version. The Upgrade Brain pick now appears whenever the status bar shows the up-arrow.
+
+### Heir impact
+
+Heirs running v9.4.0 through v9.5.1 saw the bug; v9.5.2 restores parity. No behavior change to actual install logic — only the discoverability of the existing `alex-act.upgrade` command. Heirs without an upgrade available see no change.
+
+### Falsifier
+
+Re-evaluate 2026-09-12 (90 days). If a user reports the status bar shows the arrow but QuickPick still suppresses Upgrade Brain, the cached-tag fallback didn't fire — investigate the `globalState` key + activation-time version-check path.
+
 ## [9.5.1] - 2026-06-10
 
 **Patch [behaviour] — close HEIR_OWNED leak during static-fetch install.**
