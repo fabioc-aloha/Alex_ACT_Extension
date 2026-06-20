@@ -6,7 +6,30 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-## [9.5.2] - 2026-06-12
+## [9.5.3] - 2026-06-20
+
+**Patch [behaviour] — only offer Upgrade Brain when the available Edition is strictly newer.**
+
+Before v9.5.3, every "upgrade available" signal in `extension.js` (status-bar arrow, status-bar QuickPick `Upgrade Brain` pick, `cmdStatus` info message) compared bundled/cached Edition version to the heir marker with `!==`. Any drift triggered the upgrade affordance — including the downgrade direction. A user who pinned an older Extension build, or whose `globalState` cached-tag briefly lagged the workspace marker, saw a phantom "↑" and an Upgrade pick that would have replaced their newer brain with an older one. `_cmdUpgradeBody` itself only short-circuited on exact equality, so invoking `alex-act.upgrade` against an older bundled brain would have proceeded.
+
+### Fixed
+
+- New `isNewerSemver(candidate, current)` helper in `extension.js` parses `MAJOR.MINOR.PATCH` (tolerates leading `v`, ignores pre-release suffixes) and returns `true` only when `candidate` is strictly greater. Invalid/unparseable inputs return `false` — fail closed.
+- Four upgrade-signal sites now gate on `isNewerSemver` instead of `!==`:
+  - `cmdStatusBarMenu` — `Upgrade Brain` QuickPick item + status-line description
+  - `cmdStatus` — `(vX available)` tooltip line + `Upgrade Now` prompt
+  - Status-bar item — `$(arrow-up)` indicator + tooltip
+  - `_cmdUpgradeBody` — refuses to proceed with an explanatory message when bundled brain is not strictly newer (downgrade guard)
+
+### Heir impact
+
+Heirs see no change when a real upgrade is available. The phantom-upgrade case (rare: requires Extension/cache drift opposite to the usual direction) no longer surfaces a misleading affordance, and the underlying `alex-act.upgrade` command refuses to downgrade if invoked directly.
+
+### Falsifier
+
+Re-evaluate 2026-09-20 (90 days). If a user reports the status bar fails to show the arrow when a legitimate newer Edition tag is cached, the semver parse likely rejected the tag shape — investigate `isNewerSemver` against the failing version string.
+
+
 
 **Patch [behaviour] — restore Upgrade Brain item in status-bar QuickPick under static-fetch mode.**
 

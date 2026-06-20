@@ -168,6 +168,32 @@ async function ensureBrainDir(ctx) {
     };
 }
 
+// ── Semver comparison ────────────────────────────────────────────────────
+//
+// Upgrade prompts must only fire when the bundled/available Edition is
+// strictly newer than what the workspace already has. A naive `!==`
+// check would offer a downgrade when a user installs an older Extension
+// build (or when the cached "latest" tag briefly lags behind the
+// marker). Pre-release suffixes are ignored — we compare only the
+// numeric MAJOR.MINOR.PATCH prefix, which matches how `brain/VERSION`
+// is shaped.
+function isNewerSemver(candidate, current) {
+    const parse = (v) => {
+        if (!v || typeof v !== 'string') return null;
+        const m = v.trim().replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)/);
+        if (!m) return null;
+        return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+    };
+    const a = parse(candidate);
+    const b = parse(current);
+    if (!a || !b) return false;
+    for (let i = 0; i < 3; i++) {
+        if (a[i] > b[i]) return true;
+        if (a[i] < b[i]) return false;
+    }
+    return false;
+}
+
 // ── Bundled brain introspection ──────────────────────────────────────────
 function getBundledEditionVersion() {
     try {
@@ -895,6 +921,18 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
         return;
     }
 
+    // Refuse to silently downgrade. The bundled brain can lag the
+    // workspace if the user installs an older Extension build, or if a
+    // future Edition release was pulled in via a side channel. Surface
+    // the situation but don't replace the heir's newer brain with an
+    // older one — that path leads to silent regressions.
+    if (!isNewerSemver(bundledVersion, currentVersion)) {
+        vscode.window.showInformationMessage(
+            `Workspace is on Edition v${currentVersion}; bundled brain is v${bundledVersion}. No upgrade offered.`
+        );
+        return;
+    }
+
     // Major version check
     const bundledMajor = parseInt(bundledVersion.split('.')[0], 10);
     const currentMajor = parseInt(currentVersion.split('.')[0], 10);
@@ -1230,7 +1268,7 @@ async function cmdStatusBarMenu() {
                 const cached = getCachedLatestEditionTag(_extensionContext);
                 if (cached) bundledVersion = cached.replace(/^v/, '');
             }
-            upgradeAvailable = bundledVersion && editionVersion && bundledVersion !== editionVersion;
+            upgradeAvailable = isNewerSemver(bundledVersion, editionVersion);
         }
     }
 
@@ -1368,7 +1406,7 @@ async function cmdStatus() {
     const localCount = fs.existsSync(path.join(ghDir, 'skills', 'local'))
         ? fs.readdirSync(path.join(ghDir, 'skills', 'local')).filter(f => { try { return fs.statSync(path.join(ghDir, 'skills', 'local', f)).isDirectory(); } catch { return false; } }).length : 0;
 
-    const upgradeAvailable = bundledVersion !== marker.edition_version;
+    const upgradeAvailable = isNewerSemver(bundledVersion, marker.edition_version);
     const lines = [
         `Heir: ${marker.heir_name} (${marker.heir_id})`,
         `Edition: v${marker.edition_version}${upgradeAvailable ? ` (v${bundledVersion} available)` : ' (latest)'}`,
@@ -1806,7 +1844,7 @@ function activate(context) {
                             (protectedMarker.note ? `\n\n${protectedMarker.note}` : '') +
                             '\n\nClick for actions';
                     } else if (marker && marker.edition_version) {
-                        const upgradeAvailable = bundledVersion && bundledVersion !== marker.edition_version;
+                        const upgradeAvailable = isNewerSemver(bundledVersion, marker.edition_version);
                         statusBar.text = upgradeAvailable
                             ? `$(brain) ACT v${marker.edition_version} $(arrow-up)`
                             : `$(brain) ACT v${marker.edition_version}`;
