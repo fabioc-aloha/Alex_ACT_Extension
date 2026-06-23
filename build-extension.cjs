@@ -131,6 +131,11 @@ console.log('5. Writing .vscodeignore...');
 const vscodeignore = [
     '.git',
     '.github',
+    // Legacy AlexMaster folder names — harmless if absent, defense-in-depth
+    // against accidentally shipping if a heir or contributor reintroduces them.
+    'decisions',
+    'ACT',
+    'ACT_obsolete',
     'assets/banner-*.svg',
     '*.cjs',
     '**/*.cjs',
@@ -142,7 +147,15 @@ const vscodeignore = [
     // The Extension fetches the latest Edition brain from GitHub at runtime.
     // The entry below is defense-in-depth in case a stale brain/ exists locally.
     'brain/**',
+    // Test code: not shipped to Marketplace consumers. Run locally with `npm test`.
     'test/**',
+    // Dev tooling: wiki publish scripts, etc.
+    'scripts/**',
+    // Developer's local VS Code config — never ship; potential config leak.
+    '.vscode/**',
+    // Repo metadata — not relevant to Marketplace consumers.
+    '.gitignore',
+    '.markdownlint.json',
     'node_modules',
     '.vscode-test',
     'build-extension.cjs',

@@ -27,7 +27,6 @@ const EXT_ROOT = __dirname;
 const SIGNATURE_PATH = path.join(EXT_ROOT, 'migration', 'alex-master-signature.json');
 const MANIFEST_PATH = path.join(EXT_ROOT, 'migration', 'alex-master-v8.4.0.manifest.json');
 const REVIEW_TEMPLATE_PATH = path.join(EXT_ROOT, 'templates', 'MIGRATION-REVIEW.md');
-const BRAIN_DIR = path.join(EXT_ROOT, 'brain');
 
 // ── AlexMaster v8.4.0 command IDs (deprecated stubs) ──────────────
 // Extracted from migration/legacy/alex-master-v8.4.0.vsix package.json

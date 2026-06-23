@@ -23,7 +23,12 @@ const https = require('node:https');
 const { getLatestTag, fetchTarball } = require('../lib/edition-fetch');
 const { readAndValidateManifest } = require('../lib/edition-install');
 
-const EXT_VERSION = '9.4.0';
+// Source EXT_VERSION from package.json so the integration test always reflects
+// the Extension as-published. Eagerly surfaces install-contract incompatibility
+// when an Edition release bumps min_extension_version past this Extension's
+// version (test fails with EXTENSION_TOO_OLD typed error rather than silently
+// passing against a stale fixture).
+const EXT_VERSION = require('../package.json').version;
 const SKIP_TAG = 'v3.2.0'; // skip if this tag does not yet exist
 
 // In-memory globalState shim for tests.

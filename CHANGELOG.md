@@ -6,6 +6,35 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.4] - 2026-06-23
+
+**Patch [behaviour] — VSIX hygiene + integration-test self-healing + dead-code cleanup.**
+
+Post-v3.6.1 Extension audit surfaced 5 defects of varying severity. Bundled as one patch because the user-visible change (`.vscodeignore` hardening) is a single coherent ship; the test fix + dead-code cleanup ride along at no extra release cost.
+
+### Fixed
+
+- **VSIX exclusion hardening (build template)** — `build-extension.cjs` step 5 (which writes `.vscodeignore` on each build — the file itself is gitignored) was missing several exclusions, so `vsce package` would ship 12 files that don't belong in the Marketplace VSIX: 7 `test/**` files (test code in user installs), `scripts/publish-wiki.ps1` (dev tooling), `.vscode/settings.json` (developer's local VS Code config — potential config leak), `.gitignore`, `.markdownlint.json` (repo metadata). Added explicit exclusions for `scripts/**`, `.vscode/**`, `.gitignore`, `.markdownlint.json` (and brought back legacy defenses for `decisions`, `ACT`, `ACT_obsolete` that the prior template lost). **VSIX file count drops 53 → 41** (12 fewer files shipped to Marketplace consumers).
+- **`brain/**` exclusion** — the prior local `.vscodeignore` carried a decorative `!brain/**` (which negated a non-existent exclusion). The build template already had the correct `brain/**` exclusion; this release confirms the local file's stale state would be overwritten on next build. Per ADR-009 § Phase 3, defense-in-depth even though `brain/` is also in `.gitignore`.
+- **Integration test self-healing** — `test/edition-fetch.integration.test.js:26` hardcoded `const EXT_VERSION = '9.4.0';` Edition v3.6.1 (2026-06-23) bumped `min_extension_version: 9.4.0 → 9.5.1`, so the test correctly fired `EXTENSION_TOO_OLD` typed error but assertion expected success — test was broken every time the floor exceeded the hardcoded constant. Now sources `EXT_VERSION` from `require('../package.json').version` so the test always reflects the Extension as-published and eagerly surfaces install-contract incompatibility on each `min_extension_version` bump.
+- **`migration.js` dead code removal** — unused `const BRAIN_DIR = path.join(EXT_ROOT, 'brain');` on line 30 referencing the absent `brain/` directory (Phase 3 cleanup); declared but never referenced elsewhere in the file. Removed.
+- **Stale local VSIX cleanup** — `alex-cognitive-architecture-9.3.0.vsix` (651 KB, predates static-fetch cutover) deleted from disk. Was gitignored, never in the repo, just dev clutter.
+
+### Heir impact
+
+Zero for installed heirs. Marketplace consumers on next install get a smaller, cleaner VSIX (12 fewer files; no exposed dev settings). The integration test fix is dev-only — doesn't affect runtime behaviour.
+
+### Verification
+
+- `npx vsce ls` confirms 41 files (was 53); zero `test/`, `scripts/`, `.vscode/`, `.gitignore`, `.markdownlint.json`, `brain/` entries.
+- `npm test` 95/95 PASS (no regression from `migration.js` line removal).
+- Integration test `node --test test/edition-fetch.integration.test.js` 3/3 PASS against live Edition v3.6.1 (was failing on `EXTENSION_TOO_OLD` before fix).
+- `lib/edition-source.js` `EDITION_REPO` unchanged (Rule 7 per `extension-delivery.instructions.md`).
+
+### Falsifier
+
+2026-09-23 (90 days) or sooner if (a) a Marketplace consumer reports the smaller VSIX missing a file they actually needed; (b) the integration test fixture self-healing breaks a CI invocation that depended on the hardcoded version; (c) a future Extension release accidentally re-introduces the `!brain/**` pattern.
+
 ## [9.5.3] - 2026-06-20
 
 **Patch [behaviour] — only offer Upgrade Brain when the available Edition is strictly newer.**
