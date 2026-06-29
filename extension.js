@@ -12,6 +12,7 @@ const { EDITION_REPO } = require('./lib/edition-source');
 const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
 const { readAndValidateManifest, acquireLock, getLockPath, applyStaticFetchMarkerFields } = require('./lib/edition-install');
 const { pathMatchesAny, shouldSkipForHeirOwnership } = require('./lib/heir-ownership');
+const { installVscodeAssets, seedBootstrapTemplates } = require('./lib/manifest-assets');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 // BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
@@ -149,6 +150,7 @@ async function ensureBrainDir(ctx) {
         tag: tagInfo.tag,
         commitSha: tagInfo.commitSha,
         authMode: tagInfo.authMode,
+        tarballRoot: fetch.tarballRoot,
         tempParent: fetch.tempParent
     };
     _fetchCleanup = () => {
@@ -308,6 +310,11 @@ function getBootstrapTemplateSet(manifest) {
         }
     }
     return s;
+}
+
+function getEditionRootForInstall() {
+    if (_fetchProvenance && _fetchProvenance.tarballRoot) return _fetchProvenance.tarballRoot;
+    return path.dirname(BRAIN_DIR);
 }
 
 // Map a brain-relative path (e.g. `instructions/foo.md` or `.vscode/settings.json`)
@@ -530,31 +537,19 @@ async function _cmdBootstrapBody(root) {
             );
         }
 
-        // 1b. Seed .github/ bootstrap templates from staged templates/ dir.
-        // These (e.g. cognitive-config.json) are intentionally absent from
-        // brain/ per the audit contract, so they don't appear in brainFiles
-        // above. We copy them once on first install; upgrades never touch them.
-        const templatesDir = path.join(__dirname, 'templates');
-        const templateSeedFailures = [];
-        for (const tpl of (manifest && Array.isArray(manifest.bootstrap_templates) ? manifest.bootstrap_templates : [])) {
-            const norm = String(tpl).replace(/\\/g, '/');
-            if (!norm.startsWith('.github/')) continue;
-            const dst = path.join(root, norm);
-            if (fs.existsSync(dst)) continue;
-            const src = path.join(templatesDir, path.basename(norm));
-            if (!fs.existsSync(src)) continue;
-            try {
-                fs.mkdirSync(path.dirname(dst), { recursive: true });
-                fs.copyFileSync(src, dst);
-                copied++;
-            } catch (err) {
-                templateSeedFailures.push({ rel: norm, err: err && err.message ? err.message : String(err) });
-            }
-        }
-        if (templateSeedFailures.length > 0) {
-            const sample = templateSeedFailures.map(f => `${f.rel}: ${f.err}`).join('\n');
+        const editionRoot = getEditionRootForInstall();
+        const vscodeAssetsCopied = installVscodeAssets(root, manifest, editionRoot);
+
+        // 1b. Seed bootstrap templates from the correct source root.
+        // .github/config/cognitive-config.json is staged in templates/ because
+        // it is intentionally absent from brain/; .vscode/* templates live in
+        // the fetched Edition tarball root and must be copied from there.
+        const templateResult = seedBootstrapTemplates(root, manifest, editionRoot, path.join(__dirname, 'templates'), null);
+        copied += vscodeAssetsCopied.length + templateResult.seeded.length;
+        if (templateResult.failures.length > 0) {
+            const sample = templateResult.failures.map(f => `${f.rel}: ${f.err}`).join('\n');
             vscode.window.showWarningMessage(
-                `ACT bootstrap: ${templateSeedFailures.length} bootstrap template(s) failed to seed.\n\n${sample}`
+                `ACT bootstrap: ${templateResult.failures.length} bootstrap template(s) failed to seed.\n\n${sample}`
             );
         }
 
@@ -1120,33 +1115,17 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
         return;
     }
 
-    // ── 4b. Seed bootstrap_templates from staged templates/ dir if missing ──
-    // Mirrors cmdBootstrap step 1b. The bootstrap_templates entries (e.g.
-    // .github/config/cognitive-config.json) are intentionally absent from
-    // brain/ per the faithfulness audit contract, so step 4 never installs
-    // them. Step 5 will restore them from snapshot if the heir had them.
-    // If the heir is missing any (manual deletion, partial bootstrap, schema
-    // bump that added a new template), this step reseeds the missing ones
-    // so the upgraded heir is never worse off than a fresh bootstrap.
-    const templatesDir = path.join(__dirname, 'templates');
-    const templateSeedFailures = [];
+    const editionRoot = getEditionRootForInstall();
+    const vscodeAssetsCopied = installVscodeAssets(root, manifest, editionRoot);
+
+    // ── 4b. Seed bootstrap_templates if missing ─────────────────────
+    // .github/config/cognitive-config.json is staged in templates/. Non-.github
+    // templates (today .vscode/extensions.json + .vscode/settings.json) live in
+    // the fetched Edition tarball root. Seed only when absent and not already
+    // snapshotted for restore.
     const heirOwnedAlreadySnapshot = new Set(allOwned);
-    for (const tpl of (manifest && Array.isArray(manifest.bootstrap_templates) ? manifest.bootstrap_templates : [])) {
-        const norm = String(tpl).replace(/\\/g, '/');
-        if (!norm.startsWith('.github/')) continue;
-        // Skip if step 5 will restore it from snapshot (heir already had it).
-        if (heirOwnedAlreadySnapshot.has(norm)) continue;
-        const dst = path.join(root, norm);
-        if (fs.existsSync(dst)) continue;
-        const src = path.join(templatesDir, path.basename(norm));
-        if (!fs.existsSync(src)) continue;
-        try {
-            fs.mkdirSync(path.dirname(dst), { recursive: true });
-            fs.copyFileSync(src, dst);
-        } catch (err) {
-            templateSeedFailures.push({ rel: norm, err: err && err.message ? err.message : String(err) });
-        }
-    }
+    const templateResult = seedBootstrapTemplates(root, manifest, editionRoot, path.join(__dirname, 'templates'), heirOwnedAlreadySnapshot);
+    const templateSeedFailures = templateResult.failures;
 
     // ── 5. Restore heir-owned files from the holding area (apply relocations) ──
     let recovered = 0;
@@ -1221,6 +1200,9 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
     const templateSeedLine = templateSeedFailures.length > 0
         ? ` ⚠ ${templateSeedFailures.length} bootstrap template(s) failed to seed.`
         : '';
+    const vscodeAssetsLine = vscodeAssetsCopied.length > 0
+        ? ` ${vscodeAssetsCopied.length} VS Code asset(s) refreshed.`
+        : '';
     const recoverLine = recoverFailures.length > 0
         ? ` ⚠ ${recoverFailures.length} heir-owned file(s) failed to recover — check backup at ${path.basename(backupDir)}/ and hold dir at ${path.basename(holdDir)}/.`
         : '';
@@ -1235,7 +1217,7 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
     }
 
     vscode.window.showInformationMessage(
-        `Upgraded to Edition v${bundledVersion}. ${recovered} heir-owned file(s) recovered.${relocatedLine}${collisionLine}${templateSeedLine}${migratedLine}${mergeLine}${doctorLine}${recoverLine}${holdPreservedLine}\n\nBackup: ${path.basename(backupDir)}/ — review then delete when satisfied.`
+        `Upgraded to Edition v${bundledVersion}. ${recovered} heir-owned file(s) recovered.${vscodeAssetsLine}${relocatedLine}${collisionLine}${templateSeedLine}${migratedLine}${mergeLine}${doctorLine}${recoverLine}${holdPreservedLine}\n\nBackup: ${path.basename(backupDir)}/ — review then delete when satisfied.`
     );
 }
 

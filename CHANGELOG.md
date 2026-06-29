@@ -6,7 +6,55 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.6] - 2026-06-29
+
+**Patch [behaviour] — Complete the production installer contract: Extension bootstrap/upgrade now install `vscode_assets` and non-`.github` `bootstrap_templates` from the fetched Edition root, while keeping the v9.5.5 HEIR_OWNED skip fix. This is the Marketplace-publishable replacement for v9.5.5.**
+
+v9.5.5 fixed the production copy loops for broad HEIR_OWNED paths inside `.github/` (workflows, dependabot, ISSUE_TEMPLATE, episodic, local namespaces). TESTE then exposed the other half of the same split-installer bug: `cmdBootstrap` and `cmdUpgrade` still only treated `BRAIN_DIR = <tarball>/.github` as the install source, so they never copied `.vscode/markdown-light.css` (`vscode_assets`) or `.vscode/extensions.json` / `.vscode/settings.json` (`bootstrap_templates`) from the fetched Edition root. `lib/edition-install.js installFromTarball` had the correct manifest logic, but production does not call it. v9.5.6 wires the production loops to the complete manifest contract.
+
+### Fixed
+
+- `extension.js` now preserves the fetched tarball root in `_fetchProvenance.tarballRoot` so production install paths can copy files outside `.github/`.
+- New `lib/manifest-assets.js` module (unit-tested) implements:
+  - `installVscodeAssets(heirRoot, manifest, editionRoot)` — refreshes Edition-owned `.vscode/<asset>` files every install/upgrade.
+  - `seedBootstrapTemplates(heirRoot, manifest, editionRoot, templatesDir, alreadyOwned)` — seeds `.github/config/cognitive-config.json` from Extension `templates/`, and seeds `.vscode/extensions.json` + `.vscode/settings.json` from the fetched Edition root, only when absent / not already snapshotted.
+- `cmdBootstrap` now calls both helpers after the `.github` brain-copy loop. Fresh Extension bootstraps receive:
+  - `.vscode/markdown-light.css`
+  - `.vscode/extensions.json`
+  - `.vscode/settings.json`
+  - `.github/config/cognitive-config.json`
+  without receiving Edition workflows/dependabot.
+- `cmdUpgrade` now refreshes `vscode_assets` on every upgrade and seeds any missing `bootstrap_templates` without clobbering existing heir-owned `.vscode/settings.json` or `.vscode/extensions.json`.
+- `npm test` now includes both new contract test files (`test/heir-ownership.test.js`, `test/manifest-assets.test.js`) in the canonical test command, so this class cannot drift outside the default gate again.
+
+### Verification
+
+- `npm test`: 116/116 PASS (was 95; +16 HEIR_OWNED tests +5 manifest asset/template tests).
+- Direct Edition bootstrap contract test (v3.6.3): CSS present, extensions/settings present, cognitive-config present, workflows absent, dependabot absent.
+- Direct Edition upgrade contract test (v3.6.3): CSS repaired, extensions/settings present, cognitive-config present, workflows absent, dependabot absent, summary reports asset refresh + template seed.
+
+### Heir-visible behaviour delta
+
+- Fresh Extension bootstrap on v9.5.6+ now installs the expected `.vscode/` files. TESTE is the canonical repro: v9.5.5 had only merger-created `settings.json`; v9.5.6 should also install `markdown-light.css` and `extensions.json`.
+- Existing heirs missing `.vscode/markdown-light.css` or `.vscode/extensions.json` can run `ACT: Upgrade Brain` after updating to v9.5.6; missing templates/assets are repaired.
+- Existing leaked workflows/dependabot from v9.5.0–v9.5.4 are still heir-owned and are not auto-deleted. Remove manually if they came from Edition and were not customized.
+
+### Falsifier
+
+2026-09-29 (90 days). Triggers:
+
+- A fresh Extension v9.5.6+ bootstrap lacks `.vscode/markdown-light.css`, `.vscode/extensions.json`, or `.vscode/settings.json`.
+- A v9.5.6+ upgrade clobbers an existing heir-owned `.vscode/settings.json` or `.vscode/extensions.json`.
+- A v9.5.6+ bootstrap/upgrade reintroduces Edition workflows/dependabot.
+- `installFromTarball` remains dead code and a fourth production installer path appears. If this fires, stop patching loops and refactor the installer behind a single kernel.
+
+### Why this is patch and not minor
+
+Bug-fix only. It makes the production installer obey the manifest contract Edition already declares. No new command, no new user-facing feature, no contract field added.
+
 ## [9.5.5] - 2026-06-29
+
+**Superseded before Marketplace publish by v9.5.6.** v9.5.5 fixed HEIR_OWNED filtering in the production copy loops, but TESTE proved the production loops still ignored `vscode_assets` and non-`.github` `bootstrap_templates`. v9.5.6 includes v9.5.5 plus the missing asset/template half and is the version to publish.
 
 **Patch [behaviour] — Wire HEIR_OWNED filter into the production copy loops in `extension.js`. Closes the leak class shipped 2026-06-10 where Edition's curator-side `.github/workflows/{brain-qa,release-gate}.yml` + `.github/dependabot.yml` were copied to every heir.**
 
