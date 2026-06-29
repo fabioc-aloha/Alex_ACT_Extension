@@ -6,6 +6,41 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.5] - 2026-06-29
+
+**Patch [behaviour] — Wire HEIR_OWNED filter into the production copy loops in `extension.js`. Closes the leak class shipped 2026-06-10 where Edition's curator-side `.github/workflows/{brain-qa,release-gate}.yml` + `.github/dependabot.yml` were copied to every heir.**
+
+The 2026-06-10 install-side defense added `_loadHeirOwnedGlobs` and `_matchesHeirOwnedGlob` to `lib/edition-install.js` `installFromTarball` and shipped with 98/98 unit tests passing. But `extension.js` `_cmdBootstrapBody` (line ~490) and `_cmdUpgradeBody` (line ~1089) use their own `listFilesRecursive(BRAIN_DIR)` + copy loops and never called `installFromTarball`. The function under test was dead code in the production path. Every heir bootstrapped or upgraded via Extension v9.5.0–v9.5.4 received Edition's curator-only workflows + dependabot.yml verbatim. Verified 2026-06-29 against a heir on Extension v9.5.4: leaked files present despite the documented defense.
+
+### Fixed
+
+- New `lib/heir-ownership.js` module exposing `pathMatchesAny` and `shouldSkipForHeirOwnership` as pure, unit-testable helpers (16 new tests; covers EDITION_OWNED no-skip, HEIR_OWNED-non-template skip, bootstrap-template no-skip, legacy-Edition graceful-degradation, regression test for the exact paths msft-career leaked).
+- `extension.js` `_cmdBootstrapBody` copy loop: load `HEIR_OWNED` via `loadOwnershipPolicy()` before the loop; call `shouldSkipForHeirOwnership(wsRel, heirOwnedGlobs, bootstrapTemplates)` per file. Existing `bootstrap_templates` first-install semantics preserved.
+- `extension.js` `_cmdUpgradeBody` copy loop: same wiring. Step 5's heir-owned restore-from-snapshot is unaffected.
+- `pathMatchesAny` moved from extension.js into the new lib module (no semantic change; required via `./lib/heir-ownership`). Other callers in extension.js (e.g. `collectHeirOwnedSnapshot`) continue to use the same function from the new location.
+
+### Heir-visible behaviour delta
+
+- **Next `/upgrade` from any v9.5.5+ Extension**: heirs no longer receive new copies of `.github/workflows/`, `.github/dependabot.yml`, `.github/ISSUE_TEMPLATE/`, `.github/episodic/`, or `local/` namespace files from Edition. Heir-owned files the heir already had are preserved (Step 5 restore is unchanged).
+- **Existing leaked files in heirs bootstrapped via v9.5.0–v9.5.4**: not automatically cleaned up. The Extension never deletes heir-owned files. If your heir has `.github/workflows/{brain-qa,release-gate}.yml` and/or `.github/dependabot.yml` that you didn't author, they leaked from Edition; safe to `rm` if you haven't customized them. Listing your heirs: bootstrap fresh ones; for existing ones the leaked files match exactly these patterns.
+- **Legacy Edition tags (pre-v3.4.x)**: the new code degrades gracefully — `loadOwnershipPolicy()` returns `null`, `shouldSkipForHeirOwnership` no-ops, behavior reverts to pre-v9.5.5 verbatim copy. Heirs on those Edition versions are not affected by this fix and were not affected by the bug (HEIR_OWNED enum didn't exist).
+
+### Falsifier
+
+2026-09-29 (90 days). Triggers:
+
+- A heir reports the new filter clobbered a HEIR_OWNED file they wanted to keep (filter too broad).
+- A heir on Extension v9.5.5+ reports workflows or dependabot.yml reappearing after `/upgrade` (fix didn't fire — possibly BRAIN_DIR scope mismatch or `loadOwnershipPolicy()` returning null when it shouldn't).
+- A third parallel install path appears that also needs this filter (refactor proposal would precede that).
+
+### Why this is patch and not minor
+
+Behavior change is bug-fix only: heirs **stop** receiving files they were never supposed to receive. No new feature, no new contract surface, no breaking change to existing heir behavior. Marketplace audience sees a `.vscodeignore`-class fix.
+
+### Provenance
+
+Proposal: `Alex_ACT_Supervisor/docs/proposals/extension-heir-owned-filter-wiring-2026-06-29.md` (Approved). Surfaced by Fabio observing `.github/workflows/` in `C:\Development\msft-career` after a same-day v9.5.4 bootstrap.
+
 ## [9.5.4] - 2026-06-23
 
 **Patch [behaviour] — VSIX hygiene + integration-test self-healing + dead-code cleanup.**

@@ -11,6 +11,7 @@ const { listFilesRecursive } = require('./lib/fs-utils');
 const { EDITION_REPO } = require('./lib/edition-source');
 const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
 const { readAndValidateManifest, acquireLock, getLockPath, applyStaticFetchMarkerFields } = require('./lib/edition-install');
+const { pathMatchesAny, shouldSkipForHeirOwnership } = require('./lib/heir-ownership');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 // BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
@@ -484,14 +485,27 @@ async function _cmdBootstrapBody(root) {
         const ghDir = getGitHubDir(root);
         const manifest = loadEditionManifest();
         const bootstrapTemplates = getBootstrapTemplateSet(manifest);
+        // Load HEIR_OWNED policy from the fetched tarball (or bundled brain
+        // on legacy installs). When null (pre-v3.4.x Edition tags), the
+        // skip helper degrades to no-skip and we get pre-v9.5.5 verbatim
+        // behavior. The 2026-06-29 fix wires this list into the copy loop
+        // below; the 2026-06-10 install-side filter shipped in
+        // lib/edition-install.js was tested but never called by production.
+        const ownership = loadOwnershipPolicy();
+        const heirOwnedGlobs = ownership ? ownership.HEIR_OWNED : null;
 
         // 1. Copy edition-owned brain files
         progress.report({ message: 'Copying brain files...' });
         const brainFiles = listFilesRecursive(BRAIN_DIR);
         let copied = 0;
+        let heirOwnedSkipped = 0;
         const copyFailures = [];
         for (const rel of brainFiles) {
             const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
+            if (shouldSkipForHeirOwnership(wsRel, heirOwnedGlobs, bootstrapTemplates)) {
+                heirOwnedSkipped++;
+                continue;
+            }
             const isTemplate = bootstrapTemplates.has(wsRel);
             try {
                 if (isTemplate) {
@@ -679,33 +693,9 @@ function loadOwnershipPolicy() {
     } catch { return null; }
 }
 
-/**
- * Test whether a workspace-relative path matches any of the supplied glob
- * patterns. Supports `**` (recursive) and `*` (single-segment) wildcards.
- * Patterns and input are normalised to forward slashes. Mirrors the pattern
- * matcher in `brain/scripts/upgrade-self.cjs` so classification stays
- * identical between the script and the Extension's JS upgrade.
- *
- * @param {string} wsRel - workspace-relative path (forward slashes)
- * @param {string[]} patterns - glob patterns
- * @returns {boolean}
- */
-function pathMatchesAny(wsRel, patterns) {
-    const norm = String(wsRel).replace(/\\/g, '/');
-    for (const raw of patterns) {
-        const p = String(raw).replace(/\\/g, '/');
-        if (p.endsWith('/**')) {
-            const prefix = p.slice(0, -3);
-            if (norm === prefix || norm.startsWith(prefix + '/')) return true;
-        } else if (p.includes('*')) {
-            const escaped = p.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
-            if (new RegExp('^' + escaped + '$').test(norm)) return true;
-        } else if (norm === p) {
-            return true;
-        }
-    }
-    return false;
-}
+// pathMatchesAny + shouldSkipForHeirOwnership live in ./lib/heir-ownership.js
+// for unit-testability without the vscode runtime. Required at the top of
+// this file.
 
 /**
  * Walk the heir's `.github/` and `.vscode/` and collect every file that is
@@ -1087,10 +1077,23 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
 
     // ── 4. Install fresh brain from bundled BRAIN_DIR (rollback on failure) ──
     const brainFiles = listFilesRecursive(BRAIN_DIR);
+    // Heir-owned files (workflows/, dependabot.yml, ISSUE_TEMPLATE/,
+    // episodic/, local/) must not ship from Edition. Step 5 restores
+    // anything the heir already had from the snapshot taken above; this
+    // skip prevents Edition's own copies from being written first. Without
+    // it, the heir's snapshot would clobber back over Edition's files but
+    // any HEIR_OWNED path the heir DIDN'T have would silently land — that's
+    // exactly the 2026-06-29 workflow leak.
+    const heirOwnedGlobs = policy ? policy.HEIR_OWNED : null;
+    let heirOwnedSkipped = 0;
     const installFailures = [];
     try {
         for (const rel of brainFiles) {
             const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
+            if (shouldSkipForHeirOwnership(wsRel, heirOwnedGlobs, bootstrapTemplates)) {
+                heirOwnedSkipped++;
+                continue;
+            }
             // bootstrap_templates are heir-owned merge points; only seed if
             // absent. After we recover from backup in step 5 they will be
             // restored anyway, so this is a belt-and-suspenders no-op.
