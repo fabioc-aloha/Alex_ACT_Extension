@@ -7,6 +7,10 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
+## [9.5.7] - 2026-07-01
+
+**Patch [behaviour] — Harden the static-fetch release path, remove retired repository automation and migration payloads, and add deterministic plus semantic release gates before Marketplace packaging.**
+
 ### Removed
 
 - Removed Extension-side GitHub automation (`.github/workflows/release-gate.yml`, `.github/dependabot.yml`). The Extension release process is operator-driven and Marketplace-bound; source-repo automation was not part of the runtime surface and should not ship or be maintained here.
@@ -15,6 +19,24 @@ All notable changes to Alex — ACT Edition.
 ### Changed
 
 - Simplified `migration.js` to the live static-fetch-era surface: retired migration warning, deprecated AlexMaster command stubs, rollback, and backup cleanup.
+- Committed `.vscodeignore` as source and changed `build-extension.cjs` to verify it instead of generating it at build time. Packaging now uses `npx --yes @vscode/vsce package` through `execFileSync` to avoid deprecated/interactively prompting `npx vsce package` behavior.
+- Added lock heartbeats during long bootstrap/upgrade operations, static-fetch-safe status version resolution, converter overwrite confirmation, data-only HEIR_OWNED manifest loading, and required-copy bootstrap abort behavior before marker creation.
+
+### Verification
+
+- `npm test`: 145/145 PASS.
+- `npm run test:semantic`: 5/5 PASS.
+- `node build-extension.cjs --no-vsix`: PASS.
+- VSIX packaging check: 42 files; no `.github/`, `brain/`, `test/`, `scripts/`, `.vscode/`, `build-extension.cjs`, `.act-protected.json`, retired migration payloads, or `*.tmp` files.
+
+### Heir-visible behaviour delta
+
+- Fresh Bootstrap and Upgrade stay on the same command surface, but static-fetch install failures are more defensive: required copy failures abort before an heir marker is written, long-running locks heartbeat instead of going stale, and converter commands ask before overwriting an existing output file.
+- The old AlexMaster migration command now clearly refuses in the static-fetch line; existing rollback/backup cleanup remains for already-migrated workspaces.
+
+### Falsifier
+
+2026-10-01 (90 days). Triggers: a VSIX ships a source-only file despite the package gate, a static-fetch bootstrap writes `.act-heir.json` after required file-copy failure, an active long-running upgrade lock is broken as stale, or a user reports silent converter output overwrite.
 
 ## [9.5.6] - 2026-06-29
 
