@@ -8,7 +8,7 @@ Alex is not one thing. It is six pieces in three layers, each with a clearly def
 | --- | --- | --- | --- |
 | **Edition** | The canonical brain — instructions, skills, prompts, agents, scripts | [`Alex_ACT_Edition`](https://github.com/fabioc-aloha/Alex_ACT_Edition) GitHub repo, versioned (e.g. v3.2.0) | The framework maintainers (you read it) |
 | **Extension** | The VS Code Marketplace tool that fetches Edition and provides the commands | [`Alex_ACT_Extension`](https://github.com/fabioc-aloha/Alex_ACT_Extension) GitHub repo + Marketplace listing, versioned (e.g. v9.4.0) | The framework maintainers (you install it) |
-| **Plugin Mall** | The optional catalog of 300+ extra skills, instructions, prompts | [`Alex_ACT_Plugin_Mall`](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall) GitHub repo | The framework maintainers (you browse and install) |
+| **Plugin Mall** | The optional catalog of extra skills, instructions, prompts | [`Alex_ACT_Plugin_Mall`](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall) GitHub repo | The framework maintainers (you browse and install) |
 | **Project memory** (`.github/`) | The per-project brain Alex actually reads each turn | Your workspace's `.github/` folder | You (it is plain text) |
 | **Shared memory bus** (`Alex_ACT_Memory`) | Cross-project channel for announcements, feedback, profile, cross-project insights | `../Alex_ACT_Memory` sibling git repo | You + the framework (via announcements) |
 | **Copilot memory** (`/memories/`) | VS Code's built-in memory tool — user prefs, repo facts, session scratch | Managed by the GitHub Copilot extension itself | You (Alex writes via the memory tool) |
@@ -108,4 +108,4 @@ The previous architecture bundled the brain inside the Extension, which meant ev
 
 ---
 
-*Last reviewed: 2026-05-31*
+Last reviewed: 2026-05-31

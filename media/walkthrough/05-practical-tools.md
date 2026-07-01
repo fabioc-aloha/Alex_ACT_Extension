@@ -1,6 +1,6 @@
-# The Plugin Mall: 300+ specialized skills on demand
+# The Plugin Mall: specialized skills on demand
 
-The core ACT brain is deliberately lean: a small fixed budget of always-on reasoning discipline. Everything else lives in the **Plugin Mall**, a curated catalog of **300+ specialized skills, instructions, and prompts** that Alex pulls in *only when your project actually needs them*.
+The core ACT brain is deliberately lean: a small fixed budget of always-on reasoning discipline. Everything else lives in the **Plugin Mall**, a curated catalog of specialized skills, instructions, and prompts that Alex pulls in *only when your project actually needs them*.
 
 Bloated context produces *worse* reasoning, not better. The Mall lets Alex stay sharp and reach for depth only when depth is warranted.
 

@@ -126,45 +126,13 @@ if (!fs.existsSync(ICON_PATH)) {
     console.log('   WARN: No icon.png found. Create a 128x128 PNG at extension/assets/icon.png');
 }
 
-// ── Step 5: Create .vscodeignore ─────────────────────────────────
-console.log('5. Writing .vscodeignore...');
-const vscodeignore = [
-    '.git',
-    '.github',
-    // Legacy AlexMaster folder names — harmless if absent, defense-in-depth
-    // against accidentally shipping if a heir or contributor reintroduces them.
-    'decisions',
-    'ACT',
-    'ACT_obsolete',
-    'assets/banner-*.svg',
-    '*.cjs',
-    '**/*.cjs',
-    '!extension.js',
-    'MIGRATION.md',
-    'PLUGINS.md',
-    'README.md',
-    // Per ADR-009 Phase 3.1: brain/ is no longer produced at build time.
-    // The Extension fetches the latest Edition brain from GitHub at runtime.
-    // The entry below is defense-in-depth in case a stale brain/ exists locally.
-    'brain/**',
-    // Test code: not shipped to Marketplace consumers. Run locally with `npm test`.
-    'test/**',
-    // Dev tooling: wiki publish scripts, etc.
-    'scripts/**',
-    // Developer's local VS Code config — never ship; potential config leak.
-    '.vscode/**',
-    // Repo metadata — not relevant to Marketplace consumers.
-    '.gitignore',
-    '.markdownlint.json',
-    'node_modules',
-    '.vscode-test',
-    'build-extension.cjs',
-    // Constellation source-repo marker. Runtime reads the *workspace-root*
-    // marker (the user's open folder), not the bundled one, so shipping
-    // it adds dead weight and could mislead installed users.
-    '.act-protected.json',
-].join('\n') + '\n';
-fs.writeFileSync(path.join(EXT_DIR, '.vscodeignore'), vscodeignore);
+// ── Step 5: Verify committed .vscodeignore ───────────────────────
+console.log('5. Checking .vscodeignore...');
+const VSCODEIGNORE_PATH = path.join(EXT_DIR, '.vscodeignore');
+if (!fs.existsSync(VSCODEIGNORE_PATH)) {
+    console.error('FATAL: .vscodeignore is missing. This file is committed source, not generated, so clean checkouts keep Marketplace packaging exclusions.');
+    process.exit(1);
+}
 
 // ── Step 6+7: Extension-identity files are repo-owned ────────────
 // README.md, CHANGELOG.md, and LICENSE are owned by this Extension repo
@@ -192,18 +160,18 @@ if (extPkg.version !== version) {
 if (!noVsix) {
     console.log('\n10. Building VSIX...');
     try {
-        execSync('npx vsce package', { cwd: EXT_DIR, stdio: 'inherit' });
+        execFileSync('npx', ['--yes', '@vscode/vsce', 'package'], { cwd: EXT_DIR, stdio: 'inherit' });
         const vsixFiles = fs.readdirSync(EXT_DIR).filter(f => f.endsWith('.vsix'));
         if (vsixFiles.length > 0) {
             console.log(`\nVSIX ready: ${vsixFiles[vsixFiles.length - 1]}`);
             console.log(`Test: code --install-extension ${vsixFiles[vsixFiles.length - 1]}`);
         }
     } catch (e) {
-        console.error('VSIX build failed. Install vsce: npm install -g @vscode/vsce');
+        console.error('VSIX build failed. Package command: npx --yes @vscode/vsce package');
         console.error(e.message);
     }
 } else {
-    console.log('\nSkipped VSIX build (--no-vsix). Run `npx vsce package` to build.');
+    console.log('\nSkipped VSIX build (--no-vsix). Run `npx --yes @vscode/vsce package` to build.');
 }
 
 // ── Cleanup ──────────────────────────────────────────────────────

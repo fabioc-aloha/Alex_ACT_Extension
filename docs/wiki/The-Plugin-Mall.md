@@ -1,6 +1,6 @@
 # The Plugin Mall
 
-The core ACT brain that Alex ships with is deliberately lean by design: a small fixed budget of always-on reasoning discipline that loads on every conversation. Everything else lives in the **Plugin Mall**: a curated catalog of **300+ specialized skills, instructions, and prompts** that Alex pulls in *only when your project actually needs them*.
+The core ACT brain that Alex ships with is deliberately lean by design: a small fixed budget of always-on reasoning discipline that loads on every conversation. Everything else lives in the **Plugin Mall**: a curated catalog of specialized skills, instructions, and prompts that Alex pulls in *only when your project actually needs them*.
 
 This is the opposite of the kitchen-sink prompt. Bloated context produces *worse* reasoning, not better. The Mall lets Alex stay sharp on the conversation in front of it, and reach for depth only when depth is warranted.
 
@@ -41,11 +41,9 @@ The catalog spans sixteen categories. Counts grow as new plugins are reviewed in
 
 Just ask Alex naturally:
 
-> *"Search the Mall for skills relevant to [what you are working on]. What are the top three I should know about?"*
-
-> *"I am about to do a code review on a payment processor. Pull anything from the Mall that would sharpen that."*
-
-> *"I have a difficult conversation with my manager tomorrow. What does the Mall have on this?"*
+- *"Search the Mall for skills relevant to [what you are working on]. What are the top three I should know about?"*
+- *"I am about to do a code review on a payment processor. Pull anything from the Mall that would sharpen that."*
+- *"I have a difficult conversation with my manager tomorrow. What does the Mall have on this?"*
 
 Alex reads the catalog, picks the most relevant skills, and either loads them for *this conversation* (cheap and reversible) or recommends installing them into your project's brain (persistent across sessions, see [Project Memory](Project-Memory)).
 
@@ -57,7 +55,7 @@ Press `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`) and run **ACT: Search Plugin Mall**. Y
 
 If Alex recommends installing a skill persistently, it will give you a slash command to run in the chat:
 
-```
+```text
 /mall-install <skill-name>
 ```
 
@@ -107,4 +105,4 @@ The Mall's depth is real where it claims to be: MCP server-building, RAG archite
 
 ---
 
-*Last reviewed: 2026-05-25*
+Last reviewed: 2026-05-25

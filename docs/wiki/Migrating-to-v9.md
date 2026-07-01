@@ -12,6 +12,12 @@ Extension v9.0.0 (Edition v3.0.0) replaces the OneDrive-based AI-Memory with a g
 | `heirs/registry.json` for fleet tracking | Removed — fleet is a separate concern |
 | Self-registration on every bootstrap | Removed — no registration needed |
 
+## AlexMaster migration command status
+
+The old one-click AlexMaster migration command is retired in the static-fetch Extension. It no longer installs a migrated brain, because the VSIX no longer bundles an Edition brain or the old AlexMaster migration manifests. If you still have a pre-ACT AlexMaster workspace, create a fresh workspace with **ACT: Bootstrap This Workspace**, then manually copy any local customizations you still need.
+
+Rollback and backup-cleanup commands remain available for workspaces that already migrated with an older Extension build.
+
 ## Do I need to do anything?
 
 ### If you never used AI-Memory features
@@ -27,11 +33,13 @@ One-time manual migration (takes 2 minutes):
    - Common location: `C:\Users\<you>\OneDrive\AI-Memory\`
 
 2. **Copy announcements** (optional — the new repo already has them)
+
    ```bash
    cp AI-Memory/announcements/alex-act/*.md ../Alex_ACT_Memory/announcements/
    ```
 
 3. **Copy your profile**
+
    ```bash
    # Windows (PowerShell):
    $user = $env:USERNAME
@@ -41,11 +49,13 @@ One-time manual migration (takes 2 minutes):
    ```
 
 4. **Copy knowledge packages** (if you had any custom ones)
+
    ```bash
    cp -r AI-Memory/knowledge/* ../Alex_ACT_Memory/knowledge/
    ```
 
 5. **Commit**
+
    ```bash
    cd ../Alex_ACT_Memory
    git add -A
@@ -102,4 +112,4 @@ A: Removed. The bootstrap is automatic. If something is wrong, delete `../Alex_A
 
 ---
 
-*Last reviewed: 2026-05-27*
+Last reviewed: 2026-05-27

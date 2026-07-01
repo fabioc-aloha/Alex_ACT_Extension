@@ -23,7 +23,7 @@ Read these in order:
 ### I want depth on a specific project
 
 - **[How It Fits Together](How-It-Fits-Together)**: the six pieces (Edition, Extension, Mall, project memory, shared memory, Copilot memory) and why they're split.
-- **[The Plugin Mall](The-Plugin-Mall)**: 300+ curated skills you can pull in on demand.
+- **[The Plugin Mall](The-Plugin-Mall)**: curated skills you can pull in on demand.
 - **[The Edition Template](The-Edition-Template)**: how brain versioning works, using Edition directly without the Extension.
 - **[Project Memory](Project-Memory)**: how Alex remembers your project across sessions.
 - **[AI-Memory](AI-Memory)**: the cross-project channel that links all your ACT workspaces.
@@ -64,4 +64,4 @@ Alex is your second opinion that does not flinch.
 
 ---
 
-*Last reviewed: 2026-05-25*
+Last reviewed: 2026-05-25

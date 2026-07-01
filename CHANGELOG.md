@@ -1,10 +1,20 @@
-<!-- markdownlint-configure-file {"MD024": {"siblings_only": true}} -->
+<!-- markdownlint-disable MD024 -->
+<!-- Historical changelog entries intentionally repeat subheadings such as Fixed, Heir impact, and Falsifier across releases. -->
 
 # Changelog
 
 All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
+
+### Removed
+
+- Removed Extension-side GitHub automation (`.github/workflows/release-gate.yml`, `.github/dependabot.yml`). The Extension release process is operator-driven and Marketplace-bound; source-repo automation was not part of the runtime surface and should not ship or be maintained here.
+- Removed retired AlexMaster migration payloads (`migration/alex-master-signature.json`, `migration/alex-master-v8.4.0.manifest.json`, `migration/dry-run.cjs`, `templates/MIGRATION-REVIEW.md`). The static-fetch Extension no longer bundles an Edition brain, so the migration command now fails closed with a clear retirement message; rollback and backup-cleanup commands remain for already-migrated workspaces.
+
+### Changed
+
+- Simplified `migration.js` to the live static-fetch-era surface: retired migration warning, deprecated AlexMaster command stubs, rollback, and backup cleanup.
 
 ## [9.5.6] - 2026-06-29
 
@@ -140,8 +150,6 @@ Heirs see no change when a real upgrade is available. The phantom-upgrade case (
 ### Falsifier
 
 Re-evaluate 2026-09-20 (90 days). If a user reports the status bar fails to show the arrow when a legitimate newer Edition tag is cached, the semver parse likely rejected the tag shape — investigate `isNewerSemver` against the failing version string.
-
-
 
 **Patch [behaviour] — restore Upgrade Brain item in status-bar QuickPick under static-fetch mode.**
 

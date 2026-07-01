@@ -1,0 +1,27 @@
+.git
+.github
+# Legacy AlexMaster folder names: harmless if absent, defense-in-depth.
+decisions
+ACT
+ACT_obsolete
+assets/banner-*.svg
+*.cjs
+**/*.cjs
+!extension.js
+*.tmp
+MIGRATION.md
+PLUGINS.md
+README.md
+# Per ADR-009 Phase 3.1: brain/ is no longer produced at build time.
+brain/**
+# Test code and local dev tooling do not ship to Marketplace consumers.
+test/**
+scripts/**
+.vscode/**
+# Repo metadata and build-only files.
+.gitignore
+.markdownlint.json
+node_modules
+.vscode-test
+build-extension.cjs
+.act-protected.json

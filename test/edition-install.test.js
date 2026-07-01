@@ -158,6 +158,20 @@ test('manifest: empty brain_subtrees → MANIFEST_MISSING_CONTRACT_FIELDS', () =
     } finally { cleanup(root); }
 });
 
+test('manifest: marker_schema.file_name must be .act-heir.json', () => {
+    const badNames = ['../outside.json', '/tmp/outside.json', '.github/.act-heir.json', 'nested/.act-heir.json'];
+    for (const fileName of badNames) {
+        const root = setupTarballRoot(validManifest({ marker_schema: { file_name: fileName, version: 2 } }), { '.github': { 'x.md': 'x' } });
+        try {
+            assert.throws(
+                () => readAndValidateManifest(root, '9.4.0'),
+                (err) => /** @type {any} */ (err).code === 'MANIFEST_INVALID_MARKER_SCHEMA',
+                `expected ${fileName} to be rejected`
+            );
+        } finally { cleanup(root); }
+    }
+});
+
 // ── acquireLock ────────────────────────────────────────────────────────
 
 test('lock: take → release works', () => {
@@ -181,6 +195,25 @@ test('lock: second concurrent acquire → CONCURRENT_UPGRADE', () => {
             );
         } finally {
             lock1.release();
+        }
+    } finally { cleanup(heir); }
+});
+
+test('lock: touch refreshes mtime so long-running upgrade lock stays active', () => {
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    try {
+        const lock = acquireLock(heir);
+        try {
+            const oldTime = (Date.now() - 11 * 60 * 1000) / 1000;
+            fs.utimesSync(lock.path, oldTime, oldTime);
+            lock.touch();
+
+            assert.throws(
+                () => acquireLock(heir),
+                (err) => /** @type {any} */ (err).code === 'CONCURRENT_UPGRADE'
+            );
+        } finally {
+            lock.release();
         }
     } finally { cleanup(heir); }
 });
@@ -704,6 +737,29 @@ test('install: HEIR_OWNED files in tarball are NOT copied to heir', () => {
         assert.equal(fs.existsSync(path.join(heir, '.github', 'dependabot.yml')), false, 'dependabot.yml must not leak');
         assert.equal(fs.existsSync(path.join(heir, '.github', 'episodic', 'note-2026-06-10.md')), false, 'episodic/ must not leak');
     } finally { cleanup(root); cleanup(heir); }
+});
+
+test('install: reads HEIR_OWNED policy without executing fetched registry code', () => {
+    const tarball = setupTarballRoot(validManifest({ heir_owned: ['.github/workflows/**'] }), {
+        '.github': {
+            'instructions/x.instructions.md': 'inst-content',
+            'workflows/leak.yml': 'name: should-not-copy',
+            'scripts/_registry.cjs': 'require("fs").writeFileSync("SIDE_EFFECT", "bad"); module.exports = { HEIR_OWNED: [] };'
+        }
+    });
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'install-heir-'));
+    const cwd = process.cwd();
+    try {
+        process.chdir(tarball);
+        installFromTarball(tarball, heir, '9.4.0', { fetchedTag: 'v3.2.0' });
+        assert.equal(fs.existsSync(path.join(tarball, 'SIDE_EFFECT')), false, 'fetched _registry.cjs must not execute during install');
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'workflows', 'leak.yml')), false, 'manifest heir_owned should filter workflows');
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'instructions', 'x.instructions.md')), true);
+    } finally {
+        process.chdir(cwd);
+        cleanup(tarball);
+        cleanup(heir);
+    }
 });
 
 test('install: graceful fallback when tarball has no _registry.cjs (older Edition)', () => {

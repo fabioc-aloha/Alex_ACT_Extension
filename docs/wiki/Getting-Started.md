@@ -13,7 +13,8 @@ If you arrived here from a fresh VS Code install:
 
 When the extension loads it opens a welcome walkthrough. You can re-open it any time with `Ctrl+Shift+P` then *Alex: Open Welcome Guide*.
 
-> **Network requirement (v9.4.0+).** The first Bootstrap or Upgrade fetches the latest Edition brain from GitHub. The Extension needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your admin to allowlist those two hosts. See [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help) for failure-mode guidance.
+- **Network requirement (v9.4.0+)**: The first Bootstrap or Upgrade fetches the latest Edition brain from GitHub. The Extension needs to reach `api.github.com` and `codeload.github.com`. If you're behind a corporate proxy, ask your admin to allowlist those two hosts. See [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help) for failure-mode guidance.
+- **Coming from AlexMaster?** The old one-click AlexMaster migration command is retired in the static-fetch Extension. Bootstrap a fresh workspace, then manually copy any old local customizations you still need.
 
 ## 2. Sign in to GitHub Copilot
 
@@ -61,11 +62,9 @@ If you are on **Copilot Free** and only see basic models, that is okay for a fir
 
 Open the chat and try one of these. They are designed to surface Alex's discipline in the first few turns:
 
-> *"What is the most important critical thinking habit I am probably missing right now? Do not flatter me. Be specific. Ask me a question first if you need to."*
-
-> *"I am about to make a decision about [thing]. Steelman the case against. Tell me what I am probably not seeing."*
-
-> *"I want to plan a project: [one-sentence description]. Run a frame audit before you suggest anything. Is this even the right problem?"*
+- *"What is the most important critical thinking habit I am probably missing right now? Do not flatter me. Be specific. Ask me a question first if you need to."*
+- *"I am about to make a decision about [thing]. Steelman the case against. Tell me what I am probably not seeing."*
+- *"I want to plan a project: [one-sentence description]. Run a frame audit before you suggest anything. Is this even the right problem?"*
 
 Watch what shows up in the chat: a frame restatement, a second hypothesis, a confidence level, a *would revise if* line. Those are the ACT markers. They are the framework working.
 
@@ -77,4 +76,4 @@ Watch what shows up in the chat: a frame restatement, a second hypothesis, a con
 
 ---
 
-*Last reviewed: 2026-05-25*
+Last reviewed: 2026-05-25

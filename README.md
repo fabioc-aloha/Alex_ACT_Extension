@@ -10,7 +10,7 @@ Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They
 
 ## What you get
 
-- **A cognitive architecture** installed into your project's `.github/` folder — skills, instructions, prompts, agents, and muscles that GitHub Copilot reads on every request
+- **A cognitive architecture** installed into your project's `.github/` folder — skills, instructions, prompts, agents, scripts, and config that GitHub Copilot reads on every request
 - **The 10 ACT tenets** operationalized as runtime behavior, not just docs
 - **A 7-step critical-thinking pass** that fires on medium and high-stakes decisions
 - **The [Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** — thousands of trust-scored plugins across dozens of stores, installed on demand at the version you pick
@@ -18,7 +18,7 @@ Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They
 
 ## The Plugin Mall
 
-The bundled brain is deliberately small. When a project needs more — a new domain, a niche tool, a different opinion — the **[Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** is a curated search index over **thousands of plugins from dozens of upstream stores** (Anthropic, Microsoft `awesome-copilot`, community catalogs, and many more). Every plugin carries a published 0–100 trust score built from provenance, maintenance, adoption, license clarity, and frontmatter completeness — so you see *why* one plugin scored higher than another before you install it.
+The core brain is deliberately small. When a project needs more — a new domain, a niche tool, a different opinion — the **[Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** is a curated search index over **thousands of plugins from dozens of upstream stores** (Anthropic, Microsoft `awesome-copilot`, community catalogs, and many more). Every plugin carries a published 0–100 trust score built from provenance, maintenance, adoption, license clarity, and frontmatter completeness — so you see *why* one plugin scored higher than another before you install it.
 
 Heirs install from upstream at a pinned version. The Mall never sits in the middle of the supply chain; it just helps you find and judge.
 
@@ -54,7 +54,7 @@ If a Bootstrap or Upgrade fails for any reason, run **Alex ACT: Diagnose Fetch**
 
 ## Coming from an older version?
 
-If you previously had **Alex Cognitive Architecture (AlexMaster)** installed, this extension is the direct successor — same Marketplace ID, auto-updates in place. No manual migration needed; the brain overwrites cleanly on upgrade.
+If you previously had **Alex Cognitive Architecture (AlexMaster)** installed, this extension is the direct successor — same Marketplace ID, auto-updates in place. The old one-click AlexMaster migration command is retired in the static-fetch line. For a clean start, run **ACT: Bootstrap This Workspace** in a fresh project and manually copy any old local customizations you still need.
 
 If you are upgrading from **v8.x** (Edition v2.x) to **v9.x** (Edition v3.x), see [Migrating to v9](https://github.com/fabioc-aloha/Alex_ACT_Extension/wiki/Migrating-to-v9) for the one breaking change (AI-Memory moved from cloud drives to a git repo).
 

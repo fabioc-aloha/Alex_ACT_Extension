@@ -62,6 +62,26 @@ function getCachedLatestEditionTag(ctx) {
 }
 
 /**
+ * Resolve the available Edition version for sync display paths. Bundled
+ * installs read `brain/VERSION`; static-fetch installs may only have the
+ * latest release tag cached in globalState until a bootstrap/upgrade command
+ * fetches a tarball in this extension-host session.
+ *
+ * @param {vscode.ExtensionContext | null | undefined} ctx
+ * @param {string} [brainDir]
+ * @returns {string}
+ */
+function getAvailableEditionVersion(ctx, brainDir = BRAIN_DIR) {
+    try {
+        const version = fs.readFileSync(path.join(brainDir, 'VERSION'), 'utf8').trim();
+        if (version) return version.replace(/^v/, '');
+    } catch { /* static-fetch before ensureBrainDir, or missing bundle */ }
+
+    const cached = getCachedLatestEditionTag(ctx || _extensionContext);
+    return cached ? cached.replace(/^v/, '') : '';
+}
+
+/**
  * Ensure BRAIN_DIR points at a usable Edition brain. In bundled mode
  * (`<extension>/brain` exists) this is a no-op. In static-fetch mode this
  * downloads the latest Edition release tarball to a per-fetch temp dir,
@@ -328,6 +348,18 @@ function resolveBrainDest(rel, workspaceRoot, ghDir) {
     return { wsRel: '.github/' + norm, dst: path.join(ghDir, norm) };
 }
 
+function formatBootstrapFailureMessage(copyFailures, templateFailures) {
+    const failures = [
+        ...copyFailures.map(f => ({ kind: 'brain file', rel: f.rel, err: f.err })),
+        ...templateFailures.map(f => ({ kind: 'bootstrap template', rel: f.rel, err: f.err })),
+    ];
+    if (failures.length === 0) return '';
+
+    const sample = failures.slice(0, 5).map(f => `${f.kind} ${f.rel}: ${f.err}`).join('\n');
+    const more = failures.length > 5 ? `\n... and ${failures.length - 5} more` : '';
+    return `ACT bootstrap failed before creating the heir marker. ${failures.length} required file operation(s) failed. Remove the partial .github/.vscode files and retry.\n\n${sample}${more}`;
+}
+
 // ── File operations ────────────────────────────────────────────────
 
 function copyFileSync(src, dst) {
@@ -371,6 +403,17 @@ function mergeHeirWorkspaceSettings(root) {
 
 // ── Commands ───────────────────────────────────────────────────────
 
+async function withLockHeartbeat(lock, work) {
+    const timer = setInterval(() => {
+        try { lock.touch(); } catch { /* best effort */ }
+    }, 30 * 1000);
+    try {
+        return await work();
+    } finally {
+        clearInterval(timer);
+    }
+}
+
 /**
  * Bootstrap: copy brain into workspace .github/
  */
@@ -400,6 +443,7 @@ async function cmdBootstrap() {
     }
 
     try {
+        return await withLockHeartbeat(lock, async () => {
         // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
         // resolve BRAIN_DIR by downloading the latest Edition release tarball
         // before any destructive op. Errors here leave the heir untouched.
@@ -415,6 +459,7 @@ async function cmdBootstrap() {
         } finally {
             if (_fetchCleanup) _fetchCleanup();
         }
+        });
     } finally {
         lock.release();
     }
@@ -530,11 +575,7 @@ async function _cmdBootstrapBody(root) {
             }
         }
         if (copyFailures.length > 0) {
-            const sample = copyFailures.slice(0, 5).map(f => `${f.rel}: ${f.err}`).join('\n');
-            const more = copyFailures.length > 5 ? `\n... and ${copyFailures.length - 5} more` : '';
-            vscode.window.showWarningMessage(
-                `ACT bootstrap: ${copyFailures.length} file(s) failed to copy. Workspace may be in a partial state — consider removing .github/ and retrying.\n\n${sample}${more}`
-            );
+            throw new Error(formatBootstrapFailureMessage(copyFailures, []));
         }
 
         const editionRoot = getEditionRootForInstall();
@@ -547,10 +588,7 @@ async function _cmdBootstrapBody(root) {
         const templateResult = seedBootstrapTemplates(root, manifest, editionRoot, path.join(__dirname, 'templates'), null);
         copied += vscodeAssetsCopied.length + templateResult.seeded.length;
         if (templateResult.failures.length > 0) {
-            const sample = templateResult.failures.map(f => `${f.rel}: ${f.err}`).join('\n');
-            vscode.window.showWarningMessage(
-                `ACT bootstrap: ${templateResult.failures.length} bootstrap template(s) failed to seed.\n\n${sample}`
-            );
+            throw new Error(formatBootstrapFailureMessage([], templateResult.failures));
         }
 
         // 2. Render marker
@@ -572,7 +610,7 @@ async function _cmdBootstrapBody(root) {
         // Try to get repo URL
         try {
             const { execSync } = require('child_process');
-            marker.repo_url = execSync('git remote get-url origin', { cwd: root, encoding: 'utf8' }).trim();
+            marker.repo_url = execSync('git remote get-url origin', { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
             const match = marker.repo_url.match(/github\.com[:/]([^/]+)/);
             if (match) marker.contact.owner = match[1];
         } catch { /* no git remote */ }
@@ -626,13 +664,9 @@ async function _cmdBootstrapBody(root) {
 
         // 4. Shared memory bus resolution (git-based)
         progress.report({ message: 'Resolving shared memory bus...' });
-        try {
-            const registry = require(path.join(BRAIN_DIR, 'scripts', '_registry.cjs'));
-            const memResult = registry.resolveMemoryBus(root);
-            if (memResult && memResult.message) {
-                vscode.window.showInformationMessage(`ACT: ${memResult.message}`);
-            }
-        } catch { /* best-effort; memory bus is optional */ }
+        // Static-fetch must not execute fetched Edition code from the tarball.
+        // Memory-bus setup is optional and Edition bootstrap scripts handle it
+        // when run directly; the Extension installer stays data-only here.
 
         // Run heir-doctor and surface exit code; non-fatal if it fails.
         // 30s timeout so a wedged subprocess can't hang the bootstrap UI indefinitely.
@@ -869,6 +903,7 @@ async function cmdUpgrade() {
     }
 
     try {
+        return await withLockHeartbeat(lock, async () => {
         // Static-fetch path (ADR-009): when the VSIX ships no bundled brain,
         // resolve BRAIN_DIR by downloading the latest Edition release tarball
         // before any destructive op. Errors here leave the heir untouched.
@@ -884,6 +919,7 @@ async function cmdUpgrade() {
         } finally {
             if (_fetchCleanup) _fetchCleanup();
         }
+        });
     } finally {
         lock.release();
     }
@@ -1242,17 +1278,7 @@ async function cmdStatusBarMenu() {
         const marker = readMarkerSafe(getMarkerPath(root));
         if (marker) {
             editionVersion = marker.edition_version;
-            try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
-            // Static-fetch fallback: no bundled brain post-ADR-009, but the
-            // activation-time version check may have cached the latest
-            // Edition tag in globalState. Use that as the "available
-            // version" so the Upgrade Brain pick mirrors the status-bar
-            // arrow indicator. Without this, the status bar shows
-            // "ACT vX.Y.Z ↑" but the QuickPick hides the Upgrade item.
-            if (!bundledVersion) {
-                const cached = getCachedLatestEditionTag(_extensionContext);
-                if (cached) bundledVersion = cached.replace(/^v/, '');
-            }
+            bundledVersion = getAvailableEditionVersion(_extensionContext);
             upgradeAvailable = isNewerSemver(bundledVersion, editionVersion);
         }
     }
@@ -1382,7 +1408,7 @@ async function cmdStatus() {
         );
         return;
     }
-    const bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim();
+    const bundledVersion = getAvailableEditionVersion(_extensionContext);
     const ghDir = getGitHubDir(root);
     const instrCount = fs.existsSync(path.join(ghDir, 'instructions'))
         ? fs.readdirSync(path.join(ghDir, 'instructions')).filter(f => f.endsWith('.instructions.md')).length : 0;
@@ -1441,6 +1467,22 @@ function resolveConverterScript(converter, root) {
     return null;
 }
 
+function getConverterOutputPath(inputPath, converter) {
+    const inputDir = path.dirname(inputPath);
+    const inputBase = path.basename(inputPath, path.extname(inputPath));
+    return path.join(inputDir, inputBase + converter.ext);
+}
+
+async function confirmConverterOverwrite(outputPath, label) {
+    if (!fs.existsSync(outputPath)) return true;
+    const pick = await vscode.window.showWarningMessage(
+        `ACT Convert: ${path.basename(outputPath)} already exists. Overwrite it with the new ${label} output?`,
+        { modal: true },
+        'Overwrite'
+    );
+    return pick === 'Overwrite';
+}
+
 async function runConverter(converterId, fileUri) {
     const converter = CONVERTERS[converterId];
     if (!converter) { vscode.window.showErrorMessage(`Unknown converter: ${converterId}`); return; }
@@ -1471,8 +1513,12 @@ async function runConverter(converterId, fileUri) {
 
     // Compute output path
     const inputDir = path.dirname(inputPath);
-    const inputBase = path.basename(inputPath, path.extname(inputPath));
-    const outputPath = path.join(inputDir, inputBase + converter.ext);
+    const outputPath = getConverterOutputPath(inputPath, converter);
+    const overwriteConfirmed = await confirmConverterOverwrite(outputPath, converter.label);
+    if (!overwriteConfirmed) {
+        vscode.window.showInformationMessage(`ACT Convert: canceled to avoid overwriting ${path.basename(outputPath)}.`);
+        return;
+    }
 
     // Run the converter via spawn() with array args so paths containing spaces,
     // quotes, or shell metacharacters can't be reinterpreted. Stream output into
@@ -1809,16 +1855,7 @@ function activate(context) {
                     const marker = !protectedMarker && fs.existsSync(heirMarkerPath)
                         ? readMarkerSafe(heirMarkerPath)
                         : null;
-                    let bundledVersion = '';
-                    try { bundledVersion = fs.readFileSync(path.join(BRAIN_DIR, 'VERSION'), 'utf8').trim(); } catch { /* leave empty */ }
-                    // Static-fetch fallback: no bundled brain, but the
-                    // activation-time check may have cached the latest
-                    // Edition tag in globalState. Use that as the
-                    // "available version" for the upgrade arrow.
-                    if (!bundledVersion) {
-                        const cached = getCachedLatestEditionTag(context);
-                        if (cached) bundledVersion = cached.replace(/^v/, '');
-                    }
+                    const bundledVersion = getAvailableEditionVersion(context);
 
                     if (protectedMarker) {
                         const name = protectedMarker.name || 'Protected';
@@ -1893,4 +1930,20 @@ function deactivate() {
     _extensionContext = null;
 }
 
-module.exports = { activate, deactivate };
+module.exports = {
+    activate,
+    deactivate,
+    _internal: {
+        getAvailableEditionVersion,
+        isNewerSemver,
+        formatBootstrapFailureMessage,
+        getConverterOutputPath,
+        confirmConverterOverwrite,
+        withLockHeartbeat,
+        _cmdBootstrapBody,
+        _cmdUpgradeBody,
+        setBrainDirForTest: (brainDir) => { BRAIN_DIR = brainDir; },
+        setFetchProvenanceForTest: (provenance) => { _fetchProvenance = provenance; },
+        setExtensionContextForTest: (ctx) => { _extensionContext = ctx; },
+    }
+};
