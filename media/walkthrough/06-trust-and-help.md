@@ -4,6 +4,15 @@
 
 Chat messages flow through GitHub Copilot to an AI provider (OpenAI, Anthropic, Google), under GitHub's privacy policy. By default, conversations aren't used for training. Alex's memory of your project (the `.github/` folder) stays local. No separate Alex account, server, or telemetry.
 
+Shared `Alex_ACT_Memory` is a sibling Git repository, not a hidden backend.
+Remote access defines who can read tracked channels. Profiles are encrypted and
+loaded only on explicit demand. Never paste secrets into chat or tracked Memory
+files.
+
+Edition `main` has an Unreleased exact-name fallback to Memory's ignored local
+`.env`; current v4.0.1 Extension installs still use process or project-local
+authorization until that Edition change is separately released.
+
 ## When Alex is wrong (and it will be)
 
 The framework only works if you push back. Phrases that work:

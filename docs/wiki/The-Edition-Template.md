@@ -6,8 +6,8 @@ The brain that Alex ships with is not built inside the Extension. It is built in
 
 | Repo | What it is | Version track |
 | --- | --- | --- |
-| **Alex_ACT_Edition** | The canonical brain: instructions, skills, prompts, agents, scripts, config | Edition version (e.g. v3.2.0) |
-| **Alex_ACT_Extension** | The VS Code Marketplace delivery channel that fetches the brain on demand | Extension version (e.g. v9.4.0) |
+| **Alex_ACT_Edition** | The canonical brain: instructions, skills, prompts, agents, scripts, config | Edition version (current release: v4.0.1) |
+| **Alex_ACT_Extension** | The VS Code Marketplace delivery channel that fetches the brain on demand | Independent Extension version (static-fetch line: v9.x) |
 
 Starting with Extension v9.4.0, the Extension does **not** bundle the brain in the VSIX. On `Bootstrap This Workspace` or `Upgrade Brain`, it downloads the latest tagged Edition release from GitHub, validates the manifest contract (spec 1.4 minimum), and installs the declared subtrees into your project. See [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md) for the rationale.
 
@@ -25,6 +25,14 @@ The Extension has its own lifecycle (activation code, commands, walkthrough, Mar
 | New Extension command or walkthrough step | Extension (minor) |
 
 The CHANGELOG in the Extension repo documents Extension changes. Edition's CHANGELOG documents brain changes. The Extension is no longer pinned to a specific Edition tag — heirs always receive the latest Edition release that satisfies `min_extension_version`.
+
+### Released brain versus Edition main
+
+The Extension fetches the latest **GitHub Release**, not arbitrary Edition
+`main`. Edition v4.0.1 is the current released brain. Edition `main` may contain
+validated work under `Unreleased`; for example, exact-name fallback to the
+sibling Memory `.env` is proposed for v4.1.0 and is not available to current
+v4.0.1 Extension installs.
 
 ## How to check your version
 
@@ -52,7 +60,7 @@ The Extension adds convenience (one-click bootstrap, upgrade command, walkthroug
 
 When a new Edition version ships:
 
-1. The Supervisor cuts an Edition release (tagged, e.g. `v3.2.0`).
+1. The Supervisor cuts an Edition release (for example, `v4.0.1`).
 2. The Edition release tarball is immediately reachable at `codeload.github.com/fabioc-aloha/Alex_ACT_Edition/tar.gz/refs/tags/vX.Y.Z`.
 3. On VS Code startup in a heir workspace, the Extension silently checks for a newer Edition release (ETag-conditional, 24h-inhibited per `(current, latest)` version pair).
 4. If a newer release exists, an information message offers **Upgrade now** / **Later** — no Marketplace republish required.
@@ -68,12 +76,12 @@ Every bootstrapped workspace contains `.github/.act-heir.json` — a marker file
 {
   "spec_version": "2",
   "heir_id": "your-heir",
-  "edition_version": "3.2.0",
+  "edition_version": "4.0.1",
   "source": "github-fetch",
   "commit_sha": "abc123...",
   "fetched_at": "2026-05-31T10:00:00Z",
   "auth_mode": "anonymous",
-  "extension_version": "9.4.0",
+  "extension_version": "9.5.6",
   "marker_schema_version": 2
 }
 ```

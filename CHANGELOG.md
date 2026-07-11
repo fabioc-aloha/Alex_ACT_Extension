@@ -10,6 +10,7 @@ All notable changes to Alex — ACT Edition.
 ### Changed
 
 - `[behaviour]` Converged static-fetch bootstrap, upgrade, and the compatibility `installFromTarball()` path on one tested Edition payload installer. VS Code interaction, locking, backup, heir-owned restore, relocation, rollback, marker updates, and status refresh remain in `extension.js`; manifest subtree copying, HEIR_OWNED filtering, VS Code assets, and bootstrap templates now have one implementation. Added static-fetch, legacy-bundle, template-preservation, production-wiring, fixture-restoration, and mutation coverage. This change is implemented but not yet released to the Marketplace.
+- `[clarification]` Refreshed README, trust walkthrough, and GitHub Wiki source for Edition v4.0.1, Git-based `Alex_ACT_Memory`, encrypted on-demand profiles, read-only sibling resolution, repository audience boundaries, and version-aware local-secret setup. The Memory `.env` fallback is clearly marked Unreleased and proposed for Edition v4.1.0; no Extension version or Marketplace release is implied.
 
 ## [9.5.7] - 2026-07-01
 

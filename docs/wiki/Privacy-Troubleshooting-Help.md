@@ -18,6 +18,19 @@ Plain English:
 - Chat traffic is governed by Copilot's privacy policy *and* by your subscription tier. Business and Enterprise tiers have different defaults than personal tiers. Check the [GitHub Copilot plans page](https://github.com/features/copilot/plans) for current details.
 - Do not paste secrets into the chat (API keys, passwords, real customer data). The same caution that applies to any chat with a cloud-hosted AI applies here.
 
+### Shared Memory, profiles, and local secrets
+
+- `Alex_ACT_Memory` is a sibling Git repository. If it has a remote, repository
+	access defines who can read tracked channels.
+- Profiles are AES-256-GCM encrypted and decrypted only on explicit demand.
+	Greeting does not decrypt them.
+- Real `.env` files must be ignored and untracked. `.env.example` contains
+	placeholders and instructions only.
+- Edition v4.0.1 reads profile authorization from the process or project `.env`.
+	Memory `.env` fallback is Unreleased and proposed for v4.1.0.
+- A local `.env` does not protect against a compromised machine or another
+	process with the same filesystem access.
+
 ## When Alex is wrong (and it will be)
 
 Alex will get things wrong. The framework only works if you push back. Specifics that work:
@@ -78,6 +91,18 @@ If a fetch fails for any reason, run **ACT: Diagnose Fetch** from the Command Pa
 - Try variations: skill name, category name, or a description fragment.
 - Ask in chat instead: *"Search the Mall for skills relevant to [topic]."*
 
+### Encrypted profile is unavailable
+
+1. Confirm `../Alex_ACT_Memory` exists.
+2. On Edition v4.0.1, provide `ALEX_ACT_MEMORY_PASSWORD` through the process or
+	the heir project's ignored `.env`.
+3. Verify the file is ignored with
+	`git check-ignore --quiet --no-index .env` in the repository that owns it.
+4. Do not print the value. Run the profile status command instead:
+	`node .github/scripts/_registry.cjs --profile .`.
+5. Wrong passwords and tampering fail closed. A sanitized authentication error
+	means the envelope was not decrypted.
+
 ### Document conversion produced weird output
 
 See [Document Conversion](Document-Conversion). Common causes: heavy custom Word styles, embedded objects, or complex tables. The converter prioritizes content structure over visual fidelity.
@@ -114,4 +139,4 @@ The framework gets revised when it fails. That is Tenet X in practice.
 
 ---
 
-*Last reviewed: 2026-05-25*
+*Last reviewed: 2026-07-11*

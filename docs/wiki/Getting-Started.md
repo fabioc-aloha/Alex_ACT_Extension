@@ -68,12 +68,32 @@ Open the chat and try one of these. They are designed to surface Alex's discipli
 
 Watch what shows up in the chat: a frame restatement, a second hypothesis, a confidence level, a *would revise if* line. Those are the ACT markers. They are the framework working.
 
+## 7. Optional: shared Memory and encrypted profiles
+
+Alex works without shared Memory. To use cross-project announcements, feedback,
+knowledge, insights, or encrypted profiles, clone `Alex_ACT_Memory` as a sibling
+to your project:
+
+```powershell
+git clone https://github.com/fabioc-aloha/Alex_ACT_Memory.git ../Alex_ACT_Memory
+```
+
+Edition v4.0.1 supports encrypted profiles when
+`ALEX_ACT_MEMORY_PASSWORD` is in the process environment or an ignored project
+`.env`. Never paste the password into chat or commit it.
+
+Memory also ships a tracked `.env.example` for centralized machine-local
+secrets. The fallback from an heir to Memory `.env` is currently **Unreleased**
+on Edition `main` and proposed for v4.1.0. Until that release exists, Extension
+v4.0.1 heirs should continue using process or project-local authorization.
+
 ## Next steps
 
 - New to the conversational discipline? Read **[The CSAR Loop](The-CSAR-Loop)**.
 - Curious about what makes Alex different from raw Copilot? Read **[What Makes Alex Different](What-Makes-Alex-Different)**.
 - Working in a non-English language? **[Working in Other Languages](Working-in-Other-Languages)**.
+- Using shared Memory or encrypted profiles? **[AI-Memory](AI-Memory)**.
 
 ---
 
-Last reviewed: 2026-05-25
+Last reviewed: 2026-07-11

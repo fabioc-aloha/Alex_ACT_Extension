@@ -16,6 +16,18 @@ Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They
 - **The [Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** — thousands of trust-scored plugins across dozens of stores, installed on demand at the version you pick
 - **Self-upgrading**: `/upgrade` keeps your brain current; existing customizations preserved
 
+### Current brain release
+
+The latest tagged brain is **Edition v4.0.1**. It includes encrypted, on-demand
+profiles and the release-blocking ten-tenet canon guard. Extension host versions
+and Edition brain versions are independent; Bootstrap and Upgrade fetch the
+latest compatible Edition GitHub Release.
+
+Edition `main` contains an **Unreleased** exact-name local-secret source that can
+use the sibling Memory repository's ignored `.env` after process and project
+sources. Extension users do not receive that behavior until a later Edition
+release is explicitly approved (proposed v4.1.0).
+
 ## The Plugin Mall
 
 The core brain is deliberately small. When a project needs more — a new domain, a niche tool, a different opinion — the **[Plugin Mall](https://github.com/fabioc-aloha/Alex_ACT_Plugin_Mall)** is a curated search index over **thousands of plugins from dozens of upstream stores** (Anthropic, Microsoft `awesome-copilot`, community catalogs, and many more). Every plugin carries a published 0–100 trust score built from provenance, maintenance, adoption, license clarity, and frontmatter completeness — so you see *why* one plugin scored higher than another before you install it.
@@ -69,6 +81,7 @@ Full documentation lives in the **[GitHub wiki](https://github.com/fabioc-aloha/
 - Model compatibility and the open `MAN.8.3` capability-floor question
 - Brain upgrade lifecycle
 - Migrating to v9 (AI-Memory breaking change)
+- Git-based Memory, encrypted profiles, and local-secret setup
 
 ## Source and feedback
 
