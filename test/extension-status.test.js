@@ -37,6 +37,7 @@ const {
     confirmConverterOverwrite,
     withLockHeartbeat,
     _cmdBootstrapBody,
+    _cmdUpgradeBody,
     setBrainDirForTest,
     setFetchProvenanceForTest,
     setExtensionContextForTest,
@@ -221,6 +222,70 @@ test('_cmdBootstrapBody: installs via production copy loop without leaking HEIR_
         vscodeStub.window.showInputBox = priorInput;
         vscodeStub.window.withProgress = priorProgress;
         vscodeStub.commands.executeCommand = priorCommands;
+        setFetchProvenanceForTest(null);
+        setExtensionContextForTest(null);
+        fs.writeFileSync(trackedTemplate, originalTemplate);
+        fs.rmSync(editionRoot, { recursive: true, force: true });
+        fs.rmSync(heirRoot, { recursive: true, force: true });
+    }
+});
+
+test('_cmdUpgradeBody: shared installer replaces brain and preserves heir-owned state', async () => {
+    const editionRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'edition-upgrade-'));
+    const brainDir = path.join(editionRoot, '.github');
+    const heirRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-upgrade-'));
+    const markerPath = path.join(heirRoot, '.github', '.act-heir.json');
+    const trackedTemplate = path.join(__dirname, '..', 'templates', 'cognitive-config.json');
+    const originalTemplate = fs.readFileSync(trackedTemplate);
+    const priorWarning = vscodeStub.window.showWarningMessage;
+    const priorInfo = vscodeStub.window.showInformationMessage;
+
+    try {
+        const marker = { spec_version: '1.0', heir_id: 'upgrade-heir', edition_version: '3.7.0' };
+        writeFile(markerPath, JSON.stringify(marker, null, 2));
+        writeFile(path.join(heirRoot, '.github', 'instructions', 'old.instructions.md'), 'old');
+        writeFile(path.join(heirRoot, '.github', 'workflows', 'heir.yml'), 'heir-owned');
+        writeFile(path.join(heirRoot, '.vscode', 'settings.json'), '{"heir":true}');
+
+        writeFile(path.join(brainDir, 'VERSION'), '3.8.0\n');
+        writeFile(path.join(brainDir, 'instructions', 'new.instructions.md'), 'new');
+        writeFile(path.join(brainDir, 'workflows', 'edition.yml'), 'must not install');
+        writeFile(path.join(brainDir, 'config', 'edition-manifest.json'), JSON.stringify({
+            brain_subtrees: ['.github'],
+            heir_owned: ['.github/.act-heir.json', '.github/workflows/**', '.vscode/settings.json'],
+            vscode_assets: ['markdown-light.css'],
+            bootstrap_templates: ['.vscode/settings.json'],
+        }, null, 2));
+        writeFile(path.join(brainDir, 'scripts', '_registry.cjs'), [
+            'module.exports = {',
+            '  EDITION_OWNED: [".github/**", ".vscode/markdown-light.css"],',
+            '  HEIR_OWNED: [".github/.act-heir.json", ".github/workflows/**", ".vscode/settings.json"],',
+            '};',
+        ].join('\n'));
+        writeFile(path.join(editionRoot, '.vscode', 'markdown-light.css'), 'body{color:black}');
+        writeFile(path.join(editionRoot, '.vscode', 'settings.json'), '{"edition":true}');
+
+        setBrainDirForTest(brainDir);
+        setFetchProvenanceForTest({ source: 'github-fetch', tag: 'v3.8.0', commitSha: 'def456', authMode: 'anonymous', tarballRoot: editionRoot });
+        setExtensionContextForTest({ extension: { packageJSON: { version: '9.5.7' } } });
+        vscodeStub.window.showWarningMessage = async () => undefined;
+        vscodeStub.window.showInformationMessage = async () => undefined;
+
+        await _cmdUpgradeBody(heirRoot, markerPath, marker);
+
+        assert.equal(fs.existsSync(path.join(heirRoot, '.github', 'instructions', 'old.instructions.md')), false);
+        assert.equal(fs.readFileSync(path.join(heirRoot, '.github', 'instructions', 'new.instructions.md'), 'utf8'), 'new');
+        assert.equal(fs.readFileSync(path.join(heirRoot, '.github', 'workflows', 'heir.yml'), 'utf8'), 'heir-owned');
+        assert.equal(fs.existsSync(path.join(heirRoot, '.github', 'workflows', 'edition.yml')), false);
+        assert.equal(fs.readFileSync(path.join(heirRoot, '.vscode', 'settings.json'), 'utf8'), '{"heir":true}');
+        assert.equal(fs.readFileSync(path.join(heirRoot, '.vscode', 'markdown-light.css'), 'utf8'), 'body{color:black}');
+        const upgradedMarker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+        assert.equal(upgradedMarker.edition_version, '3.8.0');
+        assert.equal(upgradedMarker.source, 'github-fetch');
+        assert.equal(upgradedMarker.extension_version, '9.5.7');
+    } finally {
+        vscodeStub.window.showWarningMessage = priorWarning;
+        vscodeStub.window.showInformationMessage = priorInfo;
         setFetchProvenanceForTest(null);
         setExtensionContextForTest(null);
         fs.writeFileSync(trackedTemplate, originalTemplate);
