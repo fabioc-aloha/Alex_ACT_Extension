@@ -33,7 +33,6 @@ try {
 
 const {
     getAvailableEditionVersion,
-    formatBootstrapFailureMessage,
     getConverterOutputPath,
     confirmConverterOverwrite,
     withLockHeartbeat,
@@ -47,6 +46,13 @@ function writeFile(filePath, content) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, content);
 }
+
+test('production bootstrap and upgrade both call the shared payload installer', () => {
+    const source = fs.readFileSync(path.join(__dirname, '..', 'extension.js'), 'utf8');
+    assert.match(source, /require\('\.\/lib\/edition-install'\)[\s\S]*installEditionPayload/);
+    const calls = [...source.matchAll(/installEditionPayload\s*\(/g)];
+    assert.equal(calls.length, 2, 'bootstrap and upgrade must each call the shared payload installer exactly once');
+});
 
 test('getAvailableEditionVersion: returns cached latest tag when bundled brain is absent', () => {
     const ctx = {
@@ -76,17 +82,6 @@ test('getAvailableEditionVersion: prefers fetched/bundled BRAIN_DIR version when
     } finally {
         fs.rmSync(brainRoot, { recursive: true, force: true });
     }
-});
-
-test('formatBootstrapFailureMessage: tells user marker was not created', () => {
-    const message = formatBootstrapFailureMessage(
-        [{ rel: '.github/copilot-instructions.md', err: 'EACCES' }],
-        [{ rel: '.vscode/settings.json', err: 'EPERM' }]
-    );
-
-    assert.match(message, /failed before creating the heir marker/);
-    assert.match(message, /brain file \.github\/copilot-instructions\.md: EACCES/);
-    assert.match(message, /bootstrap template \.vscode\/settings\.json: EPERM/);
 });
 
 test('getConverterOutputPath: replaces extension with converter output extension', () => {
@@ -172,6 +167,8 @@ test('_cmdBootstrapBody: installs via production copy loop without leaking HEIR_
     const editionRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'edition-root-'));
     const brainDir = path.join(editionRoot, '.github');
     const heirRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'heir-root-'));
+    const trackedTemplate = path.join(__dirname, '..', 'templates', 'cognitive-config.json');
+    const originalTemplate = fs.readFileSync(trackedTemplate);
     const priorWarning = vscodeStub.window.showWarningMessage;
     const priorInfo = vscodeStub.window.showInformationMessage;
     const priorInput = vscodeStub.window.showInputBox;
@@ -191,7 +188,7 @@ test('_cmdBootstrapBody: installs via production copy loop without leaking HEIR_
         writeFile(path.join(brainDir, 'scripts', '_registry.cjs'), 'module.exports = { HEIR_OWNED: [".github/workflows/**", ".github/dependabot.yml"], EDITION_OWNED: [".github/**", ".vscode/markdown-light.css"] };');
         writeFile(path.join(editionRoot, '.vscode', 'markdown-light.css'), 'body{}');
         writeFile(path.join(editionRoot, '.vscode', 'settings.json'), '{\n  "editor.tabSize": 4\n}\n');
-        writeFile(path.join(__dirname, '..', 'templates', 'cognitive-config.json'), '{\n  "showConfidenceBadge": false\n}\n');
+        writeFile(trackedTemplate, '{\n  "showConfidenceBadge": false\n}\n');
 
         setBrainDirForTest(brainDir);
         setFetchProvenanceForTest({ source: 'github-fetch', tag: 'v3.8.0', commitSha: 'abc123', authMode: 'anonymous', tarballRoot: editionRoot });
@@ -226,6 +223,7 @@ test('_cmdBootstrapBody: installs via production copy loop without leaking HEIR_
         vscodeStub.commands.executeCommand = priorCommands;
         setFetchProvenanceForTest(null);
         setExtensionContextForTest(null);
+        fs.writeFileSync(trackedTemplate, originalTemplate);
         fs.rmSync(editionRoot, { recursive: true, force: true });
         fs.rmSync(heirRoot, { recursive: true, force: true });
     }

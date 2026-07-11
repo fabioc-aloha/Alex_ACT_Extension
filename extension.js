@@ -10,9 +10,8 @@ const { spawn } = require('child_process');
 const { listFilesRecursive } = require('./lib/fs-utils');
 const { EDITION_REPO } = require('./lib/edition-source');
 const { getLatestTag, fetchTarball, getSilentAuthToken, sweepStaleTempDirs, CACHE_KEY: EDITION_FETCH_CACHE_KEY } = require('./lib/edition-fetch');
-const { readAndValidateManifest, acquireLock, getLockPath, applyStaticFetchMarkerFields } = require('./lib/edition-install');
-const { pathMatchesAny, shouldSkipForHeirOwnership } = require('./lib/heir-ownership');
-const { installVscodeAssets, seedBootstrapTemplates } = require('./lib/manifest-assets');
+const { readAndValidateManifest, acquireLock, getLockPath, installEditionPayload, applyStaticFetchMarkerFields } = require('./lib/edition-install');
+const { pathMatchesAny } = require('./lib/heir-ownership');
 
 // ── Paths ───────────────────────────────────────────────────────────────
 // BRAIN_DIR is mutable. In v9.3.x it stays at `<extension>/brain` (bundled
@@ -322,42 +321,9 @@ function loadEditionManifest() {
     try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; }
 }
 
-function getBootstrapTemplateSet(manifest) {
-    const s = new Set();
-    if (manifest && Array.isArray(manifest.bootstrap_templates)) {
-        for (const t of manifest.bootstrap_templates) {
-            s.add(String(t).replace(/\\/g, '/'));
-        }
-    }
-    return s;
-}
-
 function getEditionRootForInstall() {
     if (_fetchProvenance && _fetchProvenance.tarballRoot) return _fetchProvenance.tarballRoot;
     return path.dirname(BRAIN_DIR);
-}
-
-// Map a brain-relative path (e.g. `instructions/foo.md` or `.vscode/settings.json`)
-// to its workspace-relative key and absolute destination. Files under `.vscode/`
-// land at the workspace root; everything else lands under `.github/`.
-function resolveBrainDest(rel, workspaceRoot, ghDir) {
-    const norm = rel.replace(/\\/g, '/');
-    if (norm === '.vscode' || norm.startsWith('.vscode/')) {
-        return { wsRel: norm, dst: path.join(workspaceRoot, norm) };
-    }
-    return { wsRel: '.github/' + norm, dst: path.join(ghDir, norm) };
-}
-
-function formatBootstrapFailureMessage(copyFailures, templateFailures) {
-    const failures = [
-        ...copyFailures.map(f => ({ kind: 'brain file', rel: f.rel, err: f.err })),
-        ...templateFailures.map(f => ({ kind: 'bootstrap template', rel: f.rel, err: f.err })),
-    ];
-    if (failures.length === 0) return '';
-
-    const sample = failures.slice(0, 5).map(f => `${f.kind} ${f.rel}: ${f.err}`).join('\n');
-    const more = failures.length > 5 ? `\n... and ${failures.length - 5} more` : '';
-    return `ACT bootstrap failed before creating the heir marker. ${failures.length} required file operation(s) failed. Remove the partial .github/.vscode files and retry.\n\n${sample}${more}`;
 }
 
 // ── File operations ────────────────────────────────────────────────
@@ -536,60 +502,20 @@ async function _cmdBootstrapBody(root) {
     }, async (progress) => {
         const ghDir = getGitHubDir(root);
         const manifest = loadEditionManifest();
-        const bootstrapTemplates = getBootstrapTemplateSet(manifest);
-        // Load HEIR_OWNED policy from the fetched tarball (or bundled brain
-        // on legacy installs). When null (pre-v3.4.x Edition tags), the
-        // skip helper degrades to no-skip and we get pre-v9.5.5 verbatim
-        // behavior. The 2026-06-29 fix wires this list into the copy loop
-        // below; the 2026-06-10 install-side filter shipped in
-        // lib/edition-install.js was tested but never called by production.
-        const ownership = loadOwnershipPolicy();
-        const heirOwnedGlobs = ownership ? ownership.HEIR_OWNED : null;
 
-        // 1. Copy edition-owned brain files
+        // 1. Install Edition payload through the same tested primitive used by
+        // installFromTarball. Marker and user-specific setup remain below.
         progress.report({ message: 'Copying brain files...' });
-        const brainFiles = listFilesRecursive(BRAIN_DIR);
-        let copied = 0;
-        let heirOwnedSkipped = 0;
-        const copyFailures = [];
-        for (const rel of brainFiles) {
-            const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
-            if (shouldSkipForHeirOwnership(wsRel, heirOwnedGlobs, bootstrapTemplates)) {
-                heirOwnedSkipped++;
-                continue;
-            }
-            const isTemplate = bootstrapTemplates.has(wsRel);
-            try {
-                if (isTemplate) {
-                    // Heir-owned template: only copy if absent
-                    if (!fs.existsSync(dst)) {
-                        copyFileSync(path.join(BRAIN_DIR, rel), dst);
-                        copied++;
-                    }
-                } else {
-                    copyFileSync(path.join(BRAIN_DIR, rel), dst);
-                    copied++;
-                }
-            } catch (err) {
-                copyFailures.push({ rel: wsRel, err: err && err.message ? err.message : String(err) });
-            }
-        }
-        if (copyFailures.length > 0) {
-            throw new Error(formatBootstrapFailureMessage(copyFailures, []));
-        }
-
         const editionRoot = getEditionRootForInstall();
-        const vscodeAssetsCopied = installVscodeAssets(root, manifest, editionRoot);
-
-        // 1b. Seed bootstrap templates from the correct source root.
-        // .github/config/cognitive-config.json is staged in templates/ because
-        // it is intentionally absent from brain/; .vscode/* templates live in
-        // the fetched Edition tarball root and must be copied from there.
-        const templateResult = seedBootstrapTemplates(root, manifest, editionRoot, path.join(__dirname, 'templates'), null);
-        copied += vscodeAssetsCopied.length + templateResult.seeded.length;
-        if (templateResult.failures.length > 0) {
-            throw new Error(formatBootstrapFailureMessage([], templateResult.failures));
-        }
+        const payload = installEditionPayload({
+            heirRoot: root,
+            manifest,
+            editionRoot: _fetchProvenance && _fetchProvenance.tarballRoot ? editionRoot : undefined,
+            brainDir: BRAIN_DIR,
+            templatesDir: path.join(__dirname, 'templates'),
+        });
+        const copied = payload.filesCopied + payload.vscodeAssetsCopied.length + payload.bootstrapTemplatesInstalled.length;
+        const heirOwnedSkipped = payload.heirOwnedSkipped;
 
         // 2. Render marker
         progress.report({ message: 'Creating heir marker...' });
@@ -967,7 +893,6 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
     }
 
     const manifest = loadEditionManifest();
-    const bootstrapTemplates = getBootstrapTemplateSet(manifest);
     const ghDir = getGitHubDir(root);
 
     // Load the ownership policy from the bundled brain. Required for the
@@ -1106,62 +1031,34 @@ async function _cmdUpgradeBody(root, markerPath, marker) {
         } catch { /* best-effort — .vscode/ backup is a convenience, not a guarantee */ }
     }
 
-    // ── 4. Install fresh brain from bundled BRAIN_DIR (rollback on failure) ──
-    const brainFiles = listFilesRecursive(BRAIN_DIR);
-    // Heir-owned files (workflows/, dependabot.yml, ISSUE_TEMPLATE/,
-    // episodic/, local/) must not ship from Edition. Step 5 restores
-    // anything the heir already had from the snapshot taken above; this
-    // skip prevents Edition's own copies from being written first. Without
-    // it, the heir's snapshot would clobber back over Edition's files but
-    // any HEIR_OWNED path the heir DIDN'T have would silently land — that's
-    // exactly the 2026-06-29 workflow leak.
-    const heirOwnedGlobs = policy ? policy.HEIR_OWNED : null;
-    let heirOwnedSkipped = 0;
-    const installFailures = [];
+    // ── 4. Install fresh payload through the shared primitive ───────
+    const editionRoot = getEditionRootForInstall();
+    const heirOwnedAlreadySnapshot = new Set(allOwned);
+    let payload;
     try {
-        for (const rel of brainFiles) {
-            const { wsRel, dst } = resolveBrainDest(rel, root, ghDir);
-            if (shouldSkipForHeirOwnership(wsRel, heirOwnedGlobs, bootstrapTemplates)) {
-                heirOwnedSkipped++;
-                continue;
-            }
-            // bootstrap_templates are heir-owned merge points; only seed if
-            // absent. After we recover from backup in step 5 they will be
-            // restored anyway, so this is a belt-and-suspenders no-op.
-            if (bootstrapTemplates.has(wsRel) && fs.existsSync(dst)) continue;
-            try {
-                copyFileSync(path.join(BRAIN_DIR, rel), dst);
-            } catch (err) {
-                installFailures.push({ rel: wsRel, err: err && err.message ? err.message : String(err) });
-            }
-        }
+        payload = installEditionPayload({
+            heirRoot: root,
+            manifest,
+            editionRoot: _fetchProvenance && _fetchProvenance.tarballRoot ? editionRoot : undefined,
+            brainDir: BRAIN_DIR,
+            templatesDir: path.join(__dirname, 'templates'),
+            alreadyOwned: heirOwnedAlreadySnapshot,
+        });
     } catch (err) {
-        installFailures.push({ rel: '(unknown)', err: err && err.message ? err.message : String(err) });
-    }
-
-    if (installFailures.length > 0) {
         // Rollback: remove the partially-installed .github/, rename backup back.
         try { fs.rmSync(ghDir, { recursive: true, force: true }); } catch { /* best-effort */ }
         try { fs.renameSync(backupDir, ghDir); } catch { /* best-effort — backup may now be orphaned */ }
         try { fs.rmSync(holdDir, { recursive: true, force: true }); } catch { /* best-effort */ }
-        const sample = installFailures.slice(0, 3).map(f => `${f.rel}: ${f.err}`).join('\n');
+        const message = err && err.message ? err.message : String(err);
         vscode.window.showErrorMessage(
-            `ACT upgrade: install failed (${installFailures.length} file(s)). Rolled back to previous state.\n\n${sample}`
+            `ACT upgrade: install failed. Rolled back to previous state.\n\n${message}`
         );
         return;
     }
 
-    const editionRoot = getEditionRootForInstall();
-    const vscodeAssetsCopied = installVscodeAssets(root, manifest, editionRoot);
-
-    // ── 4b. Seed bootstrap_templates if missing ─────────────────────
-    // .github/config/cognitive-config.json is staged in templates/. Non-.github
-    // templates (today .vscode/extensions.json + .vscode/settings.json) live in
-    // the fetched Edition tarball root. Seed only when absent and not already
-    // snapshotted for restore.
-    const heirOwnedAlreadySnapshot = new Set(allOwned);
-    const templateResult = seedBootstrapTemplates(root, manifest, editionRoot, path.join(__dirname, 'templates'), heirOwnedAlreadySnapshot);
-    const templateSeedFailures = templateResult.failures;
+    const heirOwnedSkipped = payload.heirOwnedSkipped;
+    const vscodeAssetsCopied = payload.vscodeAssetsCopied;
+    const templateSeedFailures = [];
 
     // ── 5. Restore heir-owned files from the holding area (apply relocations) ──
     let recovered = 0;
@@ -1936,7 +1833,6 @@ module.exports = {
     _internal: {
         getAvailableEditionVersion,
         isNewerSemver,
-        formatBootstrapFailureMessage,
         getConverterOutputPath,
         confirmConverterOverwrite,
         withLockHeartbeat,

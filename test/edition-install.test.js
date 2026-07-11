@@ -11,6 +11,7 @@ const {
     acquireLock,
     getLockPath,
     installFromTarball,
+    installEditionPayload,
     applyStaticFetchMarkerFields,
     MANIFEST_REL_PATH
 } = require('../lib/edition-install');
@@ -261,6 +262,80 @@ test('lock: getLockPath is deterministic and path-canonicalised', () => {
             assert.notEqual(getLockPath(heir), getLockPath(heir2));
         } finally { cleanup(heir2); }
     } finally { cleanup(heir); }
+});
+
+// ── shared payload installer ───────────────────────────────────────────
+
+test('payload: static-fetch copies declared subtree, filters HEIR_OWNED, and refreshes assets', () => {
+    const manifest = validManifest({
+        heir_owned: ['.github/workflows/**'],
+        vscode_assets: ['markdown-light.css'],
+        bootstrap_templates: [],
+    });
+    const edition = setupTarballRoot(manifest, {
+        '.github': {
+            'instructions/x.instructions.md': 'rule',
+            'workflows/leak.yml': 'do not copy',
+        },
+    });
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-heir-'));
+    try {
+        fs.mkdirSync(path.join(edition, '.vscode'), { recursive: true });
+        fs.writeFileSync(path.join(edition, '.vscode', 'markdown-light.css'), 'body{}');
+        const result = installEditionPayload({ editionRoot: edition, heirRoot: heir, manifest });
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'instructions', 'x.instructions.md')), true);
+        assert.equal(fs.existsSync(path.join(heir, '.github', 'workflows', 'leak.yml')), false);
+        assert.equal(fs.readFileSync(path.join(heir, '.vscode', 'markdown-light.css'), 'utf8'), 'body{}');
+        assert.equal(result.heirOwnedSkipped, 1);
+    } finally {
+        cleanup(edition);
+        cleanup(heir);
+    }
+});
+
+test('payload: legacy flattened brain installs as virtual .github subtree', () => {
+    const brain = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-brain-'));
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-heir-'));
+    try {
+        fs.mkdirSync(path.join(brain, 'prompts'), { recursive: true });
+        fs.writeFileSync(path.join(brain, 'prompts', 'x.prompt.md'), 'prompt');
+        const result = installEditionPayload({
+            brainDir: brain,
+            heirRoot: heir,
+            manifest: { bootstrap_templates: [], vscode_assets: [] },
+        });
+        assert.equal(fs.readFileSync(path.join(heir, '.github', 'prompts', 'x.prompt.md'), 'utf8'), 'prompt');
+        assert.deepEqual(result.subtreesCopied, ['.github']);
+    } finally {
+        cleanup(brain);
+        cleanup(heir);
+    }
+});
+
+test('payload: upgrade alreadyOwned set preserves an existing bootstrap template', () => {
+    const manifest = validManifest({
+        vscode_assets: [],
+        bootstrap_templates: ['.vscode/settings.json'],
+    });
+    const edition = setupTarballRoot(manifest, { '.github': { 'VERSION': '3.2.0' } });
+    const heir = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-heir-'));
+    try {
+        fs.mkdirSync(path.join(edition, '.vscode'), { recursive: true });
+        fs.writeFileSync(path.join(edition, '.vscode', 'settings.json'), '{"edition":true}');
+        fs.mkdirSync(path.join(heir, '.vscode'), { recursive: true });
+        fs.writeFileSync(path.join(heir, '.vscode', 'settings.json'), '{"heir":true}');
+        const result = installEditionPayload({
+            editionRoot: edition,
+            heirRoot: heir,
+            manifest,
+            alreadyOwned: new Set(['.vscode/settings.json']),
+        });
+        assert.equal(fs.readFileSync(path.join(heir, '.vscode', 'settings.json'), 'utf8'), '{"heir":true}');
+        assert.deepEqual(result.bootstrapTemplatesInstalled, []);
+    } finally {
+        cleanup(edition);
+        cleanup(heir);
+    }
 });
 
 // ── installFromTarball ─────────────────────────────────────────────────
