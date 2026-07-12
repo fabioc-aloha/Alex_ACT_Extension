@@ -36,6 +36,11 @@ test('.vscodeignore is committed and excludes non-runtime payloads', () => {
 test('build-extension uses non-interactive @vscode/vsce packaging command', () => {
     const buildScript = fs.readFileSync(path.join(root, 'build-extension.cjs'), 'utf8');
 
-    assert.match(buildScript, /execFileSync\('npx', \['--yes', '@vscode\/vsce', 'package'\]/);
+    assert.match(buildScript, /const NPX_CLI = process\.platform === 'win32'/);
+    assert.match(buildScript, /const packageCommand = NPX_CLI \? process\.execPath : 'npx';/);
+    assert.match(buildScript, /execFileSync\(packageCommand, packageArgs/);
+    assert.doesNotMatch(buildScript, /shell: true|shell: process\.platform/);
+    assert.match(buildScript, /process\.exitCode = 1;/);
+    assert.doesNotMatch(buildScript, /npx\.cmd/);
     assert.doesNotMatch(buildScript, /npx vsce package/);
 });

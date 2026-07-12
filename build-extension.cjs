@@ -31,6 +31,9 @@ const EDITION_REMOTE = 'https://github.com/fabioc-aloha/Alex_ACT_Edition.git';
 const noVsix = process.argv.includes('--no-vsix');
 const refIdx = process.argv.indexOf('--ref');
 const ref = refIdx >= 0 && process.argv[refIdx + 1] ? process.argv[refIdx + 1] : 'main';
+const NPX_CLI = process.platform === 'win32'
+    ? path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js')
+    : null;
 
 // Reject anything that isn't a plausible git ref (branch/tag/sha). Prevents shell metachars
 // from reaching the clone call even though we use execFileSync below as defense in depth.
@@ -160,7 +163,14 @@ if (extPkg.version !== version) {
 if (!noVsix) {
     console.log('\n10. Building VSIX...');
     try {
-        execFileSync('npx', ['--yes', '@vscode/vsce', 'package'], { cwd: EXT_DIR, stdio: 'inherit' });
+        if (NPX_CLI && !fs.existsSync(NPX_CLI)) {
+            throw new Error(`npx CLI not found at ${NPX_CLI}`);
+        }
+        const packageCommand = NPX_CLI ? process.execPath : 'npx';
+        const packageArgs = NPX_CLI
+            ? [NPX_CLI, '--yes', '@vscode/vsce', 'package']
+            : ['--yes', '@vscode/vsce', 'package'];
+        execFileSync(packageCommand, packageArgs, { cwd: EXT_DIR, stdio: 'inherit' });
         const vsixFiles = fs.readdirSync(EXT_DIR).filter(f => f.endsWith('.vsix'));
         if (vsixFiles.length > 0) {
             console.log(`\nVSIX ready: ${vsixFiles[vsixFiles.length - 1]}`);
@@ -169,6 +179,7 @@ if (!noVsix) {
     } catch (e) {
         console.error('VSIX build failed. Package command: npx --yes @vscode/vsce package');
         console.error(e.message);
+        process.exitCode = 1;
     }
 } else {
     console.log('\nSkipped VSIX build (--no-vsix). Run `npx --yes @vscode/vsce package` to build.');
