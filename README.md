@@ -1,6 +1,6 @@
-# Alex — ACT Edition
+# Alex: Artificial Critical Thinking for GitHub Copilot
 
-![Alex — ACT Edition](https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png)
+![Alex: Artificial Critical Thinking for GitHub Copilot](https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png)
 
 > **Artificial Critical Thinking for GitHub Copilot.** A living brain of skills, instructions, and prompts that teaches your AI to reason honestly.
 

@@ -8,6 +8,17 @@ const test = require('node:test');
 const root = path.resolve(__dirname, '..');
 const ignorePath = path.join(root, '.vscodeignore');
 
+test('Marketplace identity keeps its stable ID and descriptive display name', () => {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+
+    assert.equal(packageJson.publisher, 'fabioc-aloha');
+    assert.equal(packageJson.name, 'alex-cognitive-architecture');
+    assert.equal(
+        packageJson.displayName,
+        'Alex: Artificial Critical Thinking for GitHub Copilot'
+    );
+});
+
 function readIgnoreLines() {
     return fs.readFileSync(ignorePath, 'utf8')
         .split(/\r?\n/)

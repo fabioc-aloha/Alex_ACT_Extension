@@ -3,9 +3,31 @@
 
 # Changelog
 
-All notable changes to Alex — ACT Edition.
+All notable changes to Alex: Artificial Critical Thinking for GitHub Copilot.
 
 ## [Unreleased]
+
+## [9.5.8] - 2026-07-13
+
+**Patch [clarification] — Give the Marketplace extension a descriptive name without changing its identity or update path.**
+
+### Changed
+
+- Changed the user-facing display name from `Alex — ACT Edition` to `Alex: Artificial Critical Thinking for GitHub Copilot`.
+- Updated the Marketplace README title, install guidance, About copy, and banner to use the descriptive name.
+- Kept the immutable extension ID `fabioc-aloha.alex-cognitive-architecture`, command IDs, publisher, and installed brain identity unchanged. Existing installations continue to update in place.
+
+### Verification
+
+- `npm test`: 150/150 PASS, including the stable-ID/descriptive-display-name contract.
+- `npm run test:semantic`: 5/5 PASS.
+- `npm run test:integration`: 3/3 PASS against the live Edition release.
+- Banner source parses as XML; rendered PNG is 1200×320 with no clipping or overlap.
+- Marketplace search found no exact display-name collision before release preparation.
+
+### Falsifier
+
+Revise the display name if Marketplace search no longer finds the extension for `critical thinking`, `artificial critical thinking`, or `GitHub Copilot`, or if the 47-character name is truncated beyond recognition in the Extensions view.
 
 ## [9.5.7] - 2026-07-13
 

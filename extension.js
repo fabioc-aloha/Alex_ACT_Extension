@@ -1224,7 +1224,7 @@ async function cmdStatusBarMenu() {
 
     items.push(
         { label: '$(milestone) Open Welcome Walkthrough', description: 'Extension getting-started guide', action: 'walkthrough' },
-        { label: '$(book) Open Extension README', description: 'About Alex — ACT Edition', action: 'extReadme' },
+        { label: '$(book) Open Extension README', description: 'About Alex: Artificial Critical Thinking for GitHub Copilot', action: 'extReadme' },
     );
 
     const pick = await vscode.window.showQuickPick(items, {
