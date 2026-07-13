@@ -78,14 +78,14 @@ to your project:
 git clone https://github.com/fabioc-aloha/Alex_ACT_Memory.git ../Alex_ACT_Memory
 ```
 
-Edition v4.0.1 supports encrypted profiles when
-`ALEX_ACT_MEMORY_PASSWORD` is in the process environment or an ignored project
-`.env`. Never paste the password into chat or commit it.
+Edition v4.1.0 supports encrypted profiles when `ALEX_ACT_MEMORY_PASSWORD` is
+available from the process environment, an explicit file, an ignored project
+`.env`, or the sibling Memory repository's ignored `.env`. Project values win.
+Never paste the password into chat or commit it.
 
-Memory also ships a tracked `.env.example` for centralized machine-local
-secrets. The fallback from an heir to Memory `.env` is currently **Unreleased**
-on Edition `main` and proposed for v4.1.0. Until that release exists, Extension
-v4.0.1 heirs should continue using process or project-local authorization.
+Memory ships a tracked `.env.example` for centralized machine-local secrets.
+Copy it to `.env`, replace placeholders only in the ignored copy, and verify the
+real file is untracked before relying on the fallback.
 
 ## Next steps
 
@@ -96,4 +96,4 @@ v4.0.1 heirs should continue using process or project-local authorization.
 
 ---
 
-Last reviewed: 2026-07-11
+Last reviewed: 2026-07-13

@@ -7,15 +7,9 @@ All notable changes to Alex — ACT Edition.
 
 ## [Unreleased]
 
-### Changed
+## [9.5.7] - 2026-07-13
 
-- `[behaviour]` Converged static-fetch bootstrap, upgrade, and the compatibility `installFromTarball()` path on one tested Edition payload installer. VS Code interaction, locking, backup, heir-owned restore, relocation, rollback, marker updates, and status refresh remain in `extension.js`; manifest subtree copying, HEIR_OWNED filtering, VS Code assets, and bootstrap templates now have one implementation. Added static-fetch, legacy-bundle, template-preservation, production-wiring, fixture-restoration, and mutation coverage. This change is implemented but not yet released to the Marketplace.
-- `[behaviour]` Made VSIX packaging executable and fail-closed on Windows. The builder now invokes npm's `npx-cli.js` through the current Node binary instead of passing a batch launcher directly to `execFileSync`, and packaging failures set a nonzero process status. Added source-contract coverage for the platform-safe command and failure propagation. This change is implemented but not yet released to the Marketplace.
-- `[clarification]` Refreshed README, trust walkthrough, and GitHub Wiki source for Edition v4.0.1, Git-based `Alex_ACT_Memory`, encrypted on-demand profiles, read-only sibling resolution, repository audience boundaries, and version-aware local-secret setup. The Memory `.env` fallback is clearly marked Unreleased and proposed for Edition v4.1.0; no Extension version or Marketplace release is implied.
-
-## [9.5.7] - 2026-07-01
-
-**Patch [behaviour] — Harden the static-fetch release path, remove retired repository automation and migration payloads, and add deterministic plus semantic release gates before Marketplace packaging.**
+**Patch [behaviour] — Converge Edition installation, make Windows packaging fail closed, harden the static-fetch release path, and remove retired automation and migration payloads.**
 
 ### Removed
 
@@ -24,15 +18,18 @@ All notable changes to Alex — ACT Edition.
 
 ### Changed
 
+- Converged static-fetch bootstrap, upgrade, and the compatibility `installFromTarball()` path on one tested Edition payload installer. VS Code interaction, locking, backup, heir-owned restore, relocation, rollback, marker updates, and status refresh remain in `extension.js`; manifest subtree copying, HEIR_OWNED filtering, VS Code assets, and bootstrap templates now have one implementation.
+- Made VSIX packaging executable and fail-closed on Windows. The builder invokes npm's `npx-cli.js` through the current Node binary instead of passing a batch launcher directly to `execFileSync`, and packaging failures set a nonzero process status.
+- Refreshed README, trust walkthrough, and GitHub Wiki guidance for Edition v4.1.0, Git-based `Alex_ACT_Memory`, encrypted on-demand profiles, read-only sibling resolution, repository audience boundaries, and exact-name local-secret fallback.
 - Simplified `migration.js` to the live static-fetch-era surface: retired migration warning, deprecated AlexMaster command stubs, rollback, and backup cleanup.
 - Committed `.vscodeignore` as source and changed `build-extension.cjs` to verify it instead of generating it at build time. Packaging now uses `npx --yes @vscode/vsce package` through `execFileSync` to avoid deprecated/interactively prompting `npx vsce package` behavior.
 - Added lock heartbeats during long bootstrap/upgrade operations, static-fetch-safe status version resolution, converter overwrite confirmation, data-only HEIR_OWNED manifest loading, and required-copy bootstrap abort behavior before marker creation.
 
 ### Verification
 
-- `npm test`: 145/145 PASS.
+- `npm test`: 149/149 PASS.
 - `npm run test:semantic`: 5/5 PASS.
-- `node build-extension.cjs --no-vsix`: PASS.
+- `node build-extension.cjs --no-vsix`: PASS against Edition v4.1.0.
 - VSIX packaging check: 42 files; no `.github/`, `brain/`, `test/`, `scripts/`, `.vscode/`, `build-extension.cjs`, `.act-protected.json`, retired migration payloads, or `*.tmp` files.
 
 ### Heir-visible behaviour delta

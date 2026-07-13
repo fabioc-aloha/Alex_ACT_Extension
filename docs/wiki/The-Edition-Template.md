@@ -6,7 +6,7 @@ The brain that Alex ships with is not built inside the Extension. It is built in
 
 | Repo | What it is | Version track |
 | --- | --- | --- |
-| **Alex_ACT_Edition** | The canonical brain: instructions, skills, prompts, agents, scripts, config | Edition version (current release: v4.0.1) |
+| **Alex_ACT_Edition** | The canonical brain: instructions, skills, prompts, agents, scripts, config | Edition version (current release: v4.1.0) |
 | **Alex_ACT_Extension** | The VS Code Marketplace delivery channel that fetches the brain on demand | Independent Extension version (static-fetch line: v9.x) |
 
 Starting with Extension v9.4.0, the Extension does **not** bundle the brain in the VSIX. On `Bootstrap This Workspace` or `Upgrade Brain`, it downloads the latest tagged Edition release from GitHub, validates the manifest contract (spec 1.4 minimum), and installs the declared subtrees into your project. See [ADR-009](https://github.com/fabioc-aloha/Alex_ACT_Supervisor/blob/main/docs/adrs/ADR-009-extension-github-fetch-brain.md) for the rationale.
@@ -29,10 +29,9 @@ The CHANGELOG in the Extension repo documents Extension changes. Edition's CHANG
 ### Released brain versus Edition main
 
 The Extension fetches the latest **GitHub Release**, not arbitrary Edition
-`main`. Edition v4.0.1 is the current released brain. Edition `main` may contain
-validated work under `Unreleased`; for example, exact-name fallback to the
-sibling Memory `.env` is proposed for v4.1.0 and is not available to current
-v4.0.1 Extension installs.
+`main`. Edition v4.1.0 is the current released brain and includes exact-name
+fallback to the sibling Memory `.env`. Work committed under Edition's
+`Unreleased` heading does not reach Extension users until a later GitHub Release.
 
 ## How to check your version
 

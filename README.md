@@ -18,15 +18,15 @@ Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They
 
 ### Current brain release
 
-The latest tagged brain is **Edition v4.0.1**. It includes encrypted, on-demand
-profiles and the release-blocking ten-tenet canon guard. Extension host versions
-and Edition brain versions are independent; Bootstrap and Upgrade fetch the
-latest compatible Edition GitHub Release.
+The latest tagged brain is **Edition v4.1.0**. It includes encrypted, on-demand
+profiles, the release-blocking ten-tenet canon guard, and exact-name local-secret
+resolution. Extension host versions and Edition brain versions are independent;
+Bootstrap and Upgrade fetch the latest compatible Edition GitHub Release.
 
-Edition `main` contains an **Unreleased** exact-name local-secret source that can
-use the sibling Memory repository's ignored `.env` after process and project
-sources. Extension users do not receive that behavior until a later Edition
-release is explicitly approved (proposed v4.1.0).
+Secret resolution requests one exact variable for one explicit operation. The
+order is process environment, explicit file, project `.env`, then the sibling
+Memory repository's ignored `.env`. It never enumerates a secret file, imports
+all values, mutates `process.env`, prints values, or runs during greeting.
 
 ## The Plugin Mall
 

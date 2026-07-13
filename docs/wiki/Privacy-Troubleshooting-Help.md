@@ -21,15 +21,16 @@ Plain English:
 ### Shared Memory, profiles, and local secrets
 
 - `Alex_ACT_Memory` is a sibling Git repository. If it has a remote, repository
-	access defines who can read tracked channels.
+  access defines who can read tracked channels.
 - Profiles are AES-256-GCM encrypted and decrypted only on explicit demand.
-	Greeting does not decrypt them.
+  Greeting does not decrypt them.
 - Real `.env` files must be ignored and untracked. `.env.example` contains
-	placeholders and instructions only.
-- Edition v4.0.1 reads profile authorization from the process or project `.env`.
-	Memory `.env` fallback is Unreleased and proposed for v4.1.0.
+  placeholders and instructions only.
+- Edition v4.1.0 resolves one exact secret from the process, an explicit file,
+  the project `.env`, then the sibling Memory `.env`. Project values win; the
+  resolver does not enumerate or import the whole file.
 - A local `.env` does not protect against a compromised machine or another
-	process with the same filesystem access.
+  process with the same filesystem access.
 
 ## When Alex is wrong (and it will be)
 
@@ -94,14 +95,15 @@ If a fetch fails for any reason, run **ACT: Diagnose Fetch** from the Command Pa
 ### Encrypted profile is unavailable
 
 1. Confirm `../Alex_ACT_Memory` exists.
-2. On Edition v4.0.1, provide `ALEX_ACT_MEMORY_PASSWORD` through the process or
-	the heir project's ignored `.env`.
+2. On Edition v4.1.0, provide `ALEX_ACT_MEMORY_PASSWORD` through the process,
+  an explicit file, the heir project's ignored `.env`, or Memory's ignored
+  `.env`.
 3. Verify the file is ignored with
-	`git check-ignore --quiet --no-index .env` in the repository that owns it.
+  `git check-ignore --quiet --no-index .env` in the repository that owns it.
 4. Do not print the value. Run the profile status command instead:
-	`node .github/scripts/_registry.cjs --profile .`.
+  `node .github/scripts/_registry.cjs --profile .`.
 5. Wrong passwords and tampering fail closed. A sanitized authentication error
-	means the envelope was not decrypted.
+  means the envelope was not decrypted.
 
 ### Document conversion produced weird output
 
@@ -120,9 +122,8 @@ The full ACT framework is public: ten tenets, the manifesto, the failure modes A
 
 Or, faster, ask Alex directly:
 
-> *"Teach me the single most important critical thinking habit I am probably missing. Do not be generic. Ask me a question first to figure out where I am weak."*
-
-> *"Walk me through the ten tenets of ACT, one at a time. Ask me to apply each one to a real decision I am facing."*
+- *"Teach me the single most important critical thinking habit I am probably missing. Do not be generic. Ask me a question first to figure out where I am weak."*
+- *"Walk me through the ten tenets of ACT, one at a time. Ask me to apply each one to a real decision I am facing."*
 
 That is the kind of question Alex was built for.
 
@@ -139,4 +140,4 @@ The framework gets revised when it fails. That is Tenet X in practice.
 
 ---
 
-*Last reviewed: 2026-07-11*
+Last reviewed: 2026-07-13

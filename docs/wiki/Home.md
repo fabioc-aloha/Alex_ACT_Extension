@@ -34,16 +34,13 @@ Read these in order:
 
 The Extension now fetches the latest Edition brain from GitHub on demand instead of bundling it in the VSIX. Edition releases reach your workspace immediately on tag-push — no waiting for a Marketplace review cycle. Bootstrap and Upgrade need network access to `api.github.com` and `codeload.github.com`. A new **`ACT: Diagnose Fetch`** command surfaces cache state, auth mode, and marker fields for bug reports. See [How It Fits Together](How-It-Fits-Together) for the architecture, [The Edition Template](The-Edition-Template) for the upgrade lifecycle, and [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help) for failure-mode guidance.
 
-### Current Edition: v4.0.1
+### Current Edition: v4.1.0
 
-Edition v4.0.1 keeps encrypted profiles on demand and makes the exact ten-tenet
-canon release-blocking. The sibling `Alex_ACT_Memory` repository is local-first;
-its remote is optional and repository access defines its audience.
-
-Edition `main` also has an **Unreleased** exact-name local-secret fallback to the
-sibling Memory `.env`. It is not part of v4.0.1 and will reach Extension users
-only after a separately approved Edition release. See [AI-Memory](AI-Memory) for
-the released and upcoming behavior.
+Edition v4.1.0 keeps encrypted profiles on demand, makes the exact ten-tenet
+canon release-blocking, and adds exact-name local-secret fallback to the sibling
+Memory `.env`. The Memory repository is local-first; its remote is optional and
+repository access defines its audience. See [AI-Memory](AI-Memory) for the
+resolution order and privacy boundary.
 
 ### Something is off
 

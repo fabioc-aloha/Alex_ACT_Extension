@@ -9,17 +9,16 @@ It is local-first. A Git remote is optional. If multiple clones use one remote,
 repository access defines the audience; separate local clones are not an
 isolation boundary.
 
-> **Version note:** Edition v4.0.1 supports encrypted profiles using process or
-> project-local authorization. Exact-name fallback to Memory's ignored `.env`
-> is implemented on Edition `main` under `Unreleased` and is proposed for
-> v4.1.0. Extension users do not receive that fallback until an Edition release
-> is separately approved.
+> **Version note:** Edition v4.1.0 supports encrypted profiles and exact-name
+> local-secret fallback to Memory's ignored `.env`. Resolution order is process,
+> explicit file, project `.env`, then Memory `.env`; project values retain
+> precedence.
 
 ## Where it lives (v9.0.0+)
 
 AI-Memory lives in a **git repository** as a sibling clone next to your project workspaces:
 
-```
+```text
 C:\Development\
 ├── Your-Project/           ← your workspace
 ├── Alex_ACT_Edition/       ← the brain template
@@ -50,7 +49,7 @@ If you're upgrading from an older version, see [Migrating to v9](Migrating-to-v9
 
 ## Layout
 
-```
+```text
 Alex_ACT_Memory/
 ├── .env.example       ← tracked placeholders and local-secret instructions
 ├── CONTRACT.md        ← ownership, privacy, retention, and secret rules
@@ -107,7 +106,7 @@ git -C ../Alex_ACT_Memory check-ignore --quiet --no-index .env
 git -C ../Alex_ACT_Memory ls-files --error-unmatch .env  # must fail
 ```
 
-The Unreleased resolver requests one exact variable for one explicit operation.
+The Edition v4.1.0 resolver requests one exact variable for one explicit operation.
 Resolution order is process, explicit file, project `.env`, then Memory `.env`.
 It never enumerates the file, imports all values, mutates `process.env`, prints
 values, or runs during greeting. Project values override Memory values.
@@ -170,4 +169,4 @@ enterprise secret manager, never in profiles or tracked content.
 
 ---
 
-*Last reviewed: 2026-07-11*
+Last reviewed: 2026-07-13
