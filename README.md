@@ -1,8 +1,8 @@
 # Alex: Artificial Critical Thinking for GitHub Copilot
 
-![Alex: Artificial Critical Thinking for GitHub Copilot](https://raw.githubusercontent.com/fabioc-aloha/Alex_ACT_Extension/main/assets/banner-readme.png)
+![Alex ACT Extension](assets/banner-readme.svg)
 
-> **Artificial Critical Thinking for GitHub Copilot.** A living brain of skills, instructions, and prompts that teaches your AI to reason honestly.
+Alex ACT Extension turns GitHub Copilot from a confident assistant into a critical-thinking partner by installing a governed ACT brain into the workspace. It makes uncertainty, alternatives, and challenge visible before confident mistakes ship.
 
 Most AI assistants are helpful, fast, and confidently wrong in subtle ways. They confirm your assumptions instead of challenging them. They sound certain when they should hedge. A confident wrong answer is worse than an uncertain correct answer.
 
