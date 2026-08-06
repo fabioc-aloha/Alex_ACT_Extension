@@ -2,6 +2,14 @@
 
 Five minutes from zero to a real conversation with Alex.
 
+> [!IMPORTANT]
+> **The Extension installation below is deprecated and no longer maintained.**
+> Do not install or bootstrap the legacy Edition/Extension surface. Use the
+> [Alex ACT Core installation guide](https://github.com/fabioc-aloha/Alex_ACT_Core/blob/main/INSTALL.md)
+> for a new installation, or follow
+> [Migrating to Plugin-Native Alex ACT](Migrating-to-Plugin-Native-Alex-ACT)
+> for an existing workspace.
+
 ## 1. Install the extension
 
 If you arrived here from a fresh VS Code install:
@@ -96,4 +104,4 @@ real file is untracked before relying on the fallback.
 
 ---
 
-Last reviewed: 2026-07-13
+Last reviewed: 2026-08-06

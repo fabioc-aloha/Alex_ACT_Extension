@@ -1,6 +1,32 @@
 # Alex: Artificial Critical Thinking for GitHub Copilot
 
-![Alex ACT Extension](assets/banner-readme.svg)
+> [!IMPORTANT]
+> **Deprecated and no longer maintained.** This VS Code Extension and its
+> Edition-fetch delivery path receive no new brain fixes, host compatibility
+> updates, or feature releases. Version 9.5.9 is the final planned release and
+> exists to deliver this migration notice. Do not use **Bootstrap This
+> Workspace** or **Upgrade Brain** for new installations. Install the supported
+> plugin-native Alex ACT 1.0.0 constellation from
+> [Alex ACT Core](https://github.com/fabioc-aloha/Alex_ACT_Core).
+
+## Migrate to plugin-native Alex ACT
+
+1. Commit or back up the workspace and preserve project-owned local
+   customizations.
+2. Disable or uninstall this Extension so it cannot bootstrap or upgrade the
+   retired Edition tree.
+3. Remove old Edition-managed brain files only after separating them from
+   project-owned `.github` files and local customizations.
+4. Follow the [current installation guide](https://github.com/fabioc-aloha/Alex_ACT_Core/blob/main/INSTALL.md):
+   register `alex-mall`, install `alex-act-manager@alex-mall` and
+   `alex-act-core@alex-mall`, reload the host, then run
+   `/alex-act-manager install-constellation`.
+5. Restore only the local customizations you still need and verify all six
+   activation planes with `/alex-act-manager plugin-status`.
+
+The former Extension wiki is retained as historical documentation. Its
+[plugin-native migration guide](https://github.com/fabioc-aloha/Alex_ACT_Extension/wiki/Migrating-to-Plugin-Native-Alex-ACT)
+contains the detailed workspace cleanup boundary.
 
 Alex ACT Extension turns GitHub Copilot from a confident assistant into a critical-thinking partner by installing a governed ACT brain into the workspace. It makes uncertainty, alternatives, and challenge visible before confident mistakes ship.
 

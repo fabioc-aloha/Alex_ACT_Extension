@@ -7,6 +7,42 @@ All notable changes to Alex: Artificial Critical Thinking for GitHub Copilot.
 
 ## [Unreleased]
 
+## [9.5.9] - 2026-08-06
+
+**Patch [clarification] - Mark the Extension and Edition-fetch path as deprecated and route users to plugin-native Alex ACT.**
+
+This is the final planned Extension release. It exists to deliver the
+deprecation notice and migration path to existing Marketplace installations.
+
+### Changed
+
+- Added a first-screen Marketplace README notice that the Extension receives no
+  new brain fixes, host compatibility updates, or releases.
+- Added migration instructions that preserve project-owned `.github` files,
+  disable legacy delivery, install Manager and Core from `alex-mall`, restore
+  only local customizations, and verify all six activation planes.
+- Mirrored the same notice and migration page into the bundled wiki source so
+  the VSIX and the published GitHub wiki cannot disagree about installation.
+- Changed the Marketplace card description to direct new and existing users to
+  the maintained Alex ACT Core installation guide.
+- Kept the immutable extension ID, display name, command IDs, and runtime code
+  unchanged so existing installations receive the notice through an in-place
+  Marketplace update.
+
+### Verification
+
+- `npm test`: 150/150 PASS.
+- `npm run test:semantic`: PASS.
+- `npm run test:integration`: PASS against the final Edition release.
+- VSIX contents include the deprecation README, changelog, and `9.5.9` package
+  metadata while preserving the existing runtime exclusions.
+
+### Falsifier
+
+Revise the migration copy if the Core installation guide changes its
+marketplace identity, Manager command namespace, bootstrap cardinality, or
+activation-plane contract.
+
 ## [9.5.8] - 2026-07-13
 
 **Patch [clarification] — Give the Marketplace extension a descriptive name without changing its identity or update path.**

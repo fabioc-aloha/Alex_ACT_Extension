@@ -1,8 +1,8 @@
 {
   "name": "alex-cognitive-architecture",
   "displayName": "Alex: Artificial Critical Thinking for GitHub Copilot",
-  "description": "Artificial Critical Thinking for GitHub Copilot. A living brain of skills, instructions, and prompts that teaches your AI to reason honestly. Fetches the latest Edition brain from GitHub on first use; requires network access on activation.",
-  "version": "9.5.8",
+  "description": "Deprecated and no longer maintained. Version 9.5.9 is the final planned release; migrate to Alex ACT Core.",
+  "version": "9.5.9",
   "publisher": "fabioc-aloha",
   "license": "PolyForm-Noncommercial-1.0.0",
   "engines": {

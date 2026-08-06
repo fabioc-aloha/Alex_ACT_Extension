@@ -1,17 +1,19 @@
-### Alex: Artificial Critical Thinking
+# Alex: Artificial Critical Thinking
 
-**Start here**
+## Start here
 
 - [Home](Home)
-- [Getting Started](Getting-Started)
+- [Install the supported version](https://github.com/fabioc-aloha/Alex_ACT_Core/blob/main/INSTALL.md)
+- [Migrate to Plugin-Native Alex ACT](Migrating-to-Plugin-Native-Alex-ACT)
+- [Legacy Getting Started](Getting-Started)
 
-**How it works**
+## How it works
 
 - [The CSAR Loop](The-CSAR-Loop)
 - [What Makes Alex Different](What-Makes-Alex-Different)
 - [The ACT Framework](The-ACT-Framework)
 
-**Tools and depth**
+## Tools and depth
 
 - [How It Fits Together](How-It-Fits-Together)
 - [The Plugin Mall](The-Plugin-Mall)
@@ -22,7 +24,7 @@
 - [Document Conversion](Document-Conversion)
 - [Working in Other Languages](Working-in-Other-Languages)
 
-**Reference**
+## Reference
 
 - [Academic References](Academic-References)
 - [Privacy, Troubleshooting, Help](Privacy-Troubleshooting-Help)

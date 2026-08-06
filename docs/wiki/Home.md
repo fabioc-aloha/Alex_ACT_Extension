@@ -1,5 +1,13 @@
 # Alex: Artificial Critical Thinking
 
+> [!IMPORTANT]
+> **This Extension wiki is deprecated and no longer maintained.** The
+> Edition/Extension distribution receives no new fixes or releases. Install the
+> supported plugin-native Alex ACT 1.0.0 constellation from
+> [Alex ACT Core](https://github.com/fabioc-aloha/Alex_ACT_Core). Existing users
+> should follow [Migrating to Plugin-Native Alex ACT](Migrating-to-Plugin-Native-Alex-ACT)
+> before removing legacy workspace files.
+
 Alex is **Artificial Critical Thinking** for VS Code. The "Critical" is the point.
 
 Most AI chatbots agree with you. They tell you what you want to hear, in a confident voice, fast. That is the failure mode. Confident voice covers for shallow thinking, missing context, and answers that fall apart the moment you press them.
@@ -72,4 +80,4 @@ Alex is your second opinion that does not flinch.
 
 ---
 
-Last reviewed: 2026-07-11
+Last reviewed: 2026-08-06
